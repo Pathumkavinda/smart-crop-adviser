@@ -4,9 +4,8 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 // Create context
-const AuthContext = createContext();
-
-export function AuthProvider({ children }) {
+export const AuthContext = createContext();
+export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

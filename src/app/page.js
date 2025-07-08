@@ -3,9 +3,9 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 // TODO: Create AuthContext for Next.js
-// import { useAuth } from '@/contexts/AuthContext';
-
+import { AuthContext } from '@/context/AuthContext';
 // Replace lucide-react icons with simple SVG components
+import ThemeWrapper from '@/components/ThemeWrapper';
 const IconLeaf = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
     <path d="M11 20A7 7 0 0 1 4 13c0-3.4 2.2-6.2 5.2-7.2A7 7 0 0 0 16 13c0 3.4-2.2 6.2-5.2 7.2"/>
