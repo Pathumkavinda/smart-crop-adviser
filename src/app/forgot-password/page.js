@@ -3,85 +3,27 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-
-// Custom SVG Icons (reusing from your existing components)
-const IconLock = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
-    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-  </svg>
-);
-
-const IconMail = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect width="20" height="16" x="2" y="4" rx="2"/>
-    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-  </svg>
-);
-
-const IconArrowLeft = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m12 19-7-7 7-7"/>
-    <path d="M19 12H5"/>
-  </svg>
-);
-
-const IconCheckCircle = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-    <path d="m9 11 3 3L22 4"/>
-  </svg>
-);
-
-const IconAlertTriangle = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-    <path d="M12 9v4"/>
-    <path d="M12 17h.01"/>
-  </svg>
-);
-
-const IconMoon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
-  </svg>
-);
-
-const IconSun = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="4"/>
-    <path d="M12 2v2"/>
-    <path d="M12 20v2"/>
-    <path d="m4.93 4.93 1.41 1.41"/>
-    <path d="m17.66 17.66 1.41 1.41"/>
-    <path d="M2 12h2"/>
-    <path d="M20 12h2"/>
-    <path d="m6.34 17.66-1.41 1.41"/>
-    <path d="m19.07 4.93-1.41 1.41"/>
-  </svg>
-);
+import { useTheme } from '@/context/ThemeContext';
+import ThemeWrapper from '@/components/ThemeWrapper';
+import {
+  Lock,
+  Mail,
+  ArrowLeft,
+  CheckCircle,
+  AlertTriangle,
+  Moon,
+  Sun
+} from 'lucide-react';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
-  const [theme, setTheme] = useState('light');
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme.name === 'dark';
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState(null); // 'success', 'error', or null
   const [errorMessage, setErrorMessage] = useState('');
   const [validationError, setValidationError] = useState('');
-
-  // Detect theme preference
-  useEffect(() => {
-    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setTheme('dark');
-    } else {
-      setTheme('light');
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
 
   const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -129,46 +71,44 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div
-      className={`min-h-screen transition-colors duration-300 ${
-        theme === 'dark'
-          ? 'bg-gray-900 text-white'
-          : 'bg-gradient-to-br from-green-50 to-blue-50 text-gray-800'
-      }`}
-    >
+    <ThemeWrapper className="min-h-screen">
       <div className="max-w-md mx-auto px-4 py-12">
         {/* Header with Theme Toggle */}
         <div className="flex justify-end mb-6">
           <button
             onClick={toggleTheme}
-            className={`p-2 rounded-full transition ${
-              theme === 'dark'
-                ? 'bg-gray-700 text-yellow-300 hover:bg-gray-600'
-                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-            }`}
+            className="p-2 rounded-full transition"
+            style={{ 
+              backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+              color: theme.colors.text
+            }}
             aria-label="Toggle theme"
           >
-            {theme === 'dark' ? <IconSun /> : <IconMoon />}
+            {isDark ? <Sun /> : <Moon />}
           </button>
         </div>
         
         {/* Main Content */}
         <div
-          className={`rounded-lg shadow-lg p-8 border ${
-            theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-          }`}
+          className="rounded-lg shadow-lg p-8 border"
+          style={{ 
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
+            color: theme.colors.text
+          }}
         >
           <div className="text-center mb-8">
-            <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <div className="h-8 w-8 text-green-600">
-                <IconLock />
+            <div className="h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4"
+              style={{ backgroundColor: isDark ? 'rgba(74, 222, 128, 0.2)' : 'rgba(74, 222, 128, 0.1)' }}
+            >
+              <div className="h-8 w-8" style={{ color: theme.colors.primary }}>
+                <Lock />
               </div>
             </div>
-            <h1 className="text-2xl font-bold">Forgot Your Password?</h1>
+            <h1 className="text-2xl font-bold" style={{ color: theme.colors.text }}>Forgot Your Password?</h1>
             <p
-              className={`mt-2 ${
-                theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-              }`}
+              className="mt-2"
+              style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}
             >
               Enter your email and we'll send you instructions to reset your password
             </p>
@@ -176,24 +116,26 @@ export default function ForgotPasswordPage() {
           
           {status === 'success' ? (
             <div className="text-center py-4">
-              <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <div className="h-8 w-8 text-green-600">
-                  <IconCheckCircle />
+              <div className="h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                style={{ backgroundColor: isDark ? 'rgba(74, 222, 128, 0.2)' : 'rgba(74, 222, 128, 0.1)' }}
+              >
+                <div className="h-8 w-8" style={{ color: theme.colors.primary }}>
+                  <CheckCircle />
                 </div>
               </div>
-              <h2 className="text-xl font-semibold mb-2">Check Your Email</h2>
-              <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>
+              <h2 className="text-xl font-semibold mb-2" style={{ color: theme.colors.text }}>Check Your Email</h2>
+              <p style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
                 We've sent a password reset link to <strong>{email}</strong>. 
                 Please check your inbox and follow the instructions.
               </p>
               <div className="mt-6">
                 <Link
                   href="/login"
-                  className={`block w-full text-center py-3 rounded-md transition ${
-                    theme === 'dark'
-                      ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
-                  }`}
+                  className="block w-full text-center py-3 rounded-md transition"
+                  style={{ 
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                    color: theme.colors.text
+                  }}
                 >
                   Return to Login
                 </Link>
@@ -204,16 +146,15 @@ export default function ForgotPasswordPage() {
               <div className="mb-6">
                 <label
                   htmlFor="email"
-                  className={`block text-sm font-medium mb-2 ${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                  }`}
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}
                 >
                   Email Address
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <div className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
-                      <IconMail />
+                    <div style={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)' }}>
+                      <Mail className="h-5 w-5" />
                     </div>
                   </div>
                   <input
@@ -221,29 +162,30 @@ export default function ForgotPasswordPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-2 focus:outline-none ${
-                      validationError
-                        ? 'border-red-500 focus:ring-red-300'
-                        : theme === 'dark'
-                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-green-500'
-                        : 'bg-white border-gray-300 text-gray-900 focus:ring-green-500'
-                    }`}
+                    className="w-full pl-10 pr-3 py-2 border rounded-md focus:ring-2 focus:outline-none"
+                    style={{ 
+                      backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : '#fff',
+                      borderColor: validationError 
+                        ? '#EF4444' 
+                        : isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                      color: theme.colors.text,
+                      borderWidth: '1px',
+                    }}
                     placeholder="yourname@example.com"
                   />
                 </div>
                 {validationError && (
-                  <p className="mt-2 text-sm text-red-500">{validationError}</p>
+                  <p className="mt-2 text-sm" style={{ color: isDark ? '#F87171' : '#DC2626' }}>{validationError}</p>
                 )}
               </div>
               
               {status === 'error' && (
-                <div className={`p-3 mb-4 rounded-md ${
-                  theme === 'dark' ? 'bg-red-900/30 text-red-300' : 'bg-red-50 text-red-800'
-                }`}>
+                <div className="p-3 mb-4 rounded-md" style={{ 
+                  backgroundColor: isDark ? 'rgba(220, 38, 38, 0.2)' : '#FEF2F2',
+                  color: isDark ? '#F87171' : '#B91C1C' 
+                }}>
                   <div className="flex items-start gap-2">
-                    <div className="h-5 w-5 mt-0.5 flex-shrink-0">
-                      <IconAlertTriangle />
-                    </div>
+                    <AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                     <p className="text-sm">{errorMessage}</p>
                   </div>
                 </div>
@@ -252,9 +194,10 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-200 font-medium flex items-center justify-center ${
+                className={`w-full text-white py-2 px-4 rounded-md hover:opacity-90 transition duration-200 font-medium flex items-center justify-center ${
                   isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
                 }`}
+                style={{ backgroundColor: theme.colors.primary }}
               >
                 {isSubmitting ? (
                   <>
@@ -269,11 +212,10 @@ export default function ForgotPasswordPage() {
               <div className="mt-6 text-center">
                 <Link
                   href="/login"
-                  className={`inline-flex items-center gap-1 text-sm ${
-                    theme === 'dark' ? 'text-green-400 hover:text-green-300' : 'text-green-600 hover:text-green-700'
-                  }`}
+                  className="inline-flex items-center gap-1 text-sm hover:opacity-80"
+                  style={{ color: theme.colors.primary }}
                 >
-                  <IconArrowLeft className="h-4 w-4" />
+                  <ArrowLeft className="h-4 w-4" />
                   Back to Login
                 </Link>
               </div>
@@ -281,6 +223,6 @@ export default function ForgotPasswordPage() {
           )}
         </div>
       </div>
-    </div>
+    </ThemeWrapper>
   );
 }

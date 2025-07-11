@@ -1,39 +1,175 @@
 {
-  "app_name": "Smart Crop Adviser",
-  "adviser_title": "Crop Adviser Dashboard",
-  "soil_parameters": "Soil Parameters",
-  "location_info": "Location Information",
-  "ph_label": "Soil pH",
-  "nitrogen_label": "Nitrogen (N)",
-  "phosphorus_label": "Phosphorus (P)",
-  "potassium_label": "Potassium (K)",
-  "district_label": "District",
-  "season_label": "Growing Season",
-  "yala": "Yala (May-August)",
-  "maha": "Maha (September-March)",
-  "analyze_button": "Analyze Soil",
-  "reset_button": "Reset",
-  "results_title": "Crop Recommendations",
-  "suitability": "Suitability",
-  "crop_name": "Crop",
-  "notes": "Notes",
-  "fertilizer_recommendations": "Fertilizer Recommendations",
-  "download_report": "Download PDF Report",
-  "history": "History",
-  "profile": "Profile",
-  "settings": "Settings",
-  "logout": "Logout",
-  "login": "Login",
-  "register": "Register",
-  "light_mode": "Light Mode",
-  "dark_mode": "Dark Mode",
-  "language": "Language",
-  "home": "Home",
-  "info": "Information",
-  "excellent": "Excellent",
-  "good": "Good",
-  "fair": "Fair",
-  "poor": "Poor",
-  "loading": "Loading...",
-  "error_message": "An error occurred. Please try again."
+  "brand": "Smart Crop Adviser",
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "adviser": "Adviser",
+    "history": "History",
+    "info": "Information",
+    "profile": "Profile"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Sign Up",
+    "logout": "Logout",
+    "signedInAs": "Signed in as"
+  },
+  "language": {
+    "select": "Language"
+  },
+  "theme": {
+    "title": "Theme",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "home": {
+    "hero": {
+      "title": "Smart Crop Adviser for Sri Lankan Agriculture",
+      "subtitle": "Get personalized crop recommendations based on your soil conditions, location, and season.",
+      "getStarted": "Get Started",
+      "learnMore": "Learn More",
+      "dashboard": "Go to Dashboard"
+    },
+    "features": {
+      "title": "Features",
+      "subtitle": "Why use Smart Crop Adviser?",
+      "items": [
+        {
+          "title": "Personalized Recommendations",
+          "description": "Get crop recommendations tailored to your specific soil conditions, location, and growing season."
+        },
+        {
+          "title": "Data-Driven Insights",
+          "description": "Powered by machine learning and comprehensive agricultural data for accurate, science-based recommendations."
+        },
+        {
+          "title": "Location-Based Analysis",
+          "description": "Recommendations customized for your specific region within Sri Lanka and its unique growing conditions."
+        },
+        {
+          "title": "Weather Integration",
+          "description": "Access real-time weather data to make informed decisions about planting and crop management."
+        }
+      ]
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "subtitle": "Get your personalized crop recommendations in just a few simple steps.",
+      "steps": [
+        {
+          "title": "Enter Your Soil Data",
+          "description": "Input your soil test results or select your soil type for more accurate recommendations."
+        },
+        {
+          "title": "Specify Your Location",
+          "description": "Select your district and agricultural zone to receive region-specific advice."
+        },
+        {
+          "title": "Choose the Growing Season",
+          "description": "Indicate whether you're planning for Yala, Maha, or intermonsoon cultivation."
+        },
+        {
+          "title": "Get Recommendations",
+          "description": "Receive a list of suitable crops with detailed growing instructions and expected yields."
+        }
+      ]
+    },
+    "crops": {
+      "title": "Major Crops of Sri Lanka",
+      "subtitle": "Information about key crops grown across different regions.",
+      "categories": {
+        "rice": {
+          "name": "Rice (Paddy)",
+          "description": "The staple food crop of Sri Lanka, grown in both Maha and Yala seasons. Suitable for various regions with proper irrigation. Traditional and improved varieties are available with different growth durations."
+        },
+        "vegetables": {
+          "name": "Vegetables",
+          "varieties": [
+            {
+              "name": "Tomato",
+              "description": "Varieties like Thilina and Maheshi are widely grown. Prefers well-drained soils with pH 6.0-7.0."
+            },
+            {
+              "name": "Onions",
+              "description": "Big onion varieties (Hybrid 62, Bhima Shakti) and Red onion varieties (Vethalan, LKRON 1) are important cash crops."
+            },
+            {
+              "name": "Potato",
+              "description": "Varieties like Granola and Desiree grow well in up-country regions during Maha season."
+            },
+            {
+              "name": "Carrot",
+              "description": "New Kuroda and Chantenay varieties are popular in cooler regions with loose, deep soils."
+            }
+          ]
+        },
+        "fieldCrops": {
+          "name": "Field Crops",
+          "varieties": [
+            {
+              "name": "Maize",
+              "description": "Varieties like Pacific 984 and Arjun are important for both human consumption and animal feed."
+            },
+            {
+              "name": "Green Gram",
+              "description": "Short duration crop suitable for areas with less rainfall."
+            },
+            {
+              "name": "Cowpea",
+              "description": "Drought-tolerant crop suitable for dry and intermediate zones."
+            },
+            {
+              "name": "Groundnut",
+              "description": "Grown mainly in the dry zone during both Maha and Yala seasons."
+            }
+          ]
+        },
+        "plantation": {
+          "name": "Plantation Crops",
+          "varieties": [
+            {
+              "name": "Tea",
+              "description": "Grown in high, mid, and low elevations with different quality characteristics."
+            },
+            {
+              "name": "Rubber",
+              "description": "Mainly in wet and intermediate zones."
+            },
+            {
+              "name": "Coconut",
+              "description": "Grown in the \"Coconut Triangle\" and other suitable areas."
+            }
+          ]
+        }
+      }
+    },
+    "soil": {
+      "title": "Soil Types in Sri Lanka",
+      "subtitle": "Major soil types found across the country and their characteristics.",
+      "types": [
+        {
+          "name": "Red Yellow Podzolic",
+          "description": "Common in the wet zone, this soil is well-drained but acidic. Good for tea cultivation and some vegetables with proper management."
+        },
+        {
+          "name": "Reddish Brown Earth",
+          "description": "Found in the dry zone, suitable for many field crops. Has good fertility when adequate water is available."
+        },
+        {
+          "name": "Low Humic Gley",
+          "description": "Common in lowland paddy fields, has poor drainage but good water-holding capacity. Ideal for rice cultivation."
+        },
+        {
+          "name": "Alluvial Soils",
+          "description": "Found along river valleys and flood plains, these soils are highly fertile and suitable for intensive cultivation of vegetables and other crops."
+        }
+      ]
+    },
+    "cta": {
+      "title": "Ready to improve your farming?",
+      "subtitle": "Start using Smart Crop Adviser today.",
+      "buttonStart": "Get Started",
+      "buttonLogin": "Sign In"
+    }
+  }
 }

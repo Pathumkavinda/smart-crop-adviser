@@ -3,6 +3,20 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { useTheme } from '@/context/ThemeContext';
+import ThemeWrapper from '@/components/ThemeWrapper';
+import { 
+  Leaf, 
+  MapPin, 
+  BarChart3, 
+  AlertTriangle, 
+  CheckCircle, 
+  Droplets, 
+  Thermometer, 
+  Calendar, 
+  Moon, 
+  Sun 
+} from 'lucide-react';
 
 // Dynamically import the ChartComponent to avoid SSR issues
 const ChartComponent = dynamic(
@@ -10,89 +24,9 @@ const ChartComponent = dynamic(
   { ssr: false, loading: () => <div className="h-64 flex items-center justify-center">Loading chart...</div> }
 );
 
-// Custom SVG Icons
-const IconLeaf = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M11 20A7 7 0 0 1 4 13c0-3.4 2.2-6.2 5.2-7.2A7 7 0 0 0 16 13c0 3.4-2.2 6.2-5.2 7.2"/>
-    <path d="M15.5 9.5a4 4 0 0 0-6.5 4.5"/>
-    <path d="M22 12c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2s10 4.5 10 10z"/>
-  </svg>
-);
-
-const IconMapPin = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-    <circle cx="12" cy="10" r="3"/>
-  </svg>
-);
-
-const IconCalendar = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
-    <line x1="16" x2="16" y1="2" y2="6"/>
-    <line x1="8" x2="8" y1="2" y2="6"/>
-    <line x1="3" x2="21" y1="10" y2="10"/>
-  </svg>
-);
-
-const IconBarChart = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="12" x2="12" y1="20" y2="10"/>
-    <line x1="18" x2="18" y1="20" y2="4"/>
-    <line x1="6" x2="6" y1="20" y2="16"/>
-  </svg>
-);
-
-const IconAlertTriangle = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-    <path d="M12 9v4"/>
-    <path d="M12 17h.01"/>
-  </svg>
-);
-
-const IconCheckCircle = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-    <path d="m9 11 3 3L22 4"/>
-  </svg>
-);
-
-const IconDroplets = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/>
-    <path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/>
-  </svg>
-);
-
-const IconThermometer = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/>
-  </svg>
-);
-
-const IconMoon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
-  </svg>
-);
-
-const IconSun = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="4"/>
-    <path d="M12 2v2"/>
-    <path d="M12 20v2"/>
-    <path d="m4.93 4.93 1.41 1.41"/>
-    <path d="m17.66 17.66 1.41 1.41"/>
-    <path d="M2 12h2"/>
-    <path d="M20 12h2"/>
-    <path d="m6.34 17.66-1.41 1.41"/>
-    <path d="m19.07 4.93-1.41 1.41"/>
-  </svg>
-);
-
 export default function CropAdviserPage() {
-  const [theme, setTheme] = useState('light'); // Default theme
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme.name === 'dark';
   const [soilData, setSoilData] = useState({
     soilType: '',
     pH: '',
@@ -177,19 +111,6 @@ export default function CropAdviserPage() {
     Moneragala: { lat: 6.8833, lon: 81.3500 },
     Ratnapura: { lat: 6.6994, lon: 80.3847 },
     Kegalle: { lat: 7.2500, lon: 80.3667 },
-  };
-
-  // Detect theme preference
-  useEffect(() => {
-    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setTheme('dark');
-    } else {
-      setTheme('light');
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   const getCropRecommendations = (data) => {
@@ -426,24 +347,28 @@ export default function CropAdviserPage() {
     setRecommendations(recs);
   };
 
-  const getSuitabilityColor = (suitability) => {
+  const getSuitabilityStyle = (suitability) => {
     switch (suitability) {
       case 'Excellent':
-        return theme === 'dark'
-          ? 'text-green-400 bg-green-900/30'
-          : 'text-green-600 bg-green-100';
+        return {
+          bg: isDark ? 'rgba(34, 197, 94, 0.2)' : 'rgba(34, 197, 94, 0.1)',
+          text: isDark ? '#86EFAC' : '#16A34A'
+        };
       case 'Good':
-        return theme === 'dark'
-          ? 'text-blue-400 bg-blue-900/30'
-          : 'text-blue-600 bg-blue-100';
+        return {
+          bg: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)',
+          text: isDark ? '#93C5FD' : '#2563EB'
+        };
       case 'Fair':
-        return theme === 'dark'
-          ? 'text-yellow-400 bg-yellow-900/30'
-          : 'text-yellow-600 bg-yellow-100';
+        return {
+          bg: isDark ? 'rgba(234, 179, 8, 0.2)' : 'rgba(234, 179, 8, 0.1)',
+          text: isDark ? '#FDE68A' : '#D97706'
+        };
       default:
-        return theme === 'dark'
-          ? 'text-gray-400 bg-gray-800'
-          : 'text-gray-600 bg-gray-100';
+        return {
+          bg: isDark ? 'rgba(107, 114, 128, 0.2)' : 'rgba(107, 114, 128, 0.1)',
+          text: isDark ? '#D1D5DB' : '#4B5563'
+        };
     }
   };
 
@@ -488,96 +413,73 @@ export default function CropAdviserPage() {
   }, [soilData.district]);
 
   return (
-    <div
-      className={`min-h-screen transition-colors duration-300 ${
-        theme === 'dark'
-          ? 'bg-gray-900 text-white'
-          : 'bg-gradient-to-br from-green-50 to-blue-50 text-gray-800'
-      }`}
-    >
+    <ThemeWrapper>
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Header */}
-        <div
-          className={`rounded-lg shadow-lg p-6 mb-6 ${
-            theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-          }`}
-        >
+        <div className="rounded-lg shadow-lg p-6 mb-6" style={{ 
+          backgroundColor: theme.colors.card,
+          borderColor: theme.colors.border
+        }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 text-green-500">
-                <IconLeaf />
-              </div>
-              <h1 className="text-3xl font-bold">Smart Crop Adviser Dashboard</h1>
+              <Leaf className="h-8 w-8" style={{ color: theme.colors.primary }} />
+              <h1 className="text-3xl font-bold" style={{ color: theme.colors.text }}>Smart Crop Adviser Dashboard</h1>
             </div>
             <button
               onClick={toggleTheme}
-              className={`p-2 rounded-full transition ${
-                theme === 'dark'
-                  ? 'bg-gray-700 text-yellow-300 hover:bg-gray-600'
-                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-              }`}
+              className="p-2 rounded-full transition"
+              style={{ 
+                backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                color: isDark ? '#FACC15' : theme.colors.text
+              }}
+              aria-label={`Switch to ${isDark ? 'light' : 'dark'} theme`}
             >
-              {theme === 'dark' ? <IconSun /> : <IconMoon />}
+              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
           </div>
-          <p
-            className={`mt-2 ${
-              theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-            }`}
-          >
+          <p style={{ 
+            marginTop: '0.5rem',
+            color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)'
+          }}>
             Get personalized crop recommendations based on your soil conditions, location, and season
           </p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Input Form */}
-          <div
-            className={`rounded-lg shadow-lg p-6 border ${
-              theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-            }`}
-          >
-            <h2
-              className={`text-xl font-semibold mb-4 flex items-center gap-2 ${
-                theme === 'dark' ? 'text-gray-100' : 'text-gray-800'
-              }`}
-            >
-              <div className="h-5 w-5 text-blue-500"><IconBarChart /></div>
+          <div className="rounded-lg shadow-lg p-6 border" style={{ 
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border
+          }}>
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" style={{ color: theme.colors.text }}>
+              <BarChart3 className="h-5 w-5 text-blue-500" />
               Soil & Location Information
             </h2>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label
-                    className={`block text-sm font-medium mb-1 ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                    }`}
-                  >
+                  <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
                     Soil Type
                   </label>
                   <select
                     value={soilData.soilType}
-                    onChange={(e) =>
-                      setSoilData({ ...soilData, soilType: e.target.value })
-                    }
-                    className={`w-full p-2 border rounded-md focus:ring-2 focus:outline-none ${
-                      theme === 'dark'
-                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-green-500'
-                        : 'bg-white border-gray-300 text-gray-900 focus:ring-green-500'
-                    }`}
+                    onChange={(e) => setSoilData({ ...soilData, soilType: e.target.value })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
+                    style={{ 
+                      backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : '#fff',
+                      borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                      color: isDark ? '#ffffff' : '#000000'
+                    }}
                   >
-                    <option value="">Select Soil Type</option>
+                    <option value="" style={{ backgroundColor: isDark ? '#1e1e1e' : '#ffffff', color: isDark ? '#ffffff' : '#000000' }}>Select Soil Type</option>
                     {soilTypes.map((type) => (
-                      <option key={type} value={type}>
+                      <option key={type} value={type} style={{ backgroundColor: isDark ? '#1e1e1e' : '#ffffff', color: isDark ? '#ffffff' : '#000000' }}>
                         {type}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label
-                    className={`block text-sm font-medium mb-1 ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                    }`}
-                  >
+                  <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
                     Soil pH Level
                   </label>
                   <input
@@ -587,194 +489,159 @@ export default function CropAdviserPage() {
                     max="10"
                     value={soilData.pH}
                     onChange={(e) => setSoilData({ ...soilData, pH: e.target.value })}
-                    className={`w-full p-2 border rounded-md focus:ring-2 focus:outline-none ${
-                      theme === 'dark'
-                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-green-500'
-                        : 'bg-white border-gray-300 text-gray-900 focus:ring-green-500'
-                    }`}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
+                    style={{ 
+                      backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : '#fff',
+                      borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                      color: isDark ? '#ffffff' : '#000000'
+                    }}
                     placeholder="e.g., 6.5"
                   />
                 </div>
                 <div>
-                  <label
-                    className={`block text-sm font-medium mb-1 ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                    }`}
-                  >
+                  <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
                     Nitrogen (N) ppm
                   </label>
                   <input
                     type="number"
                     value={soilData.nitrogen}
-                    onChange={(e) =>
-                      setSoilData({ ...soilData, nitrogen: e.target.value })
-                    }
-                    className={`w-full p-2 border rounded-md focus:ring-2 focus:outline-none ${
-                      theme === 'dark'
-                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-green-500'
-                        : 'bg-white border-gray-300 text-gray-900 focus:ring-green-500'
-                    }`}
+                    onChange={(e) => setSoilData({ ...soilData, nitrogen: e.target.value })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
+                    style={{ 
+                      backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : '#fff',
+                      borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                      color: isDark ? '#ffffff' : '#000000'
+                    }}
                     placeholder="e.g., 25"
                   />
                 </div>
                 <div>
-                  <label
-                    className={`block text-sm font-medium mb-1 ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                    }`}
-                  >
+                  <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
                     Phosphorus (P) ppm
                   </label>
                   <input
                     type="number"
                     value={soilData.phosphorus}
-                    onChange={(e) =>
-                      setSoilData({ ...soilData, phosphorus: e.target.value })
-                    }
-                    className={`w-full p-2 border rounded-md focus:ring-2 focus:outline-none ${
-                      theme === 'dark'
-                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-green-500'
-                        : 'bg-white border-gray-300 text-gray-900 focus:ring-green-500'
-                    }`}
+                    onChange={(e) => setSoilData({ ...soilData, phosphorus: e.target.value })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
+                    style={{ 
+                      backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : '#fff',
+                      borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                      color: isDark ? '#ffffff' : '#000000'
+                    }}
                     placeholder="e.g., 18"
                   />
                 </div>
                 <div>
-                  <label
-                    className={`block text-sm font-medium mb-1 ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                    }`}
-                  >
+                  <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
                     Potassium (K) ppm
                   </label>
                   <input
                     type="number"
                     value={soilData.potassium}
-                    onChange={(e) =>
-                      setSoilData({ ...soilData, potassium: e.target.value })
-                    }
-                    className={`w-full p-2 border rounded-md focus:ring-2 focus:outline-none ${
-                      theme === 'dark'
-                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-green-500'
-                        : 'bg-white border-gray-300 text-gray-900 focus:ring-green-500'
-                    }`}
+                    onChange={(e) => setSoilData({ ...soilData, potassium: e.target.value })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
+                    style={{ 
+                      backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : '#fff',
+                      borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                      color: isDark ? '#ffffff' : '#000000'
+                    }}
                     placeholder="e.g., 200"
                   />
                 </div>
                 <div>
-                  <label
-                    className={`block text-sm font-medium mb-1 ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                    }`}
-                  >
+                  <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
                     District
                   </label>
                   <select
                     value={soilData.district}
-                    onChange={(e) =>
-                      setSoilData({ ...soilData, district: e.target.value, agroZone: '' })
-                    }
-                    className={`w-full p-2 border rounded-md focus:ring-2 focus:outline-none ${
-                      theme === 'dark'
-                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-green-500'
-                        : 'bg-white border-gray-300 text-gray-900 focus:ring-green-500'
-                    }`}
+                    onChange={(e) => setSoilData({ ...soilData, district: e.target.value, agroZone: '' })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
+                    style={{ 
+                      backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : '#fff',
+                      borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                      color: isDark ? '#ffffff' : '#000000'
+                    }}
                   >
-                    <option value="">Select District</option>
+                    <option value="" style={{ backgroundColor: isDark ? '#1e1e1e' : '#ffffff', color: isDark ? '#ffffff' : '#000000' }}>Select District</option>
                     {Object.keys(districts).map((district) => (
-                      <option key={district} value={district}>
+                      <option key={district} value={district} style={{ backgroundColor: isDark ? '#1e1e1e' : '#ffffff', color: isDark ? '#ffffff' : '#000000' }}>
                         {district}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label
-                    className={`block text-sm font-medium mb-1 ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                    }`}
-                  >
+                  <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
                     Agro-ecological Zone
                   </label>
                   <select
                     value={soilData.agroZone}
-                    onChange={(e) =>
-                      setSoilData({ ...soilData, agroZone: e.target.value })
-                    }
+                    onChange={(e) => setSoilData({ ...soilData, agroZone: e.target.value })}
                     disabled={!soilData.district}
-                    className={`w-full p-2 border rounded-md focus:ring-2 focus:outline-none ${
-                      !soilData.district
-                        ? 'opacity-50 cursor-not-allowed'
-                        : ''
-                    } ${
-                      theme === 'dark'
-                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-green-500'
-                        : 'bg-white border-gray-300 text-gray-900 focus:ring-green-500'
-                    }`}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
+                    style={{ 
+                      backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : '#fff',
+                      borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                      color: isDark ? '#ffffff' : '#000000',
+                      opacity: !soilData.district ? 0.5 : 1,
+                      cursor: !soilData.district ? 'not-allowed' : 'default'
+                    }}
                   >
-                    <option value="">Select Zone</option>
+                    <option value="" style={{ backgroundColor: isDark ? '#1e1e1e' : '#ffffff', color: isDark ? '#ffffff' : '#000000' }}>Select Zone</option>
                     {soilData.district &&
                       districts[soilData.district].map((zone) => (
-                        <option key={zone} value={zone}>
+                        <option key={zone} value={zone} style={{ backgroundColor: isDark ? '#1e1e1e' : '#ffffff', color: isDark ? '#ffffff' : '#000000' }}>
                           {zone}
                         </option>
                       ))}
                   </select>
                 </div>
                 <div>
-                  <label
-                    className={`block text-sm font-medium mb-1 ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                    }`}
-                  >
+                  <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
                     Cultivation Season
                   </label>
                   <select
                     value={soilData.season}
-                    onChange={(e) =>
-                      setSoilData({ ...soilData, season: e.target.value })
-                    }
-                    className={`w-full p-2 border rounded-md focus:ring-2 focus:outline-none ${
-                      theme === 'dark'
-                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-green-500'
-                        : 'bg-white border-gray-300 text-gray-900 focus:ring-green-500'
-                    }`}
+                    onChange={(e) => setSoilData({ ...soilData, season: e.target.value })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
+                    style={{ 
+                      backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : '#fff',
+                      borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                      color: isDark ? '#ffffff' : '#000000'
+                    }}
                   >
-                    <option value="">Select Season</option>
+                    <option value="" style={{ backgroundColor: isDark ? '#1e1e1e' : '#ffffff', color: isDark ? '#ffffff' : '#000000' }}>Select Season</option>
                     {seasons.map((season) => (
-                      <option key={season} value={season}>
+                      <option key={season} value={season} style={{ backgroundColor: isDark ? '#1e1e1e' : '#ffffff', color: isDark ? '#ffffff' : '#000000' }}>
                         {season}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label
-                    className={`block text-sm font-medium mb-1 ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                    }`}
-                  >
+                  <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
                     Land Area (hectares)
                   </label>
                   <input
                     type="number"
                     step="0.1"
                     value={soilData.landArea}
-                    onChange={(e) =>
-                      setSoilData({ ...soilData, landArea: e.target.value })
-                    }
-                    className={`w-full p-2 border rounded-md focus:ring-2 focus:outline-none ${
-                      theme === 'dark'
-                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-green-500'
-                        : 'bg-white border-gray-300 text-gray-900 focus:ring-green-500'
-                    }`}
+                    onChange={(e) => setSoilData({ ...soilData, landArea: e.target.value })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
+                    style={{ 
+                      backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : '#fff',
+                      borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                      color: isDark ? '#ffffff' : '#000000'
+                    }}
                     placeholder="e.g., 2.5"
                   />
                 </div>
               </div>
               <button
                 onClick={handleSubmit}
-                className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-200 font-medium"
+                className="w-full py-2 px-4 rounded-md hover:opacity-90 transition duration-200 font-medium text-white"
+                style={{ backgroundColor: theme.colors.primary }}
               >
                 Get Crop Recommendations
               </button>
@@ -786,67 +653,56 @@ export default function CropAdviserPage() {
             {recommendations && (
               <>
                 {/* Crop Recommendations */}
-                <div
-                  className={`rounded-lg shadow-lg p-6 border ${
-                    theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-                  }`}
-                >
-                  <h2
-                    className={`text-xl font-semibold mb-4 flex items-center gap-2 ${
-                      theme === 'dark' ? 'text-gray-100' : 'text-gray-800'
-                    }`}
-                  >
-                    <div className="h-5 w-5 text-green-500"><IconLeaf /></div>
+                <div className="rounded-lg shadow-lg p-6 border" style={{ 
+                  backgroundColor: theme.colors.card,
+                  borderColor: theme.colors.border
+                }}>
+                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" style={{ color: theme.colors.text }}>
+                    <Leaf className="h-5 w-5" style={{ color: theme.colors.primary }} />
                     Recommended Crops
                   </h2>
                   <div className="space-y-3">
-                    {recommendations.crops.map((crop, index) => (
-                      <div
-                        key={index}
-                        className={`border rounded-lg p-4 ${
-                          theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <h3
-                            className={`font-medium ${
-                              theme === 'dark' ? 'text-white' : 'text-gray-800'
-                            }`}
-                          >
-                            {crop.name}
-                          </h3>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${getSuitabilityColor(
-                              crop.suitability
-                            )}`}
-                          >
-                            {crop.suitability}
-                          </span>
-                        </div>
-                        <p
-                          className={`text-sm ${
-                            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                          }`}
+                    {recommendations.crops.map((crop, index) => {
+                      const colorStyle = getSuitabilityStyle(crop.suitability);
+                      return (
+                        <div
+                          key={index}
+                          className="border rounded-lg p-4"
+                          style={{ 
+                            borderColor: theme.colors.border,
+                            backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.01)'
+                          }}
                         >
-                          {crop.reason}
-                        </p>
-                      </div>
-                    ))}
+                          <div className="flex justify-between items-start mb-2">
+                            <h3 className="font-medium" style={{ color: theme.colors.text }}>
+                              {crop.name}
+                            </h3>
+                            <span
+                              className="px-2 py-1 rounded-full text-xs font-medium"
+                              style={{ 
+                                backgroundColor: colorStyle.bg,
+                                color: colorStyle.text
+                              }}
+                            >
+                              {crop.suitability}
+                            </span>
+                          </div>
+                          <p className="text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>
+                            {crop.reason}
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* Nutrient Chart - UPDATED */}
-                <div
-                  className={`rounded-lg shadow-lg p-6 border ${
-                    theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-                  }`}
-                >
-                  <h2
-                    className={`text-xl font-semibold mb-4 flex items-center gap-2 ${
-                      theme === 'dark' ? 'text-gray-100' : 'text-gray-800'
-                    }`}
-                  >
-                    <div className="h-5 w-5 text-purple-500"><IconBarChart /></div>
+                {/* Nutrient Chart */}
+                <div className="rounded-lg shadow-lg p-6 border" style={{ 
+                  backgroundColor: theme.colors.card,
+                  borderColor: theme.colors.border
+                }}>
+                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" style={{ color: theme.colors.text }}>
+                    <BarChart3 className="h-5 w-5 text-purple-500" />
                     Nutrient Levels Overview
                   </h2>
                   <ChartComponent
@@ -860,8 +716,8 @@ export default function CropAdviserPage() {
                             parseInt(soilData.phosphorus) || 0,
                             parseInt(soilData.potassium) || 0,
                           ],
-                          borderColor: '#6366F1', 
-                          backgroundColor: '#6366F1',
+                          borderColor: isDark ? '#818CF8' : '#6366F1',
+                          backgroundColor: isDark ? '#818CF8' : '#6366F1',
                           tension: 0.4,
                         },
                       ],
@@ -881,23 +737,17 @@ export default function CropAdviserPage() {
                         },
                       },
                     }}
-                    theme={theme}
                   />
                 </div>
 
                 {/* Fertilizer Calculator */}
                 {recommendations.fertilizers.length > 0 && (
-                  <div
-                    className={`rounded-lg shadow-lg p-6 border ${
-                      theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-                    }`}
-                  >
-                    <h2
-                      className={`text-xl font-semibold mb-4 flex items-center gap-2 ${
-                        theme === 'dark' ? 'text-gray-100' : 'text-gray-800'
-                      }`}
-                    >
-                      <div className="h-5 w-5 text-blue-500"><IconDroplets /></div>
+                  <div className="rounded-lg shadow-lg p-6 border" style={{ 
+                    backgroundColor: theme.colors.card,
+                    borderColor: theme.colors.border
+                  }}>
+                    <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" style={{ color: theme.colors.text }}>
+                      <Droplets className="h-5 w-5 text-blue-500" />
                       Fertilizer Quantity Calculator
                     </h2>
                     <div className="space-y-4">
@@ -912,18 +762,14 @@ export default function CropAdviserPage() {
                         return (
                           <div
                             key={index}
-                            className={`flex items-start gap-2 p-3 rounded-lg ${
-                              theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-50'
-                            }`}
+                            className="flex items-start gap-2 p-3 rounded-lg"
+                            style={{ 
+                              backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)',
+                              color: isDark ? '#93C5FD' : '#2563EB'
+                            }}
                           >
-                            <div className="h-4 w-4 mt-0.5 flex-shrink-0 flex-grow-0">
-                              <IconCheckCircle className={`${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
-                            </div>
-                            <span
-                              className={`text-sm ${
-                                theme === 'dark' ? 'text-blue-300' : 'text-blue-800'
-                              }`}
-                            >
+                            <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                            <span className="text-sm">
                               {fertilizer} → For {soilData.landArea || 0} ha:{" "}
                               <strong>{minTotal}-{maxTotal} kg</strong> total needed
                             </span>
@@ -934,28 +780,31 @@ export default function CropAdviserPage() {
                   </div>
                 )}
 
-                 {/* Weather Section */}
+                {/* Weather Section */}
                 {soilData.district && (
-                  <div className={`rounded-lg shadow-lg p-6 border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                    <h2 className={`text-xl font-semibold mb-4 flex items-center gap-2 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>
-                      <div className="h-5 w-5 text-yellow-500"><IconSun /></div> 
+                  <div className="rounded-lg shadow-lg p-6 border" style={{ 
+                    backgroundColor: theme.colors.card,
+                    borderColor: theme.colors.border
+                  }}>
+                    <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" style={{ color: theme.colors.text }}>
+                      <Sun className="h-5 w-5 text-yellow-500" /> 
                       Live Weather in {soilData.district}
                     </h2>
-                    {loadingWeather && <p>Loading weather...</p>}
-                    {weatherError && <p className="text-red-500">{weatherError}</p>}
+                    {loadingWeather && <p style={{ color: theme.colors.text }}>Loading weather...</p>}
+                    {weatherError && <p style={{ color: '#EF4444' }}>{weatherError}</p>}
                     {weather && (
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>Temperature:</span>
-                          <span className="ml-2 font-medium">{weather.temperature}°C</span>
+                          <span style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>Temperature:</span>
+                          <span className="ml-2 font-medium" style={{ color: theme.colors.text }}>{weather.temperature}°C</span>
                         </div>
                         <div>
-                          <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>Wind Speed:</span>
-                          <span className="ml-2 font-medium">{weather.windspeed} m/s</span>
+                          <span style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>Wind Speed:</span>
+                          <span className="ml-2 font-medium" style={{ color: theme.colors.text }}>{weather.windspeed} m/s</span>
                         </div>
                         <div>
-                          <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>Precipitation:</span>
-                          <span className="ml-2 font-medium">{weather.precipitation} mm</span>
+                          <span style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>Precipitation:</span>
+                          <span className="ml-2 font-medium" style={{ color: theme.colors.text }}>{weather.precipitation} mm</span>
                         </div>
                       </div>
                     )}
@@ -964,35 +813,26 @@ export default function CropAdviserPage() {
 
                 {/* Soil Issues */}
                 {recommendations.soilIssues.length > 0 && (
-                  <div
-                    className={`rounded-lg shadow-lg p-6 border ${
-                      theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-                    }`}
-                  >
-                    <h2
-                      className={`text-xl font-semibold mb-4 flex items-center gap-2 ${
-                        theme === 'dark' ? 'text-gray-100' : 'text-gray-800'
-                      }`}
-                    >
-                      <div className="h-5 w-5 text-orange-500"><IconAlertTriangle /></div>
+                  <div className="rounded-lg shadow-lg p-6 border" style={{ 
+                    backgroundColor: theme.colors.card,
+                    borderColor: theme.colors.border
+                  }}>
+                    <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" style={{ color: theme.colors.text }}>
+                      <AlertTriangle className="h-5 w-5 text-orange-500" />
                       Soil Considerations
                     </h2>
                     <div className="space-y-2">
                       {recommendations.soilIssues.map((issue, index) => (
                         <div
                           key={index}
-                          className={`flex items-start gap-2 p-3 rounded-lg ${
-                            theme === 'dark' ? 'bg-orange-900/30' : 'bg-orange-50'
-                          }`}
+                          className="flex items-start gap-2 p-3 rounded-lg"
+                          style={{ 
+                            backgroundColor: isDark ? 'rgba(249, 115, 22, 0.2)' : 'rgba(249, 115, 22, 0.1)',
+                            color: isDark ? '#FDBA74' : '#C2410C'
+                          }}
                         >
-                          <div className="h-4 w-4 mt-0.5 flex-shrink-0 flex-grow-0">
-                            <IconAlertTriangle className={`${theme === 'dark' ? 'text-orange-400' : 'text-orange-600'}`} />
-                          </div>
-                          <span
-                            className={`text-sm ${
-                              theme === 'dark' ? 'text-orange-300' : 'text-orange-800'
-                            }`}
-                          >
+                          <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                          <span className="text-sm">
                             {issue}
                           </span>
                         </div>
@@ -1003,35 +843,26 @@ export default function CropAdviserPage() {
 
                 {/* Management Tips */}
                 {recommendations.managementTips && recommendations.managementTips.length > 0 && (
-                  <div
-                    className={`rounded-lg shadow-lg p-6 border ${
-                      theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-                    }`}
-                  >
-                    <h2
-                      className={`text-xl font-semibold mb-4 flex items-center gap-2 ${
-                        theme === 'dark' ? 'text-gray-100' : 'text-gray-800'
-                      }`}
-                    >
-                      <div className="h-5 w-5 text-green-500"><IconThermometer /></div>
+                  <div className="rounded-lg shadow-lg p-6 border" style={{ 
+                    backgroundColor: theme.colors.card,
+                    borderColor: theme.colors.border
+                  }}>
+                    <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" style={{ color: theme.colors.text }}>
+                      <Thermometer className="h-5 w-5" style={{ color: theme.colors.primary }} />
                       Management Tips
                     </h2>
                     <div className="space-y-2">
                       {recommendations.managementTips.map((tip, index) => (
                         <div
                           key={index}
-                          className={`flex items-start gap-2 p-3 rounded-lg ${
-                            theme === 'dark' ? 'bg-green-900/30' : 'bg-green-50'
-                          }`}
+                          className="flex items-start gap-2 p-3 rounded-lg"
+                          style={{ 
+                            backgroundColor: isDark ? 'rgba(34, 197, 94, 0.2)' : 'rgba(34, 197, 94, 0.1)',
+                            color: isDark ? '#86EFAC' : '#16A34A'
+                          }}
                         >
-                          <div className="h-4 w-4 mt-0.5 flex-shrink-0 flex-grow-0">
-                            <IconCheckCircle className={`${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`} />
-                          </div>
-                          <span
-                            className={`text-sm ${
-                              theme === 'dark' ? 'text-green-300' : 'text-green-800'
-                            }`}
-                          >
+                          <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                          <span className="text-sm">
                             {tip}
                           </span>
                         </div>
@@ -1044,65 +875,44 @@ export default function CropAdviserPage() {
 
             {/* Current Conditions Summary */}
             {soilData.district && (
-              <div
-                className={`rounded-lg shadow-lg p-6 border ${
-                  theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-                }`}
-              >
-                <h2
-                  className={`text-xl font-semibold mb-4 flex items-center gap-2 ${
-                    theme === 'dark' ? 'text-gray-100' : 'text-gray-800'
-                  }`}
-                >
-                  <div className="h-5 w-5 text-purple-500"><IconMapPin /></div>
+              <div className="rounded-lg shadow-lg p-6 border" style={{ 
+                backgroundColor: theme.colors.card,
+                borderColor: theme.colors.border
+              }}>
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" style={{ color: theme.colors.text }}>
+                  <MapPin className="h-5 w-5 text-purple-500" />
                   Current Conditions
                 </h2>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+                    <span style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>
                       District:
                     </span>
-                    <span
-                      className={`ml-2 font-medium ${
-                        theme === 'dark' ? 'text-white' : 'text-gray-800'
-                      }`}
-                    >
+                    <span className="ml-2 font-medium" style={{ color: theme.colors.text }}>
                       {soilData.district}
                     </span>
                   </div>
                   <div>
-                    <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+                    <span style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>
                       Zone:
                     </span>
-                    <span
-                      className={`ml-2 font-medium ${
-                        theme === 'dark' ? 'text-white' : 'text-gray-800'
-                      }`}
-                    >
+                    <span className="ml-2 font-medium" style={{ color: theme.colors.text }}>
                       {soilData.agroZone || '-'}
                     </span>
                   </div>
                   <div>
-                    <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+                    <span style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>
                       Season:
                     </span>
-                    <span
-                      className={`ml-2 font-medium ${
-                        theme === 'dark' ? 'text-white' : 'text-gray-800'
-                      }`}
-                    >
+                    <span className="ml-2 font-medium" style={{ color: theme.colors.text }}>
                       {soilData.season}
                     </span>
                   </div>
                   <div>
-                    <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+                    <span style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>
                       Land Area:
                     </span>
-                    <span
-                      className={`ml-2 font-medium ${
-                        theme === 'dark' ? 'text-white' : 'text-gray-800'
-                      }`}
-                    >
+                    <span className="ml-2 font-medium" style={{ color: theme.colors.text }}>
                       {soilData.landArea || 0} ha
                     </span>
                   </div>
@@ -1112,6 +922,6 @@ export default function CropAdviserPage() {
           </div>
         </div>
       </div>
-    </div>
+    </ThemeWrapper>
   );
 }

@@ -33,7 +33,7 @@ export const themes = {
   }
 };
 
-const ThemeContext = createContext({
+export const ThemeContext = createContext({
   theme: themes.light,
   toggleTheme: () => {},
 });
@@ -57,12 +57,8 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     // Set data-theme attribute on the document element
     document.documentElement.setAttribute('data-theme', theme.name);
-    
-    // You can also set individual CSS variables if needed
-    const root = document.documentElement;
-    Object.entries(theme.colors).forEach(([key, value]) => {
-      root.style.setProperty(`--color-${key}`, value);
-    });
+    document.documentElement.style.backgroundColor = theme.colors.background;
+    document.documentElement.style.color = theme.colors.text;
     
     // Save theme preference
     try {

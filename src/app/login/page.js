@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useTheme } from '@/context/ThemeContext';
+import ThemeWrapper from '@/components/ThemeWrapper';
 
 // Custom SVG Icons
 const IconLeaf = () => (
@@ -43,6 +45,9 @@ const IconEyeOff = () => (
 );
 
 export default function Login() {
+  const { theme } = useTheme();
+  const isDark = theme.name === 'dark';
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -92,156 +97,197 @@ export default function Login() {
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
-            <IconLeaf className="h-8 w-8 text-green-600" />
+    <ThemeWrapper>
+      <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8" style={{ 
+        background: isDark 
+          ? 'linear-gradient(to bottom right, #0f172a, #1e293b)' 
+          : 'linear-gradient(to bottom right, #f0f9f4, #e6f0fd)'
+      }}>
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="flex justify-center">
+            <div className={`h-16 w-16 rounded-full flex items-center justify-center ${
+              isDark ? 'bg-green-900/30' : 'bg-green-100'
+            }`}>
+              <IconLeaf className={`h-8 w-8 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+            </div>
           </div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold" style={{ color: theme.colors.text }}>
+            Sign in to Smart Crop Adviser
+          </h2>
+          <p className="mt-2 text-center text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>
+            Or{' '}
+            <Link href="/register" style={{ color: theme.colors.primary }} className="font-medium hover:underline">
+              create a new account
+            </Link>
+          </p>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Sign in to Smart Crop Adviser
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Or{' '}
-          <Link href="/register" className="font-medium text-green-600 hover:text-green-500">
-            create a new account
-          </Link>
-        </p>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {error && (
-            <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded">
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          )}
-          
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <IconMail className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                  placeholder="Enter your email"
-                />
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="py-8 px-4 shadow sm:rounded-lg sm:px-10" style={{ 
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border
+          }}>
+            {error && (
+              <div className={`mb-4 border-l-4 p-4 rounded ${
+                isDark ? 'bg-red-900/30 border-red-500' : 'bg-red-50 border-red-500'
+              }`}>
+                <p className={`text-sm ${isDark ? 'text-red-300' : 'text-red-700'}`}>{error}</p>
               </div>
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <IconLock className="h-5 w-5 text-gray-400" />
+            )}
+            
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium" style={{ color: theme.colors.text }}>
+                  Email address
+                </label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <IconMail className={`h-5 w-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+                  </div>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="appearance-none block w-full pl-10 pr-3 py-2 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                    style={{ 
+                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'white',
+                      color: theme.colors.text,
+                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : theme.colors.border
+                    }}
+                    placeholder="Enter your email"
+                  />
                 </div>
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                  placeholder="Enter your password"
-                />
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium" style={{ color: theme.colors.text }}>
+                  Password
+                </label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <IconLock className={`h-5 w-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+                  </div>
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    required
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="appearance-none block w-full pl-10 pr-10 py-2 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                    style={{ 
+                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'white',
+                      color: theme.colors.text,
+                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : theme.colors.border
+                    }}
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <IconEyeOff className={`h-5 w-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+                    ) : (
+                      <IconEye className={`h-5 w-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <input
+                    id="remember-me"
+                    name="remember-me"
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-4 w-4 rounded"
+                    style={{ 
+                      borderColor: isDark ? 'rgba(255,255,255,0.2)' : theme.colors.border,
+                      accentColor: theme.colors.primary
+                    }}
+                  />
+                  <label htmlFor="remember-me" className="ml-2 block text-sm" style={{ color: theme.colors.text }}>
+                    Remember me
+                  </label>
+                </div>
+
+                <div className="text-sm">
+                  <Link 
+                    href="/forgot-password" 
+                    style={{ color: theme.colors.primary }}
+                    className="font-medium hover:underline"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
+              </div>
+
+              <div>
                 <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowPassword(!showPassword)}
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white transition-colors ${
+                    loading 
+                      ? 'bg-opacity-70 cursor-not-allowed' 
+                      : 'hover:bg-opacity-90'
+                  }`}
+                  style={{ backgroundColor: theme.colors.primary }}
                 >
-                  {showPassword ? (
-                    <IconEyeOff className="h-5 w-5 text-gray-400" />
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Signing in...
+                    </>
                   ) : (
-                    <IconEye className="h-5 w-5 text-gray-400" />
+                    'Sign in'
                   )}
                 </button>
               </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <Link href="/forgot-password" className="font-medium text-green-600 hover:text-green-500">
-                  Forgot your password?
-                </Link>
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                  loading ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'
-                }`}
-              >
-                {loading ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Signing in...
-                  </>
-                ) : (
-                  'Sign in'
-                )}
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  New to Smart Crop Adviser?
-                </span>
-              </div>
-            </div>
+            </form>
 
             <div className="mt-6">
-              <Link
-                href="/register"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-green-600 bg-green-50 hover:bg-green-100"
-              >
-                Create an account
-              </Link>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t" style={{ borderColor: isDark ? 'rgba(255,255,255,0.1)' : theme.colors.border }}></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2" style={{ 
+                    backgroundColor: theme.colors.card,
+                    color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                  }}>
+                    New to Smart Crop Adviser?
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <Link
+                  href="/register"
+                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium transition-colors"
+                  style={{ 
+                    backgroundColor: isDark ? 'rgba(76, 175, 80, 0.2)' : 'rgba(76, 175, 80, 0.1)',
+                    color: theme.colors.primary
+                  }}
+                >
+                  Create an account
+                </Link>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </ThemeWrapper>
   );
 }

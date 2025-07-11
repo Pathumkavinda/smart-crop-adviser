@@ -1,5 +1,6 @@
-/* src/theme.css */
+/* src/theme.css - Consolidated Theme */
 :root {
+  /* Common theme variables */
   --color-primary: #4CAF50;
   --color-secondary: #8BC34A;
   --color-background: #ffffff;
@@ -8,6 +9,11 @@
   --color-border: #e0e0e0;
   --color-navBg: #ffffff;
   --color-navText: #333333;
+  
+  /* Background gradient variables (from style.css) */
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 240, 249, 244;
+  --background-end-rgb: 255, 255, 255;
 }
 
 [data-theme='dark'] {
@@ -19,9 +25,55 @@
   --color-border: #333333;
   --color-navBg: #121212;
   --color-navText: #ffffff;
+  
+  /* Background gradient variables (from style.css) */
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 17, 24, 39;
+  --background-end-rgb: 31, 41, 55;
 }
 
-/* Additional theme-specific styles */
+/* Global theme application */
+body {
+  color: var(--color-text);
+  background-color: var(--color-background);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Optional gradient background */
+.gradient-bg {
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+/* Style main content area */
+main {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  min-height: 50vh; /* Ensure a minimum height */
+}
+
+/* Common themed components */
+.card {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary);
+  color: white;
+}
+
+/* Dark-specific classes */
 [data-theme='dark'] .bg-themed {
   background-color: #1e1e1e;
 }
@@ -29,5 +81,3 @@
 [data-theme='light'] .bg-themed {
   background-color: #f5f5f5;
 }
-
-/* You can add more themed elements here */

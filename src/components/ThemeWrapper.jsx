@@ -8,11 +8,10 @@ export default function ThemeWrapper({ children, className = "" }) {
   
   return (
     <div 
-      className={`themed-container ${className}`}
+      className={`themed-container transition-colors duration-300 ${className}`}
       style={{ 
         backgroundColor: theme.colors.background,
-        color: theme.colors.text,
-        minHeight: '100%'
+        color: theme.colors.text
       }}
     >
       {children}
