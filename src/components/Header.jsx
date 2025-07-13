@@ -100,6 +100,14 @@ export default function Header() {
     { href: '/info', label: translations?.nav?.info || 'Information', icon: <Info className="h-4 w-4" /> }
   ];
 
+  // Tamil font size utility function
+  const getTamilFontSize = (baseSize, reduction = 0.75) => {
+    if (language === 'ta') {
+      return `${reduction}rem`;
+    }
+    return undefined;
+  };
+
   return (
     <header 
       className={`sticky top-0 z-50 transition-all duration-300 ${
@@ -126,7 +134,11 @@ export default function Header() {
                 />
                 <span 
                   className="ml-2 text-xl font-bold"
-                  style={{ color: theme.colors.text }}
+                  style={{ 
+                    color: theme.colors.text,
+                    // Significant reduction for Tamil brand text
+                    fontSize: language === 'ta' ? '0.7rem' : undefined
+                  }}
                 >
                   {translations?.brand || 'Smart Crop Adviser'}
                 </span>
@@ -137,14 +149,16 @@ export default function Header() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200`}
+                  className="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200"
                   style={{ 
                     backgroundColor: isActive(link.href) 
                       ? isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' 
                       : 'transparent',
                     color: isActive(link.href)
                       ? theme.colors.primary
-                      : theme.colors.text
+                      : theme.colors.text,
+                    // Reduce font size for Tamil navigation links
+                    fontSize: language === 'ta' ? '0.7rem' : undefined
                   }}
                 >
                   <span className="mr-1.5">{link.icon}</span>
@@ -176,11 +190,19 @@ export default function Header() {
                 className="p-2 rounded-md transition-colors duration-200 flex items-center"
                 style={{ 
                   backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                  color: theme.colors.text
+                  color: theme.colors.text,
+                  // Reduce font size for Tamil language button
+                  fontSize: language === 'ta' ? '0.7rem' : undefined
                 }}
               >
                 <Globe className="h-5 w-5" />
-                <span className="ml-1 text-sm font-medium hidden md:inline">
+                <span 
+                  className="ml-1 text-sm font-medium hidden md:inline"
+                  style={{
+                    // Further reduce Tamil language name
+                    fontSize: language === 'ta' ? '0.7rem' : undefined
+                  }}
+                >
                   {languages.find(lang => lang.code === language)?.name || 'English'}
                 </span>
                 <ChevronDown className="ml-1 h-4 w-4 opacity-75" />
@@ -204,9 +226,11 @@ export default function Header() {
                         backgroundColor: language === lang.code 
                           ? isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' 
                           : 'transparent',
-                        color: language === lang.code
-                          ? theme.colors.primary
-                          : theme.colors.text
+                        color: language === lang.code 
+                          ? theme.colors.primary 
+                          : theme.colors.text,
+                        // Reduce font size specifically for Tamil option
+                        fontSize: lang.code === 'ta' ? '0.7rem' : undefined
                       }}
                     >
                       {lang.name}
@@ -225,7 +249,9 @@ export default function Header() {
                     className="flex items-center text-sm rounded-md px-3 py-2 transition-colors duration-200"
                     style={{ 
                       backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                      color: theme.colors.text
+                      color: theme.colors.text,
+                      // Reduce font size for Tamil user menu
+                      fontSize: language === 'ta' ? '0.7rem' : undefined
                     }}
                   >
                     <div 
@@ -257,7 +283,11 @@ export default function Header() {
                     <Link
                       href="/profile"
                       className="block px-4 py-2 text-sm transition-colors duration-200"
-                      style={{ color: theme.colors.text }}
+                      style={{ 
+                        color: theme.colors.text,
+                        // Reduce font size for Tamil dropdown links
+                        fontSize: language === 'ta' ? '0.7rem' : undefined
+                      }}
                       onClick={() => setIsUserMenuOpen(false)}
                     >
                       {translations?.nav?.profile || 'Your Profile'}
@@ -265,7 +295,11 @@ export default function Header() {
                     <Link
                       href="/dashboard"
                       className="block px-4 py-2 text-sm transition-colors duration-200"
-                      style={{ color: theme.colors.text }}
+                      style={{ 
+                        color: theme.colors.text,
+                        // Reduce font size for Tamil dropdown links
+                        fontSize: language === 'ta' ? '0.7rem' : undefined
+                      }}
                       onClick={() => setIsUserMenuOpen(false)}
                     >
                       {translations?.nav?.dashboard || 'Dashboard'}
@@ -276,7 +310,11 @@ export default function Header() {
                         setIsUserMenuOpen(false);
                       }}
                       className="block w-full text-left px-4 py-2 text-sm transition-colors duration-200"
-                      style={{ color: theme.colors.text }}
+                      style={{ 
+                        color: theme.colors.text,
+                        // Reduce font size for Tamil dropdown buttons
+                        fontSize: language === 'ta' ? '0.7rem' : undefined
+                      }}
                     >
                       {translations?.auth?.logout || 'Sign out'}
                     </button>
@@ -290,7 +328,9 @@ export default function Header() {
                   className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200"
                   style={{ 
                     backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                    color: theme.colors.text
+                    color: theme.colors.text,
+                    // Reduce font size for Tamil auth links
+                    fontSize: language === 'ta' ? '0.7rem' : undefined
                   }}
                 >
                   <LogIn className="mr-1.5 h-4 w-4" />
@@ -302,7 +342,9 @@ export default function Header() {
                   className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md text-white transition-colors duration-200"
                   style={{ 
                     backgroundColor: theme.colors.primary,
-                    color: '#ffffff'
+                    color: '#ffffff',
+                    // Reduce font size for Tamil auth links
+                    fontSize: language === 'ta' ? '0.7rem' : undefined
                   }}
                 >
                   <UserPlus className="mr-1.5 h-4 w-4" />
@@ -362,11 +404,25 @@ export default function Header() {
                 />
               </div>
               <div className="ml-3">
-                <div className="text-base font-medium" style={{ color: theme.colors.text }}>
+                <div 
+                  className="text-base font-medium" 
+                  style={{ 
+                    color: theme.colors.text,
+                    // Reduce font size for Tamil user info
+                    fontSize: language === 'ta' ? '0.7rem' : undefined
+                  }}
+                >
                   {user.name || user.username || 'User'}
                 </div>
                 {user.email && (
-                  <div className="text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>
+                  <div 
+                    className="text-sm" 
+                    style={{ 
+                      color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                      // Reduce font size for Tamil email
+                      fontSize: language === 'ta' ? '0.7rem' : undefined
+                    }}
+                  >
                     {user.email}
                   </div>
                 )}
@@ -388,7 +444,9 @@ export default function Header() {
                   : 'transparent',
                 color: isActive(link.href)
                   ? theme.colors.primary
-                  : theme.colors.text
+                  : theme.colors.text,
+                // Reduce font size for Tamil mobile nav
+                fontSize: language === 'ta' ? '0.7rem' : undefined
               }}
             >
               <div className="flex items-center">
@@ -409,7 +467,9 @@ export default function Header() {
                   : 'transparent',
                 color: isActive('/profile')
                   ? theme.colors.primary
-                  : theme.colors.text
+                  : theme.colors.text,
+                // Reduce font size for Tamil profile link
+                fontSize: language === 'ta' ? '0.7rem' : undefined
               }}
             >
               <div className="flex items-center">
@@ -435,7 +495,9 @@ export default function Header() {
                 className="flex items-center w-full px-3 py-2 text-base font-medium rounded-md transition-colors duration-200"
                 style={{ 
                   backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                  color: theme.colors.text
+                  color: theme.colors.text,
+                  // Reduce font size for Tamil logout button
+                  fontSize: language === 'ta' ? '0.7rem' : undefined
                 }}
               >
                 <LogOut className="mr-2 h-5 w-5" />
@@ -449,7 +511,9 @@ export default function Header() {
                 className="flex items-center justify-center w-full px-3 py-2 text-base font-medium rounded-md transition-colors duration-200"
                 style={{ 
                   backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                  color: theme.colors.text
+                  color: theme.colors.text,
+                  // Reduce font size for Tamil login link
+                  fontSize: language === 'ta' ? '0.7rem' : undefined
                 }}
               >
                 <LogIn className="mr-2 h-5 w-5" />
@@ -461,7 +525,9 @@ export default function Header() {
                 className="flex items-center justify-center w-full px-3 py-2 text-base font-medium rounded-md text-white transition-colors duration-200"
                 style={{ 
                   backgroundColor: theme.colors.primary,
-                  color: '#ffffff'
+                  color: '#ffffff',
+                  // Reduce font size for Tamil register link
+                  fontSize: language === 'ta' ? '0.7rem' : undefined
                 }}
               >
                 <UserPlus className="mr-2 h-5 w-5" />
@@ -481,7 +547,11 @@ export default function Header() {
         >
           <p 
             className="text-sm font-medium"
-            style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}
+            style={{ 
+              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+              // Reduce font size for Tamil language selector label
+              fontSize: language === 'ta' ? '0.7rem' : undefined
+            }}
           >
             {translations?.language?.select || 'Language'}
           </p>
@@ -497,7 +567,9 @@ export default function Header() {
                     : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
                   color: language === lang.code 
                     ? '#ffffff' 
-                    : theme.colors.text
+                    : theme.colors.text,
+                  // Reduce font size for Tamil language option
+                  fontSize: lang.code === 'ta' ? '0.7rem' : undefined
                 }}
               >
                 {lang.name}

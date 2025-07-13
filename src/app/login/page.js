@@ -1,9 +1,68 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 import ThemeWrapper from '@/components/ThemeWrapper';
+
+// Translations for the login page
+const translations = {
+  en: {
+    title: "Sign in to Smart Crop Adviser",
+    createAccount: "Or create a new account",
+    emailLabel: "Email address",
+    emailPlaceholder: "Enter your email",
+    passwordLabel: "Password",
+    passwordPlaceholder: "Enter your password",
+    rememberMe: "Remember me",
+    forgotPassword: "Forgot your password?",
+    signIn: "Sign in",
+    signingIn: "Signing in...",
+    newUser: "New to Smart Crop Adviser?",
+    createAccountButton: "Create an account",
+    errors: {
+      invalidCredentials: "Invalid email or password",
+      generalError: "Failed to sign in. Please try again."
+    }
+  },
+  si: {
+    title: "ස්මාර්ට් බෝග උපදේශකට පිවිසෙන්න",
+    createAccount: "හෝ නව ගිණුමක් සාදන්න",
+    emailLabel: "විද්‍යුත් තැපැල් ලිපිනය",
+    emailPlaceholder: "ඔබගේ විද්‍යුත් තැපෑල ඇතුළත් කරන්න",
+    passwordLabel: "මුරපදය",
+    passwordPlaceholder: "ඔබගේ මුරපදය ඇතුළත් කරන්න",
+    rememberMe: "මාව මතක තබා ගන්න",
+    forgotPassword: "මුරපදය අමතක වුණා ද?",
+    signIn: "පිවිසෙන්න",
+    signingIn: "පිවිසෙමින්...",
+    newUser: "ස්මාර්ට් බෝග උපදේශකයට අලුත් ද?",
+    createAccountButton: "ගිණුමක් සාදන්න",
+    errors: {
+      invalidCredentials: "වලංගු නොවන විද්‍යුත් තැපෑල හෝ මුරපදය",
+      generalError: "පිවිසීමට අසමත් විය. කරුණාකර නැවත උත්සාහ කරන්න."
+    }
+  },
+  ta: {
+    title: "ஸ்மார்ட் பயிர் ஆலோசகரில் உள்நுழைக",
+    createAccount: "அல்லது புதிய கணக்கை உருவாக்கவும்",
+    emailLabel: "மின்னஞ்சல் முகவரி",
+    emailPlaceholder: "உங்கள் மின்னஞ்சலை உள்ளிடவும்",
+    passwordLabel: "கடவுச்சொல்",
+    passwordPlaceholder: "உங்கள் கடவுச்சொல்லை உள்ளிடவும்",
+    rememberMe: "என்னை நினைவில் வைக்கவும்",
+    forgotPassword: "கடவுச்சொல்லை மறந்துவிட்டீர்களா?",
+    signIn: "உள்நுழைக",
+    signingIn: "உள்நுழைகிறது...",
+    newUser: "ஸ்மார்ட் பயிர் ஆலோசகருக்கு புதியவரா?",
+    createAccountButton: "கணக்கை உருவாக்கவும்",
+    errors: {
+      invalidCredentials: "தவறான மின்னஞ்சல் அல்லது கடவுச்சொல்",
+      generalError: "உள்நுழைய முடியவில்லை. தயவுசெய்து மீண்டும் முயற்சிக்கவும்."
+    }
+  }
+};
 
 // Custom SVG Icons
 const IconLeaf = () => (
@@ -46,7 +105,11 @@ const IconEyeOff = () => (
 
 export default function Login() {
   const { theme } = useTheme();
+  const { language } = useLanguage();
   const isDark = theme.name === 'dark';
+  
+  const [trans, setTrans] = useState(translations.en);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -57,6 +120,35 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // Update translations when language changes with a transition effect
+  useEffect(() => {
+    if (language) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setTrans(translations[language] || translations.en);
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 300);
+      }, 300);
+    }
+  }, [language]);
+
+  // Inline styles for language transition
+  const contentStyle = {
+    opacity: isTransitioning ? 0 : 1,
+    transition: 'opacity 0.3s ease-in-out',
+  };
+
+  // Utility function to apply language-specific line height adjustments
+  const getTextStyle = (baseStyle = {}) => {
+    const langLineHeight = language === 'si' ? 1.7 : language === 'ta' ? 1.8 : 1.5;
+    return {
+      ...baseStyle,
+      lineHeight: langLineHeight,
+      transition: 'all 0.3s ease'
+    };
+  };
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -84,13 +176,13 @@ export default function Login() {
       
       // For now, just simulate an error
       if (formData.email !== 'user@example.com' || formData.password !== 'password') {
-        throw new Error('Invalid email or password');
+        throw new Error(trans.errors.invalidCredentials);
       }
       
       // If successful, redirect to dashboard
       window.location.href = '/dashboard';
     } catch (err) {
-      setError(err.message || 'Failed to sign in. Please try again.');
+      setError(err.message || trans.errors.generalError);
     } finally {
       setLoading(false);
     }
@@ -111,13 +203,22 @@ export default function Login() {
               <IconLeaf className={`h-8 w-8 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
             </div>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold" style={{ color: theme.colors.text }}>
-            Sign in to Smart Crop Adviser
+          <h2 
+            className="mt-6 text-center text-3xl font-extrabold" 
+            style={{ ...getTextStyle({ color: theme.colors.text }), ...contentStyle }}
+          >
+            {trans.title}
           </h2>
-          <p className="mt-2 text-center text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>
-            Or{' '}
+          <p 
+            className="mt-2 text-center text-sm" 
+            style={{ 
+              ...getTextStyle({ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }),
+              ...contentStyle 
+            }}
+          >
+            {trans.createAccount.split(' ')[0]}{' '}
             <Link href="/register" style={{ color: theme.colors.primary }} className="font-medium hover:underline">
-              create a new account
+              {trans.createAccount.split(' ').slice(1).join(' ')}
             </Link>
           </p>
         </div>
@@ -130,15 +231,19 @@ export default function Login() {
             {error && (
               <div className={`mb-4 border-l-4 p-4 rounded ${
                 isDark ? 'bg-red-900/30 border-red-500' : 'bg-red-50 border-red-500'
-              }`}>
-                <p className={`text-sm ${isDark ? 'text-red-300' : 'text-red-700'}`}>{error}</p>
+              }`} style={contentStyle}>
+                <p className={`text-sm ${isDark ? 'text-red-300' : 'text-red-700'}`} style={getTextStyle()}>{error}</p>
               </div>
             )}
             
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium" style={{ color: theme.colors.text }}>
-                  Email address
+                <label 
+                  htmlFor="email" 
+                  className="block text-sm font-medium" 
+                  style={{ ...getTextStyle({ color: theme.colors.text }), ...contentStyle }}
+                >
+                  {trans.emailLabel}
                 </label>
                 <div className="mt-1 relative rounded-md shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -158,14 +263,18 @@ export default function Login() {
                       color: theme.colors.text,
                       borderColor: isDark ? 'rgba(255,255,255,0.1)' : theme.colors.border
                     }}
-                    placeholder="Enter your email"
+                    placeholder={trans.emailPlaceholder}
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium" style={{ color: theme.colors.text }}>
-                  Password
+                <label 
+                  htmlFor="password" 
+                  className="block text-sm font-medium" 
+                  style={{ ...getTextStyle({ color: theme.colors.text }), ...contentStyle }}
+                >
+                  {trans.passwordLabel}
                 </label>
                 <div className="mt-1 relative rounded-md shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -185,7 +294,7 @@ export default function Login() {
                       color: theme.colors.text,
                       borderColor: isDark ? 'rgba(255,255,255,0.1)' : theme.colors.border
                     }}
-                    placeholder="Enter your password"
+                    placeholder={trans.passwordPlaceholder}
                   />
                   <button
                     type="button"
@@ -215,18 +324,22 @@ export default function Login() {
                       accentColor: theme.colors.primary
                     }}
                   />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm" style={{ color: theme.colors.text }}>
-                    Remember me
+                  <label 
+                    htmlFor="remember-me" 
+                    className="ml-2 block text-sm" 
+                    style={{ ...getTextStyle({ color: theme.colors.text }), ...contentStyle }}
+                  >
+                    {trans.rememberMe}
                   </label>
                 </div>
 
                 <div className="text-sm">
                   <Link 
                     href="/forgot-password" 
-                    style={{ color: theme.colors.primary }}
+                    style={{ ...getTextStyle({ color: theme.colors.primary }), ...contentStyle }}
                     className="font-medium hover:underline"
                   >
-                    Forgot your password?
+                    {trans.forgotPassword}
                   </Link>
                 </div>
               </div>
@@ -243,15 +356,15 @@ export default function Login() {
                   style={{ backgroundColor: theme.colors.primary }}
                 >
                   {loading ? (
-                    <>
+                    <div style={contentStyle}>
                       <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Signing in...
-                    </>
+                      <span style={getTextStyle()}>{trans.signingIn}</span>
+                    </div>
                   ) : (
-                    'Sign in'
+                    <span style={{...contentStyle, ...getTextStyle()}}>{trans.signIn}</span>
                   )}
                 </button>
               </div>
@@ -263,11 +376,16 @@ export default function Login() {
                   <div className="w-full border-t" style={{ borderColor: isDark ? 'rgba(255,255,255,0.1)' : theme.colors.border }}></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2" style={{ 
-                    backgroundColor: theme.colors.card,
-                    color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
-                  }}>
-                    New to Smart Crop Adviser?
+                  <span 
+                    className="px-2" 
+                    style={{ 
+                      backgroundColor: theme.colors.card,
+                      color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                      ...contentStyle,
+                      ...getTextStyle()
+                    }}
+                  >
+                    {trans.newUser}
                   </span>
                 </div>
               </div>
@@ -278,10 +396,11 @@ export default function Login() {
                   className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium transition-colors"
                   style={{ 
                     backgroundColor: isDark ? 'rgba(76, 175, 80, 0.2)' : 'rgba(76, 175, 80, 0.1)',
-                    color: theme.colors.primary
+                    color: theme.colors.primary,
+                    ...contentStyle
                   }}
                 >
-                  Create an account
+                  <span style={getTextStyle()}>{trans.createAccountButton}</span>
                 </Link>
               </div>
             </div>

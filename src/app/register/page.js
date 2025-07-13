@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 import ThemeWrapper from '@/components/ThemeWrapper';
 import { 
   Leaf, 
@@ -18,10 +19,270 @@ import {
   Info
 } from 'lucide-react';
 
+// Translations for the registration page
+const translations = {
+  en: {
+    title: "Create your account",
+    subtitle: "Or sign in to your existing account",
+    steps: {
+      account: "Account",
+      profile: "Profile"
+    },
+    form: {
+      username: {
+        label: "Username",
+        placeholder: "Choose a username",
+        errors: {
+          required: "Username is required",
+          short: "Username must be at least 3 characters"
+        }
+      },
+      email: {
+        label: "Email address",
+        placeholder: "you@example.com",
+        errors: {
+          required: "Email is required",
+          invalid: "Please enter a valid email address"
+        }
+      },
+      password: {
+        label: "Password",
+        placeholder: "Create a secure password",
+        hint: "Password should be at least 8 characters with upper & lowercase letters, numbers, and symbols",
+        errors: {
+          required: "Password is required",
+          short: "Password must be at least 8 characters",
+          weak: "Please use a stronger password"
+        },
+        strength: {
+          veryWeak: "Very weak",
+          weak: "Weak",
+          fair: "Fair",
+          good: "Good",
+          strong: "Strong"
+        }
+      },
+      confirmPassword: {
+        label: "Confirm Password",
+        placeholder: "Confirm your password",
+        errors: {
+          mismatch: "Passwords do not match"
+        }
+      },
+      fullName: {
+        label: "Full Name",
+        placeholder: "Your full name (optional)"
+      },
+      location: {
+        label: "Location",
+        placeholder: "District, Province (optional)"
+      },
+      farmSize: {
+        label: "Farm Size (hectares)",
+        placeholder: "e.g., 2.5 (optional)"
+      },
+      terms: {
+        label: "I agree to the",
+        termsLink: "Terms and Conditions",
+        privacyLink: "Privacy Policy",
+        errors: {
+          required: "You must accept the Terms and Conditions"
+        }
+      },
+      buttons: {
+        continue: "Continue",
+        back: "Back",
+        create: "Create Account",
+        creating: "Creating account..."
+      }
+    },
+    footer: {
+      alreadyHaveAccount: "Already have an account?",
+      signIn: "Sign in",
+      disclaimer: "By creating an account, you agree to our Terms of Service and Privacy Policy."
+    },
+    errors: {
+      general: "Registration failed. Please try again."
+    }
+  },
+  si: {
+    title: "ඔබගේ ගිණුම සාදන්න",
+    subtitle: "හෝ ඔබගේ පවතින ගිණුමට පිවිසෙන්න",
+    steps: {
+      account: "ගිණුම",
+      profile: "පැතිකඩ"
+    },
+    form: {
+      username: {
+        label: "පරිශීලක නාමය",
+        placeholder: "පරිශීලක නාමයක් තෝරන්න",
+        errors: {
+          required: "පරිශීලක නාමය අවශ්‍යයි",
+          short: "පරිශීලක නාමය අවම වශයෙන් අක්ෂර 3ක් විය යුතුය"
+        }
+      },
+      email: {
+        label: "විද්‍යුත් තැපැල් ලිපිනය",
+        placeholder: "ඔබ@උදාහරණය.com",
+        errors: {
+          required: "විද්‍යුත් තැපෑල අවශ්‍යයි",
+          invalid: "කරුණාකර වලංගු විද්‍යුත් තැපැල් ලිපිනයක් ඇතුළත් කරන්න"
+        }
+      },
+      password: {
+        label: "මුරපදය",
+        placeholder: "ආරක්ෂිත මුරපදයක් සාදන්න",
+        hint: "මුරපදය අවම වශයෙන් අක්ෂර 8ක් විය යුතු අතර ඉහළ සහ පහළ අකුරු, අංක සහ සංකේත අඩංගු විය යුතුය",
+        errors: {
+          required: "මුරපදය අවශ්‍යයි",
+          short: "මුරපදය අවම වශයෙන් අක්ෂර 8ක් විය යුතුය",
+          weak: "කරුණාකර වඩාත් ශක්තිමත් මුරපදයක් භාවිතා කරන්න"
+        },
+        strength: {
+          veryWeak: "ඉතා දුර්වලයි",
+          weak: "දුර්වලයි",
+          fair: "සාධාරණයි",
+          good: "හොඳයි",
+          strong: "ශක්තිමත්"
+        }
+      },
+      confirmPassword: {
+        label: "මුරපදය තහවුරු කරන්න",
+        placeholder: "ඔබගේ මුරපදය තහවුරු කරන්න",
+        errors: {
+          mismatch: "මුරපද නොගැලපේ"
+        }
+      },
+      fullName: {
+        label: "සම්පූර්ණ නම",
+        placeholder: "ඔබගේ සම්පූර්ණ නම (විකල්ප)"
+      },
+      location: {
+        label: "ස්ථානය",
+        placeholder: "දිස්ත්‍රික්කය, පළාත (විකල්ප)"
+      },
+      farmSize: {
+        label: "ගොවිපොළ ප්‍රමාණය (හෙක්ටයාර)",
+        placeholder: "උදා., 2.5 (විකල්ප)"
+      },
+      terms: {
+        label: "මම එකඟ වෙමි",
+        termsLink: "නියමයන් සහ කොන්දේසි",
+        privacyLink: "පෞද්ගලිකත්ව ප්‍රතිපත්තිය",
+        errors: {
+          required: "ඔබ නියමයන් සහ කොන්දේසි පිළිගත යුතුයි"
+        }
+      },
+      buttons: {
+        continue: "ඉදිරියට",
+        back: "ආපසු",
+        create: "ගිණුම සාදන්න",
+        creating: "ගිණුම සාදමින්..."
+      }
+    },
+    footer: {
+      alreadyHaveAccount: "දැනටමත් ගිණුමක් තිබේද?",
+      signIn: "පිවිසෙන්න",
+      disclaimer: "ගිණුමක් සෑදීමෙන්, ඔබ අපගේ සේවා කොන්දේසි සහ පෞද්ගලිකත්ව ප්‍රතිපත්තියට එකඟ වේ."
+    },
+    errors: {
+      general: "ලියාපදිංචිය අසාර්ථක විය. කරුණාකර නැවත උත්සාහ කරන්න."
+    }
+  },
+  ta: {
+    title: "உங்கள் கணக்கை உருவாக்கவும்",
+    subtitle: "அல்லது உங்கள் ஏற்கனவே உள்ள கணக்கில் உள்நுழையவும்",
+    steps: {
+      account: "கணக்கு",
+      profile: "சுயவிவரம்"
+    },
+    form: {
+      username: {
+        label: "பயனர்பெயர்",
+        placeholder: "ஒரு பயனர்பெயரைத் தேர்ந்தெடுக்கவும்",
+        errors: {
+          required: "பயனர்பெயர் தேவை",
+          short: "பயனர்பெயர் குறைந்தது 3 எழுத்துக்கள் இருக்க வேண்டும்"
+        }
+      },
+      email: {
+        label: "மின்னஞ்சல் முகவரி",
+        placeholder: "நீங்கள்@உதாரணம்.com",
+        errors: {
+          required: "மின்னஞ்சல் தேவை",
+          invalid: "சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்"
+        }
+      },
+      password: {
+        label: "கடவுச்சொல்",
+        placeholder: "ஒரு பாதுகாப்பான கடவுச்சொல்லை உருவாக்கவும்",
+        hint: "கடவுச்சொல் குறைந்தது 8 எழுத்துக்கள் பெரிய & சிறிய எழுத்துக்கள், எண்கள் மற்றும் சின்னங்களுடன் இருக்க வேண்டும்",
+        errors: {
+          required: "கடவுச்சொல் தேவை",
+          short: "கடவுச்சொல் குறைந்தது 8 எழுத்துக்கள் இருக்க வேண்டும்",
+          weak: "தயவுசெய்து வலுவான கடவுச்சொல்லைப் பயன்படுத்தவும்"
+        },
+        strength: {
+          veryWeak: "மிகவும் பலவீனமானது",
+          weak: "பலவீனமானது",
+          fair: "நியாயமானது",
+          good: "நல்லது",
+          strong: "வலுவானது"
+        }
+      },
+      confirmPassword: {
+        label: "கடவுச்சொல்லை உறுதிப்படுத்தவும்",
+        placeholder: "உங்கள் கடவுச்சொல்லை உறுதிப்படுத்தவும்",
+        errors: {
+          mismatch: "கடவுச்சொற்கள் பொருந்தவில்லை"
+        }
+      },
+      fullName: {
+        label: "முழு பெயர்",
+        placeholder: "உங்கள் முழு பெயர் (விருப்பமானது)"
+      },
+      location: {
+        label: "இருப்பிடம்",
+        placeholder: "மாவட்டம், மாகாணம் (விருப்பமானது)"
+      },
+      farmSize: {
+        label: "பண்ணை அளவு (ஹெக்டேர்)",
+        placeholder: "எ.கா., 2.5 (விருப்பமானது)"
+      },
+      terms: {
+        label: "நான் ஒப்புக்கொள்கிறேன்",
+        termsLink: "விதிமுறைகள் மற்றும் நிபந்தனைகள்",
+        privacyLink: "தனியுரிமைக் கொள்கை",
+        errors: {
+          required: "விதிமுறைகள் மற்றும் நிபந்தனைகளை ஏற்றுக்கொள்ள வேண்டும்"
+        }
+      },
+      buttons: {
+        continue: "தொடரவும்",
+        back: "பின்னால்",
+        create: "கணக்கை உருவாக்கவும்",
+        creating: "கணக்கை உருவாக்குகிறது..."
+      }
+    },
+    footer: {
+      alreadyHaveAccount: "ஏற்கனவே ஒரு கணக்கு உள்ளதா?",
+      signIn: "உள்நுழைக",
+      disclaimer: "கணக்கை உருவாக்குவதன் மூலம், எங்கள் சேவை விதிமுறைகள் மற்றும் தனியுரிமைக் கொள்கைக்கு நீங்கள் ஒப்புக்கொள்கிறீர்கள்."
+    },
+    errors: {
+      general: "பதிவு தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்."
+    }
+  }
+};
+
 export default function Register() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { language } = useLanguage();
   const isDark = theme.name === 'dark';
+  
+  const [trans, setTrans] = useState(translations.en);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   
   // Auth context would normally be used here
   const { register, error: authError, setError: setAuthError, user } = { 
@@ -54,6 +315,35 @@ export default function Register() {
     message: ''
   });
   const [error, setError] = useState('');
+
+  // Update translations when language changes with a transition effect
+  useEffect(() => {
+    if (language) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setTrans(translations[language] || translations.en);
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 300);
+      }, 300);
+    }
+  }, [language]);
+
+  // Inline styles for language transition
+  const contentStyle = {
+    opacity: isTransitioning ? 0 : 1,
+    transition: 'opacity 0.3s ease-in-out',
+  };
+
+  // Utility function to apply language-specific line height adjustments
+  const getTextStyle = (baseStyle = {}) => {
+    const langLineHeight = language === 'si' ? 1.7 : language === 'ta' ? 1.8 : 1.5;
+    return {
+      ...baseStyle,
+      lineHeight: langLineHeight,
+      transition: 'all 0.3s ease'
+    };
+  };
 
   // If user is already logged in, redirect to dashboard
   useEffect(() => {
@@ -96,11 +386,11 @@ export default function Register() {
     
     // Define message based on score
     let message = '';
-    if (score === 0) message = 'Very weak';
-    else if (score === 1) message = 'Weak';
-    else if (score === 2) message = 'Fair';
-    else if (score === 3) message = 'Good';
-    else message = 'Strong';
+    if (score === 0) message = trans.form.password.strength.veryWeak;
+    else if (score === 1) message = trans.form.password.strength.weak;
+    else if (score === 2) message = trans.form.password.strength.fair;
+    else if (score === 3) message = trans.form.password.strength.good;
+    else message = trans.form.password.strength.strong;
     
     setPasswordStrength({ score, message });
   };
@@ -109,27 +399,27 @@ export default function Register() {
     const errors = {};
     
     if (!formData.username.trim()) {
-      errors.username = 'Username is required';
+      errors.username = trans.form.username.errors.required;
     } else if (formData.username.length < 3) {
-      errors.username = 'Username must be at least 3 characters';
+      errors.username = trans.form.username.errors.short;
     }
     
     if (!formData.email.trim()) {
-      errors.email = 'Email is required';
+      errors.email = trans.form.email.errors.required;
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Please enter a valid email address';
+      errors.email = trans.form.email.errors.invalid;
     }
     
     if (!formData.password) {
-      errors.password = 'Password is required';
+      errors.password = trans.form.password.errors.required;
     } else if (formData.password.length < 8) {
-      errors.password = 'Password must be at least 8 characters';
+      errors.password = trans.form.password.errors.short;
     } else if (passwordStrength.score < 2) {
-      errors.password = 'Please use a stronger password';
+      errors.password = trans.form.password.errors.weak;
     }
     
     if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
+      errors.confirmPassword = trans.form.confirmPassword.errors.mismatch;
     }
     
     setValidationErrors(errors);
@@ -140,7 +430,7 @@ export default function Register() {
     const errors = {};
     
     if (!formData.termsAccepted) {
-      errors.termsAccepted = 'You must accept the Terms and Conditions';
+      errors.termsAccepted = trans.form.terms.errors.required;
     }
     
     // Optional fields don't need validation
@@ -186,7 +476,7 @@ export default function Register() {
       router.push('/login?registered=true');
     } catch (error) {
       console.error('Registration error:', error);
-      setError(error.message || 'Registration failed. Please try again.');
+      setError(error.message || trans.errors.general);
       // Stay on current step
     } finally {
       setLoading(false);
@@ -208,13 +498,26 @@ export default function Register() {
               <Leaf size={32} className={`${isDark ? 'text-green-400' : 'text-green-600'}`} />
             </div>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold" style={{ color: theme.colors.text }}>
-            Create your account
+          <h2 
+            className="mt-6 text-center text-3xl font-extrabold" 
+            style={{ ...contentStyle, ...getTextStyle({ color: theme.colors.text }) }}
+          >
+            {trans.title}
           </h2>
-          <p className="mt-2 text-center text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>
-            Or{' '}
-            <Link href="/login" style={{ color: theme.colors.primary }} className="font-medium hover:underline">
-              sign in to your existing account
+          <p 
+            className="mt-2 text-center text-sm" 
+            style={{ 
+              ...contentStyle, 
+              ...getTextStyle({ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }) 
+            }}
+          >
+            {trans.subtitle.split(' ')[0]}{' '}
+            <Link 
+              href="/login" 
+              style={{ color: theme.colors.primary }} 
+              className="font-medium hover:underline"
+            >
+              {trans.subtitle.split(' ').slice(1).join(' ')}
             </Link>
           </p>
         </div>
@@ -235,7 +538,12 @@ export default function Register() {
                   }`}>
                     <span className="text-sm font-medium">1</span>
                   </div>
-                  <span className="mt-1 text-xs" style={{ color: theme.colors.text }}>Account</span>
+                  <span 
+                    className="mt-1 text-xs" 
+                    style={{ ...contentStyle, ...getTextStyle({ color: theme.colors.text }) }}
+                  >
+                    {trans.steps.account}
+                  </span>
                 </div>
                 <div className={`h-1 flex-1 mx-2 ${
                   formStep >= 2 
@@ -250,7 +558,12 @@ export default function Register() {
                   }`}>
                     <span className="text-sm font-medium">2</span>
                   </div>
-                  <span className="mt-1 text-xs" style={{ color: theme.colors.text }}>Profile</span>
+                  <span 
+                    className="mt-1 text-xs" 
+                    style={{ ...contentStyle, ...getTextStyle({ color: theme.colors.text }) }}
+                  >
+                    {trans.steps.profile}
+                  </span>
                 </div>
               </div>
             </div>
@@ -264,7 +577,12 @@ export default function Register() {
                     <AlertTriangle className={`h-5 w-5 ${isDark ? 'text-red-400' : 'text-red-400'}`} />
                   </div>
                   <div className="ml-3">
-                    <p className={`text-sm ${isDark ? 'text-red-300' : 'text-red-700'}`}>{error}</p>
+                    <p 
+                      className={`text-sm ${isDark ? 'text-red-300' : 'text-red-700'}`}
+                      style={{ ...contentStyle, ...getTextStyle() }}
+                    >
+                      {error}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -275,8 +593,12 @@ export default function Register() {
               {formStep === 1 && (
                 <>
                   <div>
-                    <label htmlFor="username" className="block text-sm font-medium" style={{ color: theme.colors.text }}>
-                      Username <span className="text-red-500">*</span>
+                    <label 
+                      htmlFor="username" 
+                      className="block text-sm font-medium" 
+                      style={{ ...contentStyle, ...getTextStyle({ color: theme.colors.text }) }}
+                    >
+                      {trans.form.username.label} <span className="text-red-500">*</span>
                     </label>
                     <div className="mt-1 relative rounded-md shadow-sm">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -300,17 +622,26 @@ export default function Register() {
                             ? 'rgb(252, 165, 165)' 
                             : isDark ? 'rgba(255,255,255,0.1)' : theme.colors.border
                         }}
-                        placeholder="Choose a username"
+                        placeholder={trans.form.username.placeholder}
                       />
                     </div>
                     {validationErrors.username && (
-                      <p className="mt-2 text-sm text-red-600">{validationErrors.username}</p>
+                      <p 
+                        className="mt-2 text-sm text-red-600" 
+                        style={{ ...contentStyle, ...getTextStyle() }}
+                      >
+                        {validationErrors.username}
+                      </p>
                     )}
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium" style={{ color: theme.colors.text }}>
-                      Email address <span className="text-red-500">*</span>
+                    <label 
+                      htmlFor="email" 
+                      className="block text-sm font-medium" 
+                      style={{ ...contentStyle, ...getTextStyle({ color: theme.colors.text }) }}
+                    >
+                      {trans.form.email.label} <span className="text-red-500">*</span>
                     </label>
                     <div className="mt-1 relative rounded-md shadow-sm">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -334,17 +665,26 @@ export default function Register() {
                             ? 'rgb(252, 165, 165)' 
                             : isDark ? 'rgba(255,255,255,0.1)' : theme.colors.border
                         }}
-                        placeholder="you@example.com"
+                        placeholder={trans.form.email.placeholder}
                       />
                     </div>
                     {validationErrors.email && (
-                      <p className="mt-2 text-sm text-red-600">{validationErrors.email}</p>
+                      <p 
+                        className="mt-2 text-sm text-red-600" 
+                        style={{ ...contentStyle, ...getTextStyle() }}
+                      >
+                        {validationErrors.email}
+                      </p>
                     )}
                   </div>
 
                   <div>
-                    <label htmlFor="password" className="block text-sm font-medium" style={{ color: theme.colors.text }}>
-                      Password <span className="text-red-500">*</span>
+                    <label 
+                      htmlFor="password" 
+                      className="block text-sm font-medium" 
+                      style={{ ...contentStyle, ...getTextStyle({ color: theme.colors.text }) }}
+                    >
+                      {trans.form.password.label} <span className="text-red-500">*</span>
                     </label>
                     <div className="mt-1 relative rounded-md shadow-sm">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -368,7 +708,7 @@ export default function Register() {
                             ? 'rgb(252, 165, 165)' 
                             : isDark ? 'rgba(255,255,255,0.1)' : theme.colors.border
                         }}
-                        placeholder="Create a secure password"
+                        placeholder={trans.form.password.placeholder}
                       />
                       <button
                         type="button"
@@ -383,7 +723,7 @@ export default function Register() {
                       </button>
                     </div>
                     {formData.password && (
-                      <div className="mt-2">
+                      <div className="mt-2" style={contentStyle}>
                         <div className="flex items-center">
                           <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                             <div 
@@ -397,27 +737,44 @@ export default function Register() {
                               style={{ width: `${(passwordStrength.score + 1) * 20}%` }}
                             ></div>
                           </div>
-                          <span className={`ml-2 text-xs ${
-                            passwordStrength.score <= 1 ? 'text-red-600' :
-                            passwordStrength.score === 2 ? 'text-yellow-600' :
-                            'text-green-600'
-                          }`}>
+                          <span 
+                            className={`ml-2 text-xs ${
+                              passwordStrength.score <= 1 ? 'text-red-600' :
+                              passwordStrength.score === 2 ? 'text-yellow-600' :
+                              'text-green-600'
+                            }`}
+                            style={getTextStyle()}
+                          >
                             {passwordStrength.message}
                           </span>
                         </div>
-                        <p className="mt-1 text-xs" style={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}>
-                          Password should be at least 8 characters with upper & lowercase letters, numbers, and symbols
+                        <p 
+                          className="mt-1 text-xs" 
+                          style={{ 
+                            ...getTextStyle({ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }) 
+                          }}
+                        >
+                          {trans.form.password.hint}
                         </p>
                       </div>
                     )}
                     {validationErrors.password && (
-                      <p className="mt-2 text-sm text-red-600">{validationErrors.password}</p>
+                      <p 
+                        className="mt-2 text-sm text-red-600" 
+                        style={{ ...contentStyle, ...getTextStyle() }}
+                      >
+                        {validationErrors.password}
+                      </p>
                     )}
                   </div>
 
                   <div>
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium" style={{ color: theme.colors.text }}>
-                      Confirm Password <span className="text-red-500">*</span>
+                    <label 
+                      htmlFor="confirmPassword" 
+                      className="block text-sm font-medium" 
+                      style={{ ...contentStyle, ...getTextStyle({ color: theme.colors.text }) }}
+                    >
+                      {trans.form.confirmPassword.label} <span className="text-red-500">*</span>
                     </label>
                     <div className="mt-1 relative rounded-md shadow-sm">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -440,7 +797,7 @@ export default function Register() {
                             ? 'rgb(252, 165, 165)' 
                             : isDark ? 'rgba(255,255,255,0.1)' : theme.colors.border
                         }}
-                        placeholder="Confirm your password"
+                        placeholder={trans.form.confirmPassword.placeholder}
                       />
                       <button
                         type="button"
@@ -455,7 +812,12 @@ export default function Register() {
                       </button>
                     </div>
                     {validationErrors.confirmPassword && (
-                      <p className="mt-2 text-sm text-red-600">{validationErrors.confirmPassword}</p>
+                      <p 
+                        className="mt-2 text-sm text-red-600" 
+                        style={{ ...contentStyle, ...getTextStyle() }}
+                      >
+                        {validationErrors.confirmPassword}
+                      </p>
                     )}
                   </div>
 
@@ -466,7 +828,9 @@ export default function Register() {
                       className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white transition-colors hover:bg-opacity-90"
                       style={{ backgroundColor: theme.colors.primary }}
                     >
-                      Continue
+                      <span style={{ ...contentStyle, ...getTextStyle() }}>
+                        {trans.form.buttons.continue}
+                      </span>
                     </button>
                   </div>
                 </>
@@ -476,8 +840,12 @@ export default function Register() {
               {formStep === 2 && (
                 <>
                   <div>
-                    <label htmlFor="fullName" className="block text-sm font-medium" style={{ color: theme.colors.text }}>
-                      Full Name
+                    <label 
+                      htmlFor="fullName" 
+                      className="block text-sm font-medium" 
+                      style={{ ...contentStyle, ...getTextStyle({ color: theme.colors.text }) }}
+                    >
+                      {trans.form.fullName.label}
                     </label>
                     <div className="mt-1 relative rounded-md shadow-sm">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -496,14 +864,18 @@ export default function Register() {
                           color: theme.colors.text,
                           borderColor: isDark ? 'rgba(255,255,255,0.1)' : theme.colors.border
                         }}
-                        placeholder="Your full name (optional)"
+                        placeholder={trans.form.fullName.placeholder}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label htmlFor="location" className="block text-sm font-medium" style={{ color: theme.colors.text }}>
-                      Location
+                    <label 
+                      htmlFor="location" 
+                      className="block text-sm font-medium" 
+                      style={{ ...contentStyle, ...getTextStyle({ color: theme.colors.text }) }}
+                    >
+                      {trans.form.location.label}
                     </label>
                     <div className="mt-1 relative rounded-md shadow-sm">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -521,14 +893,18 @@ export default function Register() {
                           color: theme.colors.text,
                           borderColor: isDark ? 'rgba(255,255,255,0.1)' : theme.colors.border
                         }}
-                        placeholder="District, Province (optional)"
+                        placeholder={trans.form.location.placeholder}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label htmlFor="farmSize" className="block text-sm font-medium" style={{ color: theme.colors.text }}>
-                      Farm Size (hectares)
+                    <label 
+                      htmlFor="farmSize" 
+                      className="block text-sm font-medium" 
+                      style={{ ...contentStyle, ...getTextStyle({ color: theme.colors.text }) }}
+                    >
+                      {trans.form.farmSize.label}
                     </label>
                     <div className="mt-1 relative rounded-md shadow-sm">
                       <input
@@ -545,7 +921,7 @@ export default function Register() {
                           color: theme.colors.text,
                           borderColor: isDark ? 'rgba(255,255,255,0.1)' : theme.colors.border
                         }}
-                        placeholder="e.g., 2.5 (optional)"
+                        placeholder={trans.form.farmSize.placeholder}
                       />
                     </div>
                   </div>
@@ -570,11 +946,35 @@ export default function Register() {
                       />
                     </div>
                     <div className="ml-3 text-sm">
-                      <label htmlFor="termsAccepted" style={{ color: theme.colors.text }}>
-                        I agree to the <a href="/terms" style={{ color: theme.colors.primary }} className="font-medium hover:underline">Terms and Conditions</a> and <a href="/privacy" style={{ color: theme.colors.primary }} className="font-medium hover:underline">Privacy Policy</a> <span className="text-red-500">*</span>
+                      <label 
+                        htmlFor="termsAccepted" 
+                        style={{ ...contentStyle, ...getTextStyle({ color: theme.colors.text }) }}
+                      >
+                        {trans.form.terms.label}{' '}
+                        <a 
+                          href="/terms" 
+                          style={{ color: theme.colors.primary }} 
+                          className="font-medium hover:underline"
+                        >
+                          {trans.form.terms.termsLink}
+                        </a>{' '}
+                        {language === 'en' ? 'and' : language === 'si' ? 'සහ' : 'மற்றும்'}{' '}
+                        <a 
+                          href="/privacy" 
+                          style={{ color: theme.colors.primary }} 
+                          className="font-medium hover:underline"
+                        >
+                          {trans.form.terms.privacyLink}
+                        </a>{' '}
+                        <span className="text-red-500">*</span>
                       </label>
                       {validationErrors.termsAccepted && (
-                        <p className="mt-1 text-sm text-red-600">{validationErrors.termsAccepted}</p>
+                        <p 
+                          className="mt-1 text-sm text-red-600" 
+                          style={{ ...contentStyle, ...getTextStyle() }}
+                        >
+                          {validationErrors.termsAccepted}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -590,7 +990,9 @@ export default function Register() {
                         borderColor: isDark ? 'rgba(255,255,255,0.1)' : theme.colors.border
                       }}
                     >
-                      Back
+                      <span style={{ ...contentStyle, ...getTextStyle() }}>
+                        {trans.form.buttons.back}
+                      </span>
                     </button>
                     <button
                       type="submit"
@@ -600,17 +1002,19 @@ export default function Register() {
                       }`}
                       style={{ backgroundColor: theme.colors.primary }}
                     >
-                      {loading ? (
-                        <>
-                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Creating account...
-                        </>
-                      ) : (
-                        'Create Account'
-                      )}
+                      <span style={{ ...contentStyle, ...getTextStyle() }}>
+                        {loading ? (
+                          <>
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            {trans.form.buttons.creating}
+                          </>
+                        ) : (
+                          trans.form.buttons.create
+                        )}
+                      </span>
                     </button>
                   </div>
                 </>
@@ -623,11 +1027,16 @@ export default function Register() {
                   <div className="w-full border-t" style={{ borderColor: isDark ? 'rgba(255,255,255,0.1)' : theme.colors.border }}></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2" style={{ 
-                    backgroundColor: theme.colors.card,
-                    color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
-                  }}>
-                    Already have an account?
+                  <span 
+                    className="px-2" 
+                    style={{ 
+                      backgroundColor: theme.colors.card,
+                      color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                      ...contentStyle,
+                      ...getTextStyle()
+                    }}
+                  >
+                    {trans.footer.alreadyHaveAccount}
                   </span>
                 </div>
               </div>
@@ -641,15 +1050,24 @@ export default function Register() {
                     color: theme.colors.primary
                   }}
                 >
-                  Sign in
+                  <span style={{ ...contentStyle, ...getTextStyle() }}>
+                    {trans.footer.signIn}
+                  </span>
                 </Link>
               </div>
             </div>
           </div>
           
           <div className="mt-6 text-center">
-            <p className="text-xs" style={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}>
-              By creating an account, you agree to our Terms of Service and Privacy Policy.
+            <p 
+              className="text-xs" 
+              style={{ 
+                color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+                ...contentStyle,
+                ...getTextStyle()
+              }}
+            >
+              {trans.footer.disclaimer}
             </p>
           </div>
         </div>

@@ -4,6 +4,8 @@
 import { Inter } from 'next/font/google';
 import './globals.css';
 import '@/theme.css';
+// Fix the import path for home.module.css
+import './home.module.css';  // Changed from '@/home.module.css'
 import { AuthProvider } from '@/context/AuthContext';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { ThemeProvider } from '@/context/ThemeContext';

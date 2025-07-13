@@ -347,16 +347,10 @@
 
 /* Language-specific adjustments */
 /* Sinhala (si) language styles */
-html[lang="si"] {
-  /* Adjust line heights and font sizes for Sinhala script */
-  --heading-line-height: 1.4;
-  --body-line-height: 1.7;
-}
-
 html[lang="si"] .hero-title,
 html[lang="si"] .section-heading,
 html[lang="si"] .cta-title {
-  line-height: var(--heading-line-height);
+  line-height: 1.4;
 }
 
 html[lang="si"] .hero-subtitle,
@@ -364,20 +358,14 @@ html[lang="si"] .feature-description,
 html[lang="si"] .step-description,
 html[lang="si"] .dl-details,
 html[lang="si"] .cta-subtitle {
-  line-height: var(--body-line-height);
+  line-height: 1.7;
 }
 
 /* Tamil (ta) language styles */
-html[lang="ta"] {
-  /* Adjust line heights and font sizes for Tamil script */
-  --heading-line-height: 1.5;
-  --body-line-height: 1.8;
-}
-
 html[lang="ta"] .hero-title,
 html[lang="ta"] .section-heading,
 html[lang="ta"] .cta-title {
-  line-height: var(--heading-line-height);
+  line-height: 1.5;
 }
 
 html[lang="ta"] .hero-subtitle,
@@ -385,7 +373,27 @@ html[lang="ta"] .feature-description,
 html[lang="ta"] .step-description,
 html[lang="ta"] .dl-details,
 html[lang="ta"] .cta-subtitle {
-  line-height: var(--body-line-height);
+  line-height: 1.8;
+}
+
+/* Tamil font size classes - CSS module compatible */
+.tamilTextSmall {
+  font-size: 0.85rem !important;
+}
+
+.tamilTextMedium {
+  font-size: 0.9rem !important;
+}
+
+.tamilTextGeneral {
+  font-size: 0.95rem;
+}
+
+/* Navigation wrapper class */
+.navWrapper[lang="ta"] a,
+.navWrapper[lang="ta"] button, 
+.navWrapper[lang="ta"] span {
+  font-size: 0.85rem;
 }
 
 /* Responsive padding and spacing */

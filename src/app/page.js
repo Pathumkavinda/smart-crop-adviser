@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import ThemeWrapper from '@/components/ThemeWrapper';
+import EnhancedHeroSection from '@/components/EnhancedHeroSection';
 import { 
   Leaf, 
   MapPin, 
@@ -80,97 +81,7 @@ const translations = {
       title: "Tips for Successful Cultivation",
       description: "Maximize your yield through proper crop selection, maintaining soil nutrient levels, and effective water management."
     },
-    crops: {
-      title: "Major Crops of Sri Lanka",
-      subtitle: "Information about key crops grown across different regions.",
-      categories: {
-        rice: {
-          name: "Rice (Paddy)",
-          description: "The staple food crop of Sri Lanka, grown in both Maha and Yala seasons. Suitable for various regions with proper irrigation. Traditional and improved varieties are available with different growth durations."
-        },
-        vegetables: {
-          name: "Vegetables",
-          varieties: [
-            {
-              name: "Tomato",
-              description: "Varieties like Thilina and Maheshi are widely grown. Prefers well-drained soils with pH 6.0-7.0."
-            },
-            {
-              name: "Onions",
-              description: "Big onion varieties (Hybrid 62, Bhima Shakti) and Red onion varieties (Vethalan, LKRON 1) are important cash crops."
-            },
-            {
-              name: "Potato",
-              description: "Varieties like Granola and Desiree grow well in up-country regions during Maha season."
-            },
-            {
-              name: "Carrot",
-              description: "New Kuroda and Chantenay varieties are popular in cooler regions with loose, deep soils."
-            }
-          ]
-        },
-        fieldCrops: {
-          name: "Field Crops",
-          varieties: [
-            {
-              name: "Maize",
-              description: "Varieties like Pacific 984 and Arjun are important for both human consumption and animal feed."
-            },
-            {
-              name: "Green Gram",
-              description: "Short duration crop suitable for areas with less rainfall."
-            },
-            {
-              name: "Cowpea",
-              description: "Drought-tolerant crop suitable for dry and intermediate zones."
-            },
-            {
-              name: "Groundnut",
-              description: "Grown mainly in the dry zone during both Maha and Yala seasons."
-            }
-          ]
-        },
-        plantation: {
-          name: "Plantation Crops",
-          varieties: [
-            {
-              name: "Tea",
-              description: "Grown in high, mid, and low elevations with different quality characteristics."
-            },
-            {
-              name: "Rubber",
-              description: "Mainly in wet and intermediate zones."
-            },
-            {
-              name: "Coconut",
-              description: "Grown in the \"Coconut Triangle\" and other suitable areas."
-            }
-          ]
-        }
-      }
-    },
-    soil: {
-      title: "Soil Types in Sri Lanka",
-      subtitle: "Major soil types found across the country and their characteristics.",
-      types: [
-        {
-          name: "Red Yellow Podzolic",
-          description: "Common in the wet zone, this soil is well-drained but acidic. Good for tea cultivation and some vegetables with proper management."
-        },
-        {
-          name: "Reddish Brown Earth",
-          description: "Found in the dry zone, suitable for many field crops. Has good fertility when adequate water is available."
-        },
-        {
-          name: "Low Humic Gley",
-          description: "Common in lowland paddy fields, has poor drainage but good water-holding capacity. Ideal for rice cultivation."
-        },
-        {
-          name: "Alluvial Soils",
-          description: "Found along river valleys and flood plains, these soils are highly fertile and suitable for intensive cultivation of vegetables and other crops."
-        }
-      ]
-    },
+
     cta: {
       title: "Ready to improve your farming?",
       subtitle: "Start using Smart Crop Adviser today.",
@@ -184,7 +95,7 @@ const translations = {
       title: {
         line1: "ශ්‍රී ලාංකික කෘෂිකර්මාන්තය",
         line2: "සඳහා",
-        line3: "බෝග උපදේශක"  // Moved "for" to line3 as it makes more sense in Sinhala
+        line3: "බෝග උපදේශක"  
       },
       subtitle: "ඔබේ පස තත්වයන්, පිහිටීම සහ කන්නය මත පදනම්ව පුද්ගලීකරණය කරන ලද බෝග නිර්දේශ ලබා ගන්න.",
       getStarted: "ආරම්භ කරන්න",
@@ -239,97 +150,7 @@ const translations = {
       title: "වඩාත් සාර්ථක වගාවක් සඳහා උපදෙස්",
       description: "නිවැරදි බෝග තේරීම, පසෙහි පෝෂක මට්ටම් පවත්වා ගැනීම, සහ නිසි ජල කළමනාකරණය මගින් ඔබේ අස්වැන්න වැඩි කර ගන්න."
     },
-    crops: {
-      title: "ශ්‍රී ලංකාවේ ප්‍රධාන බෝග",
-      subtitle: "විවිධ ප්‍රදේශවල වගා කරන ප්‍රධාන බෝග පිළිබඳ තොරතුරු.",
-      categories: {
-        rice: {
-          name: "සහල් (වී)",
-          description: "ශ්‍රී ලංකාවේ ප්‍රධාන ආහාර බෝගය, මහ සහ යල කන්න දෙකෙහිම වගා කරයි. නිසි වාරිමාර්ග සමඟ විවිධ ප්‍රදේශ සඳහා සුදුසුය. විවිධ වර්ධන කාල සීමා සහිත සාම්ප්‍රදායික සහ වැඩිදියුණු කළ ප්‍රභේද තිබේ."
-        },
-        vegetables: {
-          name: "එළවළු",
-          varieties: [
-            {
-              name: "තක්කාලි",
-              description: "තිලිණ සහ මහේෂි වැනි ප්‍රභේද පුළුල් ලෙස වගා කරයි. හොඳින් ජලය බැස යන පස pH 6.0-7.0 සමඟ කැමතියි."
-            },
-            {
-              name: "ලූනු",
-              description: "ලොකු ලූනු ප්‍රභේද (හයිබ්‍රිඩ් 62, භීමා ශක්ති) සහ රතු ලූනු ප්‍රභේද (වෙතලන්, LKRON 1) වැදගත් මුදල් බෝග වේ."
-            },
-            {
-              name: "අර්තාපල්",
-              description: "ග්‍රැනෝලා සහ ඩිසියර් වැනි ප්‍රභේද උඩරට ප්‍රදේශවල මහ කන්නයේදී හොඳින් වැඩෙයි."
-            },
-            {
-              name: "කැරට්",
-              description: "නව කුරෝඩා සහ චැන්ටේනේ ප්‍රභේද ලිහිල්, ගැඹුරු පස සහිත සිසිල් ප්‍රදේශවල ජනප්‍රිය වේ."
-            }
-          ]
-        },
-        fieldCrops: {
-          name: "ක්ෂේත්‍ර බෝග",
-          varieties: [
-            {
-              name: "බඩ ඉරිඟු",
-              description: "පැසිෆික් 984 සහ අර්ජුන් වැනි ප්‍රභේද මිනිස් පරිභෝජනය සහ සත්ව ආහාර යන දෙකටම වැදගත් වේ."
-            },
-            {
-              name: "මුං",
-              description: "අඩු වර්ෂාපතනය සහිත ප්‍රදේශ සඳහා සුදුසු කෙටි කාලීන බෝගයකි."
-            },
-            {
-              name: "කව්පි",
-              description: "වියළි සහ අතරමැදි කලාප සඳහා සුදුසු නියඟයට ඔරොත්තු දෙන බෝගයකි."
-            },
-            {
-              name: "රටකජු",
-              description: "ප්‍රධාන වශයෙන් වියළි කලාපයේ මහ සහ යල කන්න දෙකෙහිම වගා කරයි."
-            }
-          ]
-        },
-        plantation: {
-          name: "වතු බෝග",
-          varieties: [
-            {
-              name: "තේ",
-              description: "විවිධ ගුණාත්මක ලක්ෂණ සහිත ඉහළ, මැද සහ පහළ උන්නතාංශවල වගා කරයි."
-            },
-            {
-              name: "රබර්",
-              description: "ප්‍රධාන වශයෙන් තෙත් සහ අතරමැදි කලාපවල."
-            },
-            {
-              name: "පොල්",
-              description: "\"පොල් ත්‍රිකෝණය\" සහ වෙනත් සුදුසු ප්‍රදේශවල වගා කරයි."
-            }
-          ]
-        }
-      }
-    },
-    soil: {
-      title: "ශ්‍රී ලංකාවේ පස වර්ග",
-      subtitle: "රට පුරා දක්නට ලැබෙන ප්‍රධාන පස වර්ග සහ ඒවායේ ලක්ෂණ.",
-      types: [
-        {
-          name: "රතු කහ පොඩ්සොලික්",
-          description: "තෙත් කලාපයේ බහුලව දක්නට ලැබෙන මෙම පස හොඳින් ජලය බැස යන නමුත් අම්ලිකය. නිසි කළමනාකරණය සමඟ තේ වගාව සහ සමහර එළවළු සඳහා හොඳයි."
-        },
-        {
-          name: "රතු දුඹුරු පස",
-          description: "වියළි කලාපයේ දක්නට ලැබෙන, බොහෝ ක්ෂේත්‍ර බෝග සඳහා සුදුසුය. ප්‍රමාණවත් ජලය ලබා ගත හැකි විට හොඳ සාරවත් බවක් ඇත."
-        },
-        {
-          name: "අඩු හියුමික් ග්ලෙයි",
-          description: "පහළ බිම් කුඹුරුවල බහුලව දක්නට ලැබෙන, දුර්වල ජලාපවහනයක් නමුත් හොඳ ජල ධාරණ ධාරිතාවක් ඇත. වී වගාව සඳහා ආදර්ශයි."
-        },
-        {
-          name: "අවසාදිත පස",
-          description: "ගංගා නිම්න සහ ගංවතුර තැනිතලාවල දක්නට ලැබෙන, මෙම පස ඉතා සාරවත් වන අතර එළවළු සහ වෙනත් බෝග සඳහා ඉතා සුදුසු වේ."
-        }
-      ]
-    },
+
     cta: {
       title: "ඔබේ ගොවිතැන වැඩිදියුණු කිරීමට සූදානම්ද?",
       subtitle: "අද දිනයේම ස්මාර්ට් බෝග උපදේශක භාවිතා කිරීම ආරම්භ කරන්න.",
@@ -681,8 +502,8 @@ export default function Home() {
 
   return (
     <ThemeWrapper>
-      {/* Hero Section with 3-line heading */}
-      <div 
+      {/* Hero Section with 3-line heading and GIF */}
+      <EnhancedHeroSection translations={translations} 
         className="text-white"
         style={{ 
           background: isDark 
@@ -734,21 +555,43 @@ export default function Home() {
             </div>
             <div className="mt-10 md:mt-0 md:w-1/2 flex justify-center">
               <div className="rounded-lg shadow-xl overflow-hidden w-full max-w-md">
+                {/* Updated to use the GIF with better fallback handling */}
                 <img
-                  src="/images/1.png"
-                  alt="Sri Lankan paddy field"
-                  className="w-full h-64 object-cover"
-                  style={{ objectPosition: "center 70%" }}
+                  src="/images/cad.gif"
+                  alt="Smart Crop Adviser Animation"
+                  className="w-full h-64 object-cover transition-transform duration-300 hover:scale-105"
+                  style={{ objectPosition: "center" }}
                   onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/600x400?text=Sri+Lankan+Agriculture";
+                    // Multiple fallback options
+                    if (e.target.src.includes('cad.gif')) {
+                      // First fallback: try a different image path
+                      e.target.src = "/images/agriculture-hero.jpg";
+                    } else if (e.target.src.includes('agriculture-hero.jpg')) {
+                      // Second fallback: use a placeholder service
+                      e.target.src = "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80";
+                      e.target.alt = "Sri Lankan Agriculture";
+                    } else {
+                      // Final fallback: create a styled placeholder
+                      e.target.style.display = 'none';
+                      const placeholder = document.createElement('div');
+                      placeholder.className = 'w-full h-64 flex items-center justify-center text-white text-lg font-semibold';
+                      placeholder.style.background = `linear-gradient(135deg, ${isDark ? '#2E7D32, #4CAF50' : '#4CAF50, #66BB6A'})`;
+                      placeholder.innerHTML = `
+                        <div class="text-center">
+                          <div class="text-4xl mb-2">🌾</div>
+                          <div>${language === 'si' ? 'ස්මාර්ට් බෝග උපදේශක' : language === 'ta' ? 'ஸ்மார்ட் பயிர் ஆலோசகர்' : 'Smart Crop Adviser'}</div>
+                        </div>
+                      `;
+                      e.target.parentNode.appendChild(placeholder);
+                    }
                   }}
                 />
               </div>
             </div>
           </div>
         </div>
-      </div>
-
+      </EnhancedHeroSection>
+      
       {/* Features Section with Fixed Heights */}
       <div className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -821,76 +664,76 @@ export default function Home() {
         </div>
       </div>
 
-{/* How It Works Section - Fixed Layout with Both Sides */}
-<div 
-  className="py-20 relative overflow-hidden"
-  style={{ 
-    backgroundColor: isDark ? 'rgba(17, 24, 39, 0.5)' : 'rgba(243, 244, 246, 0.5)',
-    position: 'relative'
-  }}
->
-  {/* Background decorative elements */}
-  <div 
-    className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none"
-    style={{
-      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23${isDark ? '4CAF50' : '4CAF50'}' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-      transition: 'opacity 0.5s ease'
-    }}
-  />
-
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-    {/* Section header with proper spacing */}
-    <div className="text-center mb-16" style={contentStyle}>
-      
-      {/* Small Subtitle / Label */}
-      <h2 
-        className="text-base font-semibold tracking-wide uppercase relative inline-block mb-4"
+      {/* How It Works Section - Fixed Layout with Both Sides */}
+      <div 
+        className="py-20 relative overflow-hidden"
         style={{ 
-          color: theme.colors.primary,
-          paddingBottom: '8px'
+          backgroundColor: isDark ? 'rgba(17, 24, 39, 0.5)' : 'rgba(243, 244, 246, 0.5)',
+          position: 'relative'
         }}
       >
-        {trans.howItWorks.title}
-        <span 
+        {/* Background decorative elements */}
+        <div 
+          className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none"
           style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            width: '40%',
-            height: '2px',
-            backgroundColor: theme.colors.primary,
-            transition: 'width 0.3s ease'
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23${isDark ? '4CAF50' : '4CAF50'}' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            transition: 'opacity 0.5s ease'
           }}
         />
-      </h2>
 
-      {/* Main Subtitle */}
-      <div className="relative mt-6"> {/* Increased top margin for space */}
-        <h3 
-          className="text-3xl sm:text-4xl font-bold relative z-10 leading-snug"
-          style={{ 
-            ...getTextStyle(),
-            color: theme.colors.text,
-            paddingBottom: '12px',
-            transition: 'all 0.5s ease'
-          }}
-        >
-          {trans.howItWorks.subtitle}
-          <span 
-            className="absolute bottom-0 left-0 w-full"
-            style={{
-              height: '3px',
-              background: `linear-gradient(to right, ${theme.colors.primary}, ${isDark ? '#689F38' : '#8BC34A'})`,
-              transition: 'transform 0.5s ease',
-              transform: isTransitioning ? 'scaleX(0)' : 'scaleX(1)',
-              transformOrigin: 'left'
-            }}
-          />
-        </h3>
-      </div>
-    </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          {/* Section header with proper spacing */}
+          <div className="text-center mb-16" style={contentStyle}>
+            
+            {/* Small Subtitle / Label */}
+            <h2 
+              className="text-base font-semibold tracking-wide uppercase relative inline-block mb-4"
+              style={{ 
+                color: theme.colors.primary,
+                paddingBottom: '8px'
+              }}
+            >
+              {trans.howItWorks.title}
+              <span 
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  width: '40%',
+                  height: '2px',
+                  backgroundColor: theme.colors.primary,
+                  transition: 'width 0.3s ease'
+                }}
+              />
+            </h2>
 
-          
+            {/* Main Subtitle */}
+            <div className="relative mt-6"> {/* Increased top margin for space */}
+              <h3 
+                className="text-3xl sm:text-4xl font-bold relative z-10 leading-snug"
+                style={{ 
+                  ...getTextStyle(),
+                  color: theme.colors.text,
+                  paddingBottom: '12px',
+                  transition: 'all 0.5s ease'
+                }}
+              >
+                {trans.howItWorks.subtitle}
+                <span 
+                  className="absolute bottom-0 left-0 w-full"
+                  style={{
+                    height: '3px',
+                    background: `linear-gradient(to right, ${theme.colors.primary}, ${isDark ? '#689F38' : '#8BC34A'})`,
+                    transition: 'transform 0.5s ease',
+                    transform: isTransitioning ? 'scaleX(0)' : 'scaleX(1)',
+                    transformOrigin: 'left'
+                  }}
+                />
+              </h3>
+            </div>
+          </div>
+
+                
           {/* New content for the empty space */}
           <div className="empty-space-filler mb-12">
             <div className="flex flex-col md:flex-row items-center justify-between">
@@ -1095,122 +938,6 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Crops Section */}
-      <div className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="shadow overflow-hidden sm:rounded-lg mb-8 transition-all duration-300" 
-            style={{ 
-              backgroundColor: isDark ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.9)',
-              boxShadow: isDark ? '0 4px 6px rgba(0, 0, 0, 0.2)' : '0 4px 6px rgba(0, 0, 0, 0.1)',
-            }}>
-            <div className="px-4 py-5 sm:px-6">
-              <div className="flex items-center">
-                <Leaf className="h-6 w-6 mr-2" style={{ color: isDark ? '#4ADE80' : '#22C55E' }} />
-                <h2 className="text-lg leading-6 font-medium transition-all duration-300" style={{ ...getTextStyle(), color: theme.colors.text }}>
-                  {trans.crops.title}
-                </h2>
-              </div>
-              <p className="mt-1 max-w-2xl text-sm transition-all duration-300" style={{ ...getTextStyle(), color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
-                {trans.crops.subtitle}
-              </p>
-            </div>
-            <div className="border-t transition-all duration-300" style={{ borderColor: isDark ? 'rgba(75, 85, 99, 0.5)' : 'rgba(229, 231, 235, 0.8)' }}>
-              <dl>
-                <div className="px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 transition-all duration-300" 
-                  style={{ backgroundColor: isDark ? 'rgba(17, 24, 39, 0.3)' : 'rgba(249, 250, 251, 0.5)' }}>
-                  <dt className="text-sm font-medium transition-all duration-300" style={{ ...getTextStyle(), color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
-                    {trans.crops.categories.rice.name}
-                  </dt>
-                  <dd className="mt-1 text-sm sm:mt-0 sm:col-span-2 transition-all duration-300" style={{ ...getTextStyle(), color: theme.colors.text }}>
-                    <div style={contentStyle}>
-                      {trans.crops.categories.rice.description}
-                    </div>
-                  </dd>
-                </div>
-                <div className="px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium transition-all duration-300" style={{ ...getTextStyle(), color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
-                    {trans.crops.categories.vegetables.name}
-                  </dt>
-                  <dd className="mt-1 text-sm sm:mt-0 sm:col-span-2 transition-all duration-300" style={{ ...getTextStyle(), color: theme.colors.text }}>
-                    <div style={contentStyle}>
-                      {trans.crops.categories.vegetables.varieties.map((veg, idx) => (
-                        <p key={idx} className={idx > 0 ? "mt-2" : ""}>
-                          <strong>{veg.name}:</strong> {veg.description}
-                        </p>
-                      ))}
-                    </div>
-                  </dd>
-                </div>
-                <div className="px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 transition-all duration-300" 
-                  style={{ backgroundColor: isDark ? 'rgba(17, 24, 39, 0.3)' : 'rgba(249, 250, 251, 0.5)' }}>
-                  <dt className="text-sm font-medium transition-all duration-300" style={{ ...getTextStyle(), color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
-                    {trans.crops.categories.fieldCrops.name}
-                  </dt>
-                  <dd className="mt-1 text-sm sm:mt-0 sm:col-span-2 transition-all duration-300" style={{ ...getTextStyle(), color: theme.colors.text }}>
-                    <div style={contentStyle}>
-                      {trans.crops.categories.fieldCrops.varieties.map((crop, idx) => (
-                        <p key={idx} className={idx > 0 ? "mt-2" : ""}>
-                          <strong>{crop.name}:</strong> {crop.description}
-                        </p>
-                      ))}
-                    </div>
-                  </dd>
-                </div>
-                <div className="px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium transition-all duration-300" style={{ ...getTextStyle(), color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
-                    {trans.crops.categories.plantation.name}
-                  </dt>
-                  <dd className="mt-1 text-sm sm:mt-0 sm:col-span-2 transition-all duration-300" style={{ ...getTextStyle(), color: theme.colors.text }}>
-                    <div style={contentStyle}>
-                      {trans.crops.categories.plantation.varieties.map((crop, idx) => (
-                        <p key={idx} className={idx > 0 ? "mt-2" : ""}>
-                          <strong>{crop.name}:</strong> {crop.description}
-                        </p>
-                      ))}
-                    </div>
-                  </dd>
-                </div>
-              </dl>
-            </div>
-          </div>
-
-          {/* Soil Types Section */}
-          <div className="shadow overflow-hidden sm:rounded-lg mb-8 transition-all duration-300" 
-            style={{ 
-              backgroundColor: isDark ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.9)',
-              boxShadow: isDark ? '0 4px 6px rgba(0, 0, 0, 0.2)' : '0 4px 6px rgba(0, 0, 0, 0.1)',
-            }}>
-            <div className="px-4 py-5 sm:px-6">
-              <div className="flex items-center">
-                <Droplets className="h-6 w-6 mr-2" style={{ color: isDark ? '#b78846' : '#8B4513' }} />
-                <h2 className="text-lg leading-6 font-medium transition-all duration-300" style={{ ...getTextStyle(), color: theme.colors.text }}>
-                  {trans.soil.title}
-                </h2>
-              </div>
-              <p className="mt-1 max-w-2xl text-sm transition-all duration-300" style={{ ...getTextStyle(), color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
-                {trans.soil.subtitle}
-              </p>
-            </div>
-            <div className="border-t transition-all duration-300" style={{ borderColor: isDark ? 'rgba(75, 85, 99, 0.5)' : 'rgba(229, 231, 235, 0.8)' }}>
-              <dl>
-                {trans.soil.types.map((soil, index) => (
-                  <div key={index} className={`px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 transition-all duration-300 ${index % 2 === 0 ? (isDark ? 'bg-opacity-30 bg-gray-900' : 'bg-opacity-50 bg-gray-50') : ''}`}>
-                    <dt className="text-sm font-medium transition-all duration-300" style={{ ...getTextStyle(), color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
-                      {soil.name}
-                    </dt>
-                    <dd className="mt-1 text-sm sm:mt-0 sm:col-span-2 transition-all duration-300" style={{ ...getTextStyle(), color: theme.colors.text }}>
-                      <div style={contentStyle}>
-                        {soil.description}
-                      </div>
-                    </dd>
-                  </div>
-                ))}
-              </dl>
             </div>
           </div>
         </div>
