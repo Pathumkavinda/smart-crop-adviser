@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -21,34 +21,61 @@ export default function EnhancedHeroSection({ translations, className, style, ch
   const [rainIntensity, setRainIntensity] = useState(0); // 0-100 for rain intensity
   const [timeOfDay, setTimeOfDay] = useState(isDark ? 'night' : 'day');
   const [windIntensity, setWindIntensity] = useState(1); // 1-5 for wind intensity
+  
+  // Client-side only dynamic elements state
+  const [clientSideLoaded, setClientSideLoaded] = useState(false);
+  const [raindrops, setRaindrops] = useState([]);
+  const [birds, setBirds] = useState([]);
+  const [ricePlants, setRicePlants] = useState([]);
+  
   const lastRenderTime = useRef(0);
   const frameRef = useRef(null);
+  const environmentIntervalRef = useRef(null);
+  const loadTimerRef = useRef(null);
   const prefersReducedMotion = useRef(false);
   const containerRef = useRef(null);
+  const isMounted = useRef(true);
 
   // Check if user prefers reduced motion
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      prefersReducedMotion.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      try {
+        prefersReducedMotion.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      } catch (e) {
+        // Fallback if matchMedia isn't supported
+        prefersReducedMotion.current = false;
+      }
     }
+    
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
 
   // Update translations when language changes with a transition effect
   useEffect(() => {
-    if (language && translations) {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setTrans(translations[language] || translations.en);
-        setTimeout(() => {
-          setIsTransitioning(false);
-        }, 300);
+    if (!language || !translations) return;
+    
+    setIsTransitioning(true);
+    const transitionTimer1 = setTimeout(() => {
+      if (!isMounted.current) return;
+      setTrans(translations[language] || translations.en);
+      
+      const transitionTimer2 = setTimeout(() => {
+        if (!isMounted.current) return;
+        setIsTransitioning(false);
       }, 300);
-    }
+      
+      return () => clearTimeout(transitionTimer2);
+    }, 300);
+    
+    return () => clearTimeout(transitionTimer1);
   }, [language, translations]);
 
   // Set initial loaded state for entrance animations
   useEffect(() => {
-    const timer = setTimeout(() => {
+    loadTimerRef.current = setTimeout(() => {
+      if (!isMounted.current) return;
       setIsLoaded(true);
     }, 100);
     
@@ -58,7 +85,11 @@ export default function EnhancedHeroSection({ translations, className, style, ch
     // Set time of day based on theme
     setTimeOfDay(isDark ? 'night' : 'day');
     
-    return () => clearTimeout(timer);
+    return () => {
+      if (loadTimerRef.current) {
+        clearTimeout(loadTimerRef.current);
+      }
+    };
   }, [isDark]);
 
   // Periodically change the rain intensity and wind
@@ -66,7 +97,9 @@ export default function EnhancedHeroSection({ translations, className, style, ch
     // Skip animations for users who prefer reduced motion
     if (prefersReducedMotion.current) return;
     
-    const environmentInterval = setInterval(() => {
+    environmentIntervalRef.current = setInterval(() => {
+      if (!isMounted.current) return;
+      
       // Random chance to change rain intensity
       if (Math.random() > 0.7) {
         setRainIntensity(prev => {
@@ -84,54 +117,219 @@ export default function EnhancedHeroSection({ translations, className, style, ch
       }
     }, 5000); // Check every 5 seconds
     
-    return () => clearInterval(environmentInterval);
+    return () => {
+      if (environmentIntervalRef.current) {
+        clearInterval(environmentIntervalRef.current);
+      }
+    };
   }, [isDark]);
 
-  // Track mouse movement for parallax effect with throttling for performance
+  // Generate all dynamic elements only on the client side after hydration
+  useEffect(() => {
+    // Mark that client-side rendering is active
+    setClientSideLoaded(true);
+    
+    // Generate raindrops
+    const generateRaindrops = () => {
+      if (rainIntensity <= 0 || prefersReducedMotion.current) return [];
+      
+      const drops = [];
+      const count = Math.floor(rainIntensity / 2); // 0-50 intensity gives 0-25 drops
+      
+      for (let i = 0; i < count; i++) {
+        // Staggered rain pattern
+        const delay = Math.random() * 3;
+        const duration = 0.5 + Math.random();
+        const leftPos = Math.random() * 100;
+        const size = 1 + Math.random() * 2;
+        
+        drops.push({
+          key: `raindrop-${i}`,
+          style: {
+            position: 'absolute',
+            top: '-20px',
+            left: `${leftPos}%`,
+            width: `${size}px`,
+            height: `${size * 8}px`,
+            background: isDark ? 'rgba(178, 235, 242, 0.6)' : 'rgba(0, 131, 143, 0.3)',
+            borderRadius: '50px',
+            animation: `raindropFall ${duration}s linear infinite`,
+            animationDelay: `${delay}s`,
+            zIndex: 4,
+            opacity: 0.8,
+            willChange: 'transform'
+          }
+        });
+      }
+      
+      return drops;
+    };
+    
+    // Generate birds
+    const generateBirds = () => {
+      if (prefersReducedMotion.current) return [];
+      
+      const birds = [];
+      const birdCount = 8; // Total number of birds
+      
+      for (let i = 0; i < birdCount; i++) {
+        // Calculate different flight paths and timings
+        const delay = i * 2;
+        const duration = 25 + Math.random() * 30;
+        const size = 0.3 + Math.random() * 0.4;
+        const yPos = 10 + Math.random() * 30;
+        const animationName = `flyBird${i % 4 + 1}`; // Use 4 different flight patterns
+        
+        birds.push({
+          key: `bird-${i}`,
+          style: {
+            position: 'absolute',
+            top: `${yPos}%`,
+            left: '0',
+            width: '100%',
+            height: '100%',
+            animation: `${animationName} ${duration}s infinite linear`,
+            animationDelay: `${delay}s`,
+            opacity: isDark ? 0.4 : 0.6,
+            transform: `scale(${size})`,
+            zIndex: 5,
+            willChange: 'transform'
+          }
+        });
+      }
+      
+      return birds;
+    };
+    
+    // Generate rice plants
+    const generateRicePlants = () => {
+      if (prefersReducedMotion.current) {
+        // For reduced motion, just a few static plants
+        return Array(20).fill().map((_, i) => ({
+          key: `rice-static-${i}`,
+          position: {
+            left: 1 + Math.random() * 98,
+            bottom: 1 + Math.random() * 25,
+            size: 20 + Math.random() * 15
+          },
+          style: {
+            position: 'absolute',
+            bottom: `${1 + Math.random() * 25}%`,
+            left: `${1 + Math.random() * 98}%`,
+            width: `${20 + Math.random() * 15}px`,
+            height: `${40 + Math.random() * 20}px`,
+            transform: 'translateX(-50%)',
+            zIndex: 7
+          }
+        }));
+      }
+      
+      // Generate rice plants that will respond to mouse movement
+      const plants = [];
+      const plantCount = 40;
+      
+      for (let i = 0; i < plantCount; i++) {
+        // Distribute across the bottom of the screen
+        const leftPos = 1 + Math.random() * 98; // 1-99% horizontal position
+        const bottomPos = 1 + Math.random() * 25; // 1-26% from bottom
+        const size = 20 + Math.random() * 15; // Varied sizes
+        const height = 40 + Math.random() * 20;
+        const delay = i * 0.2;
+        
+        // Random variations for each plant
+        const seedCount = 3 + Math.floor(Math.random() * 3); // 3-5 seeds
+        const stemColor = isDark ? '#D7CCC8' : '#A1887F';
+        const seedColor = isDark ? '#FFE082' : '#FFC107';
+        
+        // Store position data for mouse interaction calculations
+        plants.push({
+          key: `rice-plant-${i}`,
+          position: {
+            left: leftPos,
+            bottom: bottomPos,
+            size: size,
+            height: height
+          },
+          style: {
+            position: 'absolute',
+            bottom: `${bottomPos}%`,
+            left: `${leftPos}%`,
+            width: `${size}px`,
+            height: `${height}px`,
+            zIndex: 7,
+            willChange: 'transform',
+            opacity: bottomPos > 15 ? 0.85 : 1, // Slightly fade out the ones further back
+            transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          },
+          seedCount,
+          stemColor,
+          seedColor
+        });
+      }
+      
+      return plants;
+    };
+    
+    // Set all dynamic elements
+    setRaindrops(generateRaindrops());
+    setBirds(generateBirds());
+    setRicePlants(generateRicePlants());
+    
+  }, [rainIntensity, isDark]);
+
+  // Optimized mouse move handler with useCallback to prevent excessive rerenders
+  const handleMouseMove = useCallback((e) => {
+    // Skip if component is unmounting
+    if (!isMounted.current) return;
+    
+    // Throttle updates for better performance
+    const now = Date.now();
+    if (now - lastRenderTime.current < 50) { // Limit to ~20fps for mouse tracking
+      return;
+    }
+    
+    if (frameRef.current) {
+      cancelAnimationFrame(frameRef.current);
+    }
+    
+    frameRef.current = requestAnimationFrame(() => {
+      if (!isMounted.current) return;
+      
+      // Get container bounds
+      let rect = { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+      if (containerRef.current) {
+        rect = containerRef.current.getBoundingClientRect();
+      }
+      
+      // Calculate relative position (0-1)
+      const relativeX = (e.clientX - rect.left) / rect.width;
+      const relativeY = (e.clientY - rect.top) / rect.height;
+      
+      setMousePosition({
+        x: relativeX,
+        y: relativeY,
+        clientX: e.clientX,
+        clientY: e.clientY
+      });
+      lastRenderTime.current = now;
+    });
+  }, []);
+
+  // Track mouse movement for parallax effect with proper cleanup
   useEffect(() => {
     // Skip for reduced motion preference
     if (prefersReducedMotion.current) return;
     
-    const handleMouseMove = (e) => {
-      // Throttle updates for better performance
-      const now = Date.now();
-      if (now - lastRenderTime.current < 50) { // Limit to ~20fps for mouse tracking
-        return;
-      }
-      
-      if (frameRef.current) {
-        cancelAnimationFrame(frameRef.current);
-      }
-      
-      frameRef.current = requestAnimationFrame(() => {
-        // Get container bounds
-        let rect = { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
-        if (containerRef.current) {
-          rect = containerRef.current.getBoundingClientRect();
-        }
-        
-        // Calculate relative position (0-1)
-        const relativeX = (e.clientX - rect.left) / rect.width;
-        const relativeY = (e.clientY - rect.top) / rect.height;
-        
-        setMousePosition({
-          x: relativeX,
-          y: relativeY,
-          clientX: e.clientX,
-          clientY: e.clientY
-        });
-        lastRenderTime.current = now;
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       if (frameRef.current) {
         cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
       }
     };
-  }, []);
+  }, [handleMouseMove]);
 
   // Inline styles for language transition
   const contentStyle = {
@@ -324,185 +522,52 @@ export default function EnhancedHeroSection({ translations, className, style, ch
     }
   }), [isLoaded, isDark, mousePosition.x, mousePosition.y, rainIntensity, style, timeOfDay]);
 
-  // Generate dynamic raindrops - memoized for performance
-  const raindrops = useMemo(() => {
-    if (rainIntensity <= 0 || prefersReducedMotion.current) return [];
-    
-    const drops = [];
-    const count = Math.floor(rainIntensity / 2); // 0-50 intensity gives 0-25 drops
-    
-    for (let i = 0; i < count; i++) {
-      // Staggered rain pattern
-      const delay = Math.random() * 3;
-      const duration = 0.5 + Math.random();
-      const leftPos = Math.random() * 100;
-      const size = 1 + Math.random() * 2;
-      
-      drops.push({
-        key: `raindrop-${i}`,
-        style: {
-          position: 'absolute',
-          top: '-20px',
-          left: `${leftPos}%`,
-          width: `${size}px`,
-          height: `${size * 8}px`,
-          background: isDark ? 'rgba(178, 235, 242, 0.6)' : 'rgba(0, 131, 143, 0.3)',
-          borderRadius: '50px',
-          animation: `raindropFall ${duration}s linear infinite`,
-          animationDelay: `${delay}s`,
-          zIndex: 4,
-          opacity: 0.8,
-          willChange: 'transform'
-        }
-      });
-    }
-    
-    return drops;
-  }, [rainIntensity, isDark, prefersReducedMotion.current]);
-
-  // Generate multiple birds with different behaviors
-  const birds = useMemo(() => {
-    if (prefersReducedMotion.current) return [];
-    
-    const birds = [];
-    const birdCount = 8; // Total number of birds
-    
-    for (let i = 0; i < birdCount; i++) {
-      // Calculate different flight paths and timings
-      const delay = i * 2;
-      const duration = 25 + Math.random() * 30;
-      const size = 0.3 + Math.random() * 0.4;
-      const yPos = 10 + Math.random() * 30;
-      const animationName = `flyBird${i % 4 + 1}`; // Use 4 different flight patterns
-      
-      birds.push({
-        key: `bird-${i}`,
-        style: {
-          position: 'absolute',
-          top: `${yPos}%`,
-          left: '0',
-          width: '100%',
-          height: '100%',
-          animation: `${animationName} ${duration}s infinite linear`,
-          animationDelay: `${delay}s`,
-          opacity: isDark ? 0.4 : 0.6,
-          transform: `scale(${size})`,
-          zIndex: 5,
-          willChange: 'transform'
-        }
-      });
-    }
-    
-    return birds;
-  }, [isDark, prefersReducedMotion.current]);
-
-  // Generate rice plants with SVG - with mouse movement responsiveness
-  const generateRicePlants = useMemo(() => {
-    if (prefersReducedMotion.current) {
-      // For reduced motion, just a few static plants
-      return Array(20).fill().map((_, i) => ({
-        key: `rice-static-${i}`,
-        position: {
-          left: 1 + Math.random() * 98,
-          bottom: 1 + Math.random() * 25,
-          size: 20 + Math.random() * 15
-        },
-        style: {
-          position: 'absolute',
-          bottom: `${1 + Math.random() * 25}%`,
-          left: `${1 + Math.random() * 98}%`,
-          width: `${20 + Math.random() * 15}px`,
-          height: `${40 + Math.random() * 20}px`,
-          transform: 'translateX(-50%)',
-          zIndex: 7
-        }
-      }));
-    }
-    
-    // Generate rice plants that will respond to mouse movement
-    const plants = [];
-    const plantCount = 40;
-    
-    for (let i = 0; i < plantCount; i++) {
-      // Distribute across the bottom of the screen
-      const leftPos = 1 + Math.random() * 98; // 1-99% horizontal position
-      const bottomPos = 1 + Math.random() * 25; // 1-26% from bottom
-      const size = 20 + Math.random() * 15; // Varied sizes
-      const height = 40 + Math.random() * 20;
-      const delay = i * 0.2;
-      
-      // Random variations for each plant
-      const seedCount = 3 + Math.floor(Math.random() * 3); // 3-5 seeds
-      const stemColor = isDark ? '#D7CCC8' : '#A1887F';
-      const seedColor = isDark ? '#FFE082' : '#FFC107';
-      
-      // Store position data for mouse interaction calculations
-      plants.push({
-        key: `rice-plant-${i}`,
-        position: {
-          left: leftPos,
-          bottom: bottomPos,
-          size: size,
-          height: height
-        },
-        style: {
-          position: 'absolute',
-          bottom: `${bottomPos}%`,
-          left: `${leftPos}%`,
-          width: `${size}px`,
-          height: `${height}px`,
-          zIndex: 7,
-          willChange: 'transform',
-          opacity: bottomPos > 15 ? 0.85 : 1, // Slightly fade out the ones further back
-          transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)'
-        },
-        seedCount,
-        stemColor,
-        seedColor
-      });
-    }
-    
-    return plants;
-  }, [isDark, prefersReducedMotion.current]);
-
-  // Calculate plant transformation based on mouse position
-  const calculatePlantTransform = (plant) => {
+  // Calculate plant transformation based on mouse position - memoized for better performance
+  const calculatePlantTransform = useCallback((plant) => {
     if (!mousePosition.clientX || !mousePosition.clientY || prefersReducedMotion.current) {
       return 'translateX(-50%)';
     }
 
-    // Calculate plant center position in viewport
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const plantPosX = (plant.position.left / 100) * viewportWidth;
-    const plantPosY = viewportHeight - ((plant.position.bottom / 100) * viewportHeight);
-    
-    // Calculate distance from mouse to plant
-    const dx = mousePosition.clientX - plantPosX;
-    const dy = mousePosition.clientY - plantPosY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    // Calculate movement based on distance (closer = more movement)
-    const maxDistance = 300; // Maximum distance for effect
-    const maxMovement = 30; // Maximum pixel movement
-    
-    if (distance > maxDistance) {
-      // Too far away, just return base transform
+    // Safety check for window
+    if (typeof window === 'undefined') return 'translateX(-50%)';
+
+    try {
+      // Calculate plant center position in viewport
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const plantPosX = (plant.position.left / 100) * viewportWidth;
+      const plantPosY = viewportHeight - ((plant.position.bottom / 100) * viewportHeight);
+      
+      // Calculate distance from mouse to plant
+      const dx = mousePosition.clientX - plantPosX;
+      const dy = mousePosition.clientY - plantPosY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      // Calculate movement based on distance (closer = more movement)
+      const maxDistance = 300; // Maximum distance for effect
+      const maxMovement = 30; // Maximum pixel movement
+      
+      if (distance > maxDistance) {
+        // Too far away, just return base transform
+        return 'translateX(-50%)';
+      }
+      
+      // Calculate movement strength - inverse of distance (closer = stronger)
+      const strength = 1 - (distance / maxDistance);
+      
+      // Calculate movement direction - away from mouse
+      const moveX = (-dx / distance) * strength * maxMovement;
+      const moveY = (-dy / distance) * strength * maxMovement;
+      
+      // Add slight rotation for natural effect
+      const rotate = (moveX * 0.2); // Small rotation based on horizontal movement
+      
+      return `translateX(calc(-50% + ${moveX}px)) translateY(${moveY}px) rotate(${rotate}deg)`;
+    } catch (e) {
+      // Fallback in case of any calculation errors
       return 'translateX(-50%)';
     }
-    
-    // Calculate movement strength - inverse of distance (closer = stronger)
-    const strength = 1 - (distance / maxDistance);
-    
-    // Calculate movement direction - away from mouse
-    const moveX = (-dx / distance) * strength * maxMovement;
-    const moveY = (-dy / distance) * strength * maxMovement;
-    
-    // Add slight rotation for natural effect
-    const rotate = (moveX * 0.2); // Small rotation based on horizontal movement
-    
-    return `translateX(calc(-50% + ${moveX}px)) translateY(${moveY}px) rotate(${rotate}deg)`;
-  };
+  }, [mousePosition.clientX, mousePosition.clientY]);
 
   // Dynamic animation keyframes
   const keyframes = `
@@ -654,8 +719,11 @@ export default function EnhancedHeroSection({ translations, className, style, ch
   const RicePlantSVG = React.memo(({ plant }) => {
     if (!plant || !plant.style) return null;
     
-    // Calculate transform based on mouse position
-    const transform = calculatePlantTransform(plant);
+    // Use a simpler transform for server-side rendering
+    const baseTransform = 'translateX(-50%)';
+    // Only apply interactive transform on the client side if mouse position is available
+    const transform = clientSideLoaded && mousePosition.clientX ? 
+      calculatePlantTransform(plant) : baseTransform;
     
     // Calculate stem and seed positions
     const stemWidth = plant.position.size * 0.06; // Thin stem
@@ -682,7 +750,7 @@ export default function EnhancedHeroSection({ translations, className, style, ch
             fill={plant.seedColor} 
             opacity="0.95"
             transform={`rotate(${angle})`}
-            style={{ animation: `seedSway 3s ease-in-out infinite` }}
+            style={{ animation: clientSideLoaded ? `seedSway 3s ease-in-out infinite` : 'none' }}
           />
         </g>
       );
@@ -716,9 +784,6 @@ export default function EnhancedHeroSection({ translations, className, style, ch
   });
   RicePlantSVG.displayName = 'RicePlantSVG';
 
-  // Get rice plants
-  const ricePlants = useMemo(() => generateRicePlants, [generateRicePlants]);
-
   return (
     <>
       <style>{keyframes}</style>
@@ -740,18 +805,18 @@ export default function EnhancedHeroSection({ translations, className, style, ch
         <CloudSVG style={animationStyles.cloud2} />
         <CloudSVG style={animationStyles.cloud3} />
 
-        {/* Flying birds */}
-        {birds.filter(bird => bird && bird.style).map(bird => (
+        {/* Flying birds - only render after client-side hydration */}
+        {clientSideLoaded && birds.filter(bird => bird && bird.style).map(bird => (
           <BirdSVG key={bird.key} style={bird.style} />
         ))}
         
-        {/* Raindrops */}
-        {raindrops.filter(drop => drop && drop.style).map(drop => (
+        {/* Raindrops - only render after client-side hydration */}
+        {clientSideLoaded && raindrops.filter(drop => drop && drop.style).map(drop => (
           <div key={drop.key} style={drop.style}></div>
         ))}
         
-        {/* SVG Rice plants - interactive with mouse */}
-        {ricePlants.filter(plant => plant && plant.style).map(plant => (
+        {/* SVG Rice plants - only render after client-side hydration */}
+        {clientSideLoaded && ricePlants.filter(plant => plant && plant.style).map(plant => (
           <RicePlantSVG key={plant.key} plant={plant} />
         ))}
         
@@ -872,27 +937,31 @@ export default function EnhancedHeroSection({ translations, className, style, ch
                       transform: 'scale(1.05)',
                     }}
                     onError={(e) => {
-                      // Multiple fallback options
-                      if (e.target.src.includes('cad.gif')) {
-                        // First fallback: try a different image path
-                        e.target.src = "/images/agriculture-hero.jpg";
-                      } else if (e.target.src.includes('agriculture-hero.jpg')) {
-                        // Second fallback: use a placeholder service
-                        e.target.src = "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80";
-                        e.target.alt = "Sri Lankan Agriculture";
-                      } else {
-                        // Final fallback: create a styled placeholder
-                        e.target.style.display = 'none';
-                        const placeholder = document.createElement('div');
-                        placeholder.className = 'w-full h-64 flex items-center justify-center text-white text-lg font-semibold';
-                        placeholder.style.background = `linear-gradient(135deg, ${isDark ? '#2E7D32, #4CAF50' : '#4CAF50, #66BB6A'})`;
-                        placeholder.innerHTML = `
-                          <div class="text-center">
-                            <div class="text-4xl mb-2">🌾</div>
-                            <div>${language === 'si' ? 'ස්මාර්ට් බෝග උපදේශක' : language === 'ta' ? 'ஸ்மார்ட் பயிர் ஆலோசகர்' : 'Smart Crop Adviser'}</div>
-                          </div>
-                        `;
-                        e.target.parentNode.appendChild(placeholder);
+                      try {
+                        // Multiple fallback options
+                        if (e.target.src.includes('cad.gif')) {
+                          // First fallback: try a different image path
+                          e.target.src = "/images/agriculture-hero.jpg";
+                        } else if (e.target.src.includes('agriculture-hero.jpg')) {
+                          // Second fallback: use a placeholder service
+                          e.target.src = "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80";
+                          e.target.alt = "Sri Lankan Agriculture";
+                        } else {
+                          // Final fallback: create a styled placeholder
+                          e.target.style.display = 'none';
+                          const placeholder = document.createElement('div');
+                          placeholder.className = 'w-full h-64 flex items-center justify-center text-white text-lg font-semibold';
+                          placeholder.style.background = `linear-gradient(135deg, ${isDark ? '#2E7D32, #4CAF50' : '#4CAF50, #66BB6A'})`;
+                          placeholder.innerHTML = `
+                            <div class="text-center">
+                              <div class="text-4xl mb-2">🌾</div>
+                              <div>${language === 'si' ? 'ස්මාර්ට් බෝග උපදේශක' : language === 'ta' ? 'ஸ்மார்ட் பயிர் ஆலோசகர்' : 'Smart Crop Adviser'}</div>
+                            </div>
+                          `;
+                          e.target.parentNode.appendChild(placeholder);
+                        }
+                      } catch (err) {
+                        console.error('Error in image fallback:', err);
                       }
                     }}
                   />

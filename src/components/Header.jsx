@@ -100,12 +100,24 @@ export default function Header() {
     { href: '/info', label: translations?.nav?.info || 'Information', icon: <Info className="h-4 w-4" /> }
   ];
 
-  // Tamil font size utility function
-  const getTamilFontSize = (baseSize, reduction = 0.75) => {
+  // Font size utility function for non-English languages
+  const getLocalizedFontSize = (defaultSize) => {
     if (language === 'ta') {
-      return `${reduction}rem`;
+      return '0.7rem'; // Smaller size for Tamil
+    } else if (language === 'si') {
+      return '0.8rem'; // Slightly larger for Sinhala
     }
-    return undefined;
+    return defaultSize; // Default for English
+  };
+
+  // Font size utility function for language options
+  const getLanguageOptionFontSize = (langCode) => {
+    if (langCode === 'ta') {
+      return '0.7rem'; // Tamil language option
+    } else if (langCode === 'si') {
+      return '0.8rem'; // Sinhala language option
+    }
+    return undefined; // Default for English
   };
 
   return (
@@ -136,8 +148,8 @@ export default function Header() {
                   className="ml-2 text-xl font-bold"
                   style={{ 
                     color: theme.colors.text,
-                    // Significant reduction for Tamil brand text
-                    fontSize: language === 'ta' ? '0.7rem' : undefined
+                    // Font size reduction for Tamil and Sinhala
+                    fontSize: getLocalizedFontSize('1rem')
                   }}
                 >
                   {translations?.brand || 'Smart Crop Adviser'}
@@ -157,8 +169,8 @@ export default function Header() {
                     color: isActive(link.href)
                       ? theme.colors.primary
                       : theme.colors.text,
-                    // Reduce font size for Tamil navigation links
-                    fontSize: language === 'ta' ? '0.7rem' : undefined
+                    // Font size reduction for Tamil and Sinhala navigation links
+                    fontSize: getLocalizedFontSize('0.875rem')
                   }}
                 >
                   <span className="mr-1.5">{link.icon}</span>
@@ -191,16 +203,16 @@ export default function Header() {
                 style={{ 
                   backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
                   color: theme.colors.text,
-                  // Reduce font size for Tamil language button
-                  fontSize: language === 'ta' ? '0.7rem' : undefined
+                  // Font size reduction for Tamil and Sinhala
+                  fontSize: getLocalizedFontSize('0.875rem')
                 }}
               >
                 <Globe className="h-5 w-5" />
                 <span 
                   className="ml-1 text-sm font-medium hidden md:inline"
                   style={{
-                    // Further reduce Tamil language name
-                    fontSize: language === 'ta' ? '0.7rem' : undefined
+                    // Further reduce for non-English languages
+                    fontSize: getLocalizedFontSize('0.875rem')
                   }}
                 >
                   {languages.find(lang => lang.code === language)?.name || 'English'}
@@ -229,8 +241,8 @@ export default function Header() {
                         color: language === lang.code 
                           ? theme.colors.primary 
                           : theme.colors.text,
-                        // Reduce font size specifically for Tamil option
-                        fontSize: lang.code === 'ta' ? '0.7rem' : undefined
+                        // Font size reduction for specific language options
+                        fontSize: getLanguageOptionFontSize(lang.code)
                       }}
                     >
                       {lang.name}
@@ -250,8 +262,8 @@ export default function Header() {
                     style={{ 
                       backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
                       color: theme.colors.text,
-                      // Reduce font size for Tamil user menu
-                      fontSize: language === 'ta' ? '0.7rem' : undefined
+                      // Font size reduction for Tamil and Sinhala
+                      fontSize: getLocalizedFontSize('0.875rem')
                     }}
                   >
                     <div 
@@ -285,8 +297,8 @@ export default function Header() {
                       className="block px-4 py-2 text-sm transition-colors duration-200"
                       style={{ 
                         color: theme.colors.text,
-                        // Reduce font size for Tamil dropdown links
-                        fontSize: language === 'ta' ? '0.7rem' : undefined
+                        // Font size reduction for Tamil and Sinhala
+                        fontSize: getLocalizedFontSize('0.875rem')
                       }}
                       onClick={() => setIsUserMenuOpen(false)}
                     >
@@ -297,8 +309,8 @@ export default function Header() {
                       className="block px-4 py-2 text-sm transition-colors duration-200"
                       style={{ 
                         color: theme.colors.text,
-                        // Reduce font size for Tamil dropdown links
-                        fontSize: language === 'ta' ? '0.7rem' : undefined
+                        // Font size reduction for Tamil and Sinhala
+                        fontSize: getLocalizedFontSize('0.875rem')
                       }}
                       onClick={() => setIsUserMenuOpen(false)}
                     >
@@ -312,8 +324,8 @@ export default function Header() {
                       className="block w-full text-left px-4 py-2 text-sm transition-colors duration-200"
                       style={{ 
                         color: theme.colors.text,
-                        // Reduce font size for Tamil dropdown buttons
-                        fontSize: language === 'ta' ? '0.7rem' : undefined
+                        // Font size reduction for Tamil and Sinhala
+                        fontSize: getLocalizedFontSize('0.875rem')
                       }}
                     >
                       {translations?.auth?.logout || 'Sign out'}
@@ -329,8 +341,8 @@ export default function Header() {
                   style={{ 
                     backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
                     color: theme.colors.text,
-                    // Reduce font size for Tamil auth links
-                    fontSize: language === 'ta' ? '0.7rem' : undefined
+                    // Font size reduction for Tamil and Sinhala
+                    fontSize: getLocalizedFontSize('0.875rem')
                   }}
                 >
                   <LogIn className="mr-1.5 h-4 w-4" />
@@ -343,8 +355,8 @@ export default function Header() {
                   style={{ 
                     backgroundColor: theme.colors.primary,
                     color: '#ffffff',
-                    // Reduce font size for Tamil auth links
-                    fontSize: language === 'ta' ? '0.7rem' : undefined
+                    // Font size reduction for Tamil and Sinhala
+                    fontSize: getLocalizedFontSize('0.875rem')
                   }}
                 >
                   <UserPlus className="mr-1.5 h-4 w-4" />
@@ -408,8 +420,8 @@ export default function Header() {
                   className="text-base font-medium" 
                   style={{ 
                     color: theme.colors.text,
-                    // Reduce font size for Tamil user info
-                    fontSize: language === 'ta' ? '0.7rem' : undefined
+                    // Font size reduction for Tamil and Sinhala
+                    fontSize: getLocalizedFontSize('1rem')
                   }}
                 >
                   {user.name || user.username || 'User'}
@@ -419,8 +431,8 @@ export default function Header() {
                     className="text-sm" 
                     style={{ 
                       color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
-                      // Reduce font size for Tamil email
-                      fontSize: language === 'ta' ? '0.7rem' : undefined
+                      // Font size reduction for Tamil and Sinhala
+                      fontSize: getLocalizedFontSize('0.875rem')
                     }}
                   >
                     {user.email}
@@ -445,8 +457,8 @@ export default function Header() {
                 color: isActive(link.href)
                   ? theme.colors.primary
                   : theme.colors.text,
-                // Reduce font size for Tamil mobile nav
-                fontSize: language === 'ta' ? '0.7rem' : undefined
+                // Font size reduction for Tamil and Sinhala
+                fontSize: getLocalizedFontSize('1rem')
               }}
             >
               <div className="flex items-center">
@@ -468,8 +480,8 @@ export default function Header() {
                 color: isActive('/profile')
                   ? theme.colors.primary
                   : theme.colors.text,
-                // Reduce font size for Tamil profile link
-                fontSize: language === 'ta' ? '0.7rem' : undefined
+                // Font size reduction for Tamil and Sinhala
+                fontSize: getLocalizedFontSize('1rem')
               }}
             >
               <div className="flex items-center">
@@ -496,8 +508,8 @@ export default function Header() {
                 style={{ 
                   backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
                   color: theme.colors.text,
-                  // Reduce font size for Tamil logout button
-                  fontSize: language === 'ta' ? '0.7rem' : undefined
+                  // Font size reduction for Tamil and Sinhala
+                  fontSize: getLocalizedFontSize('1rem')
                 }}
               >
                 <LogOut className="mr-2 h-5 w-5" />
@@ -512,8 +524,8 @@ export default function Header() {
                 style={{ 
                   backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
                   color: theme.colors.text,
-                  // Reduce font size for Tamil login link
-                  fontSize: language === 'ta' ? '0.7rem' : undefined
+                  // Font size reduction for Tamil and Sinhala
+                  fontSize: getLocalizedFontSize('1rem')
                 }}
               >
                 <LogIn className="mr-2 h-5 w-5" />
@@ -526,8 +538,8 @@ export default function Header() {
                 style={{ 
                   backgroundColor: theme.colors.primary,
                   color: '#ffffff',
-                  // Reduce font size for Tamil register link
-                  fontSize: language === 'ta' ? '0.7rem' : undefined
+                  // Font size reduction for Tamil and Sinhala
+                  fontSize: getLocalizedFontSize('1rem')
                 }}
               >
                 <UserPlus className="mr-2 h-5 w-5" />
@@ -549,8 +561,8 @@ export default function Header() {
             className="text-sm font-medium"
             style={{ 
               color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
-              // Reduce font size for Tamil language selector label
-              fontSize: language === 'ta' ? '0.7rem' : undefined
+              // Font size reduction for Tamil and Sinhala
+              fontSize: getLocalizedFontSize('0.875rem')
             }}
           >
             {translations?.language?.select || 'Language'}
@@ -568,8 +580,8 @@ export default function Header() {
                   color: language === lang.code 
                     ? '#ffffff' 
                     : theme.colors.text,
-                  // Reduce font size for Tamil language option
-                  fontSize: lang.code === 'ta' ? '0.7rem' : undefined
+                  // Font size reduction for specific language options
+                  fontSize: getLanguageOptionFontSize(lang.code)
                 }}
               >
                 {lang.name}

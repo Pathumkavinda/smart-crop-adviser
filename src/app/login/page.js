@@ -6,6 +6,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import ThemeWrapper from '@/components/ThemeWrapper';
 
+
 // Translations for the login page
 const translations = {
   en: {

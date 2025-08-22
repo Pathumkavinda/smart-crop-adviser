@@ -90,21 +90,21 @@ const translations = {
     }
   },
   si: {
-    brand: "බෝග උපදේශක",
+    brand: "ස්මාර්ට් බෝග උපදේශක",
     hero: {
       title: {
         line1: "ශ්‍රී ලාංකික කෘෂිකර්මාන්තය",
         line2: "සඳහා",
-        line3: "බෝග උපදේශක"  
+        line3: "ස්මාර්ට් බෝග උපදේශක"  
       },
-      subtitle: "ඔබේ පස තත්වයන්, පිහිටීම සහ කන්නය මත පදනම්ව පුද්ගලීකරණය කරන ලද බෝග නිර්දේශ ලබා ගන්න.",
+      subtitle: "ඔබේ පසේ තත්වයන්, පිහිටීම සහ කන්නය මත පදනම්ව පුද්ගලීකරණය කරන ලද බෝග නිර්දේශ ලබා ගන්න.",
       getStarted: "ආරම්භ කරන්න",
       learnMore: "තව දැනගන්න",
       dashboard: "විස්තර පුවරුවට යන්න"
     },
     features: {
       title: "විශේෂාංග",
-      subtitle: "ස්මාට් බෝග උපදේශක භාවිතා කිරීමට හේතු",
+      subtitle: "ස්මාර්ට් බෝග උපදේශක භාවිතා කිරීමට හේතු",
       items: [
         {
           title: "පුද්ගලීකරණය කළ නිර්දේශ",
@@ -129,8 +129,8 @@ const translations = {
       subtitle: "සරල පියවර කිහිපයකින් ඔබේ පුද්ගලීකරණය කළ බෝග උපදෙස් ලබා ගන්න.",
       steps: [
         {
-          title: "ඔබේ පස දත්ත ඇතුළත් කරන්න",
-          description: "වඩාත් නිවැරදි නිර්දේශ සඳහා ඔබේ පස පරීක්ෂා ප්‍රතිඵල ඇතුළත් කරන්න හෝ ඔබේ පස වර්ගය තෝරන්න."
+          title: "ඔබේ පසේ දත්ත ඇතුළත් කරන්න",
+          description: "වඩාත් නිවැරදි නිර්දේශ සඳහා ඔබේ පස පරීක්ෂා කළ ප්‍රතිඵල ඇතුළත් කරන්න හෝ ඔබේ පස් වර්ගය තෝරන්න."
         },
         {
           title: "ඔබේ ස්ථානය සඳහන් කරන්න",
@@ -490,12 +490,31 @@ export default function Home() {
     transition: 'opacity 0.3s ease-in-out',
   };
 
-  // Utility function to apply language-specific line height adjustments
+  // Modified getTextStyle function with font size adjustments
   const getTextStyle = (baseStyle = {}) => {
+    // Adjust line heights based on language
     const langLineHeight = language === 'si' ? 1.7 : language === 'ta' ? 1.8 : 1.5;
+    
+    // Add font size adjustments for Tamil and Sinhala
+    const fontSize = language === 'si' ? '110%' : language === 'ta' ? '115%' : 'inherit';
+    
     return {
       ...baseStyle,
       lineHeight: langLineHeight,
+      fontSize: fontSize,
+      transition: 'all 0.3s ease'
+    };
+  };
+
+  // Style function for headings (larger size increase)
+  const getHeadingStyle = (baseStyle = {}) => {
+    const langLineHeight = language === 'si' ? 1.7 : language === 'ta' ? 1.8 : 1.5;
+    const fontSize = language === 'si' ? '120%' : language === 'ta' ? '125%' : 'inherit';
+    
+    return {
+      ...baseStyle,
+      lineHeight: langLineHeight,
+      fontSize: fontSize,
       transition: 'all 0.3s ease'
     };
   };
@@ -515,11 +534,11 @@ export default function Home() {
           <div className="md:flex md:items-center md:justify-between">
             <div className="md:w-1/2" style={contentStyle}>
               {/* Fixed title structure - properly displays in Sinhala */}
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight" style={getTextStyle()}>
-                <span className="block mb-2">{trans.hero.title.line1}</span>
-                <span className="block mb-2 text-3xl md:text-4xl">{trans.hero.title.line2}</span>
+             <h1 className="font-extrabold tracking-tight" style={getHeadingStyle()}>
+                <span className="block mb-2 text-4xl md:text-4xl">{trans.hero.title.line1}</span>
+                <span className="block mb-2 text-4xl md:text-4xl">{trans.hero.title.line2}</span>
                 {trans.hero.title.line3 && (
-                  <span className="block mb-4">{trans.hero.title.line3}</span>
+                  <span className="block mb-4 text-4xl md:text-4xl">{trans.hero.title.line3}</span>
                 )}
               </h1>
               <p className="text-xl md:text-2xl mb-6 text-green-100" style={getTextStyle()}>
@@ -530,6 +549,7 @@ export default function Home() {
                   <Link
                     href="/dashboard"
                     className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-700 bg-white hover:bg-green-50 transition-all duration-300"
+                    style={getTextStyle()}
                   >
                     {trans.hero.dashboard}
                     <ArrowRight className="ml-2 h-5 w-5" />
@@ -539,6 +559,7 @@ export default function Home() {
                     <Link
                       href="/adviser"
                       className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-700 bg-white hover:bg-green-50 transition-all duration-300"
+                      style={getTextStyle()}
                     >
                       {trans.hero.getStarted}
                       <ArrowRight className="ml-2 h-5 w-5" />
@@ -546,6 +567,7 @@ export default function Home() {
                     <Link
                       href="/info"
                       className="inline-flex items-center justify-center px-5 py-3 border border-white text-base font-medium rounded-md text-white hover:bg-green-800 hover:bg-opacity-30 transition-all duration-300"
+                      style={getTextStyle()}
                     >
                       {trans.hero.learnMore}
                     </Link>
@@ -579,7 +601,7 @@ export default function Home() {
                       placeholder.innerHTML = `
                         <div class="text-center">
                           <div class="text-4xl mb-2">🌾</div>
-                          <div>${language === 'si' ? 'ස්මාර්ට් බෝග උපදේශක' : language === 'ta' ? 'ஸ்மார்ட் பயிர் ஆலோசகர்' : 'Smart Crop Adviser'}</div>
+                          <div style="font-size: ${language === 'si' ? '110%' : language === 'ta' ? '115%' : '100%'}">${language === 'si' ? 'ස්මාර්ට් බෝග උපදේශක' : language === 'ta' ? 'ஸ்மார்ட் பயிர் ஆலோசகர்' : 'Smart Crop Adviser'}</div>
                         </div>
                       `;
                       e.target.parentNode.appendChild(placeholder);
@@ -598,13 +620,13 @@ export default function Home() {
           <div className="text-center" style={contentStyle}>
             <h2 
               className="text-base font-semibold tracking-wide uppercase"
-              style={{ color: theme.colors.primary }}
+              style={{ ...getHeadingStyle(), color: theme.colors.primary }}
             >
               {trans.features.title}
             </h2>
             <p 
               className="mt-1 text-4xl font-extrabold sm:text-5xl sm:tracking-tight"
-              style={{ ...getTextStyle(), color: theme.colors.text }}
+              style={{ ...getHeadingStyle(), color: theme.colors.text }}
             >
               {trans.features.subtitle}
             </p>
@@ -642,7 +664,7 @@ export default function Home() {
                         </div>
                         <h3 
                           className="mt-8 text-lg font-medium tracking-tight min-h-[3rem]" // Fixed height for title
-                          style={{ ...getTextStyle(), color: theme.colors.text }}
+                          style={{ ...getHeadingStyle(), color: theme.colors.text }}
                         >
                           {feature.title}
                         </h3>
@@ -689,6 +711,7 @@ export default function Home() {
             <h2 
               className="text-base font-semibold tracking-wide uppercase relative inline-block mb-4"
               style={{ 
+                ...getHeadingStyle(),
                 color: theme.colors.primary,
                 paddingBottom: '8px'
               }}
@@ -712,7 +735,7 @@ export default function Home() {
               <h3 
                 className="text-3xl sm:text-4xl font-bold relative z-10 leading-snug"
                 style={{ 
-                  ...getTextStyle(),
+                  ...getHeadingStyle(),
                   color: theme.colors.text,
                   paddingBottom: '12px',
                   transition: 'all 0.5s ease'
@@ -740,7 +763,7 @@ export default function Home() {
               <div className="md:w-3/4">
                 <h4 
                   className="text-lg font-semibold mb-2"
-                  style={{ color: theme.colors.primary }}
+                  style={{ ...getHeadingStyle(), color: theme.colors.primary }}
                 >
                   {language === 'si' ? 'වඩාත් සාර්ථක වගාවක් සඳහා උපදෙස්' : 
                    language === 'ta' ? 'வெற்றிகரமான பயிர்களுக்கான குறிப்புகள்' : 
@@ -749,8 +772,8 @@ export default function Home() {
                 <p 
                   className="text-base"
                   style={{ 
-                    color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
-                    ...getTextStyle()
+                    ...getTextStyle(),
+                    color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)'
                   }}
                 >
                   {language === 'si' ? 
@@ -833,7 +856,7 @@ export default function Home() {
                           <div style={contentStyle}>
                             <h3 
                               className="text-xl font-bold mb-3"
-                              style={{ ...getTextStyle(), color: theme.colors.primary }}
+                              style={{ ...getHeadingStyle(), color: theme.colors.primary }}
                             >
                               {step.title}
                             </h3>
@@ -895,7 +918,7 @@ export default function Home() {
                           <div style={contentStyle}>
                             <h3 
                               className="text-xl font-bold mb-3"
-                              style={{ ...getTextStyle(), color: theme.colors.primary }}
+                              style={{ ...getHeadingStyle(), color: theme.colors.primary }}
                             >
                               {step.title}
                             </h3>
@@ -923,7 +946,7 @@ export default function Home() {
                       <div style={contentStyle}>
                         <h3 
                           className="text-lg font-bold mb-2"
-                          style={{ ...getTextStyle(), color: theme.colors.primary }}
+                          style={{ ...getHeadingStyle(), color: theme.colors.primary }}
                         >
                           {step.title}
                         </h3>
@@ -944,7 +967,7 @@ export default function Home() {
       </div>
 
       {/* CTA Section */}
-      <div 
+  <div 
         className="transition-all duration-300"
         style={{ 
           backgroundColor: isDark ? '#1e4620' : theme.colors.primary,
@@ -953,9 +976,9 @@ export default function Home() {
       >
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
           <div style={contentStyle}>
-            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl transition-all duration-300" style={getTextStyle()}>
+            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl transition-all duration-300" style={getHeadingStyle()}>
               <span className="block">{trans.cta.title}</span>
-              <span className="block text-green-100">{trans.cta.subtitle}</span>
+              <span className="block text-green-100 text-2xl sm:text-3xl">{trans.cta.subtitle}</span>
             </h2>
           </div>
           <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
@@ -964,6 +987,7 @@ export default function Home() {
                 <Link
                   href="/dashboard"
                   className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-600 bg-white hover:bg-green-50 transition-all duration-300"
+                  style={getTextStyle()}
                 >
                   {trans.hero.dashboard}
                 </Link>
@@ -974,6 +998,7 @@ export default function Home() {
                   <Link
                     href="/adviser"
                     className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-600 bg-white hover:bg-green-50 transition-all duration-300"
+                    style={getTextStyle()}
                   >
                     {trans.cta.buttonStart}
                   </Link>
@@ -982,6 +1007,7 @@ export default function Home() {
                   <Link
                     href="/login"
                     className="inline-flex items-center justify-center px-5 py-3 border border-white text-base font-medium rounded-md text-white hover:bg-green-800 transition-all duration-300"
+                    style={getTextStyle()}
                   >
                     {trans.cta.buttonLogin}
                   </Link>
