@@ -1,0 +1,716 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { Calendar as CalendarIcon, Trash2, Plus, Edit, X, Save, AlertTriangle } from 'lucide-react';
+
+/* ---------------------------------- Utils --------------------------------- */
+
+const formatDate = (date) => {
+  if (!date) return '-';
+  try {
+    return new Date(date).toLocaleDateString();
+  } catch {
+    return '-';
+  }
+};
+
+const DatePicker = ({ value, onChange, label, isDark, error }) => (
+  <div className="mb-4">
+    <label className="block text-sm font-medium mb-1" style={{ color: isDark ? '#ddd' : '#333' }}>
+      {label} {error && <span className="text-red-500">*</span>}
+    </label>
+    <div className="relative">
+      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <CalendarIcon className="h-5 w-5" style={{ color: isDark ? '#aaa' : '#666' }} />
+      </div>
+      <input
+        type="date"
+        value={value ? new Date(value).toISOString().split('T')[0] : ''}
+        onChange={(e) => onChange(new Date(e.target.value))}
+        className="pl-10 pr-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none"
+        style={{
+          backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'white',
+          borderColor: error ? '#f87171' : isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+          color: isDark ? '#eee' : '#333',
+        }}
+      />
+      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+    </div>
+  </div>
+);
+
+/* ------------------------------- Main Component --------------------------- */
+
+export default function CultivationDates({
+  apiBase = '',
+  userId = null,
+  cultivationDates = [],
+  setCultivationDates = () => {},
+  theme = { colors: { primary: '#3b82f6' } },
+  isDark = false,
+  language = 'en',
+}) {
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [isEditingId, setIsEditingId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // Local form state (UI names); we map to API on submit
+  const [formData, setFormData] = useState({
+    crop_id: '',
+    crop_name: '',
+    planting_date: new Date(),
+    expected_harvest: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+    location: '',
+    land_size: '',
+    status: 'planning', // backend default is 'planning'
+    notes: '',
+  });
+
+  const [validationErrors, setValidationErrors] = useState({});
+
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.crop_name) errors.crop_name = 'Crop name is required';
+    if (!formData.planting_date) errors.planting_date = 'Planning date is required';
+    if (!formData.expected_harvest) errors.expected_harvest = 'Expected harvest date is required';
+    if (formData.expected_harvest <= formData.planting_date) {
+      errors.expected_harvest = 'Harvest date must be after planning date';
+    }
+    if (!formData.location) errors.location = 'Location is required';
+    if (!formData.land_size) errors.land_size = 'Land size is required';
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const resetForm = () => {
+    setFormData({
+      crop_id: '',
+      crop_name: '',
+      planting_date: new Date(),
+      expected_harvest: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+      location: '',
+      land_size: '',
+      status: 'planning',
+      notes: '',
+    });
+    setValidationErrors({});
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (value && validationErrors[name]) {
+      setValidationErrors((prev) => {
+        const n = { ...prev };
+        delete n[name];
+        return n;
+      });
+    }
+  };
+
+  const handleCancel = () => {
+    setIsAddingNew(false);
+    setIsEditingId(null);
+    resetForm();
+  };
+
+  /* ------------------------------- API Calls ------------------------------ */
+
+  const fetchCultivationDates = useCallback(async () => {
+    if (!userId) return;
+    try {
+      setLoading(true);
+      setError('');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+      const res = await fetch(
+        `${apiBase}/api/v1/cultivations?user_id=${encodeURIComponent(userId)}`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+
+      if (!res.ok) {
+        const errData = await safeJson(res);
+        throw new Error(errData?.error || errData?.message || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : (data?.data || []);
+      setCultivationDates(list);
+    } catch (err) {
+      console.error('Error fetching cultivation dates:', err);
+      setError('Failed to load cultivation dates');
+    } finally {
+      setLoading(false);
+    }
+  }, [apiBase, userId, setCultivationDates]);
+
+  useEffect(() => {
+    fetchCultivationDates();
+  }, [fetchCultivationDates]);
+
+  const handleAddCultivation = async () => {
+    if (!validateForm()) return;
+
+    try {
+      setLoading(true);
+      setError('');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+      // Map UI -> API field names
+      const payload = {
+        user_id: userId,
+        crop: formData.crop_name,
+        location: formData.location,
+        land_size: formData.land_size,
+        status: formData.status,
+        planning_date: formData.planting_date.toISOString(),
+        expected_harvest_date: formData.expected_harvest.toISOString(),
+        note: formData.notes,
+      };
+
+      const res = await fetch(`${apiBase}/api/v1/cultivations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errData = await safeJson(res);
+        throw new Error(errData?.error || errData?.message || `HTTP ${res.status}`);
+      }
+
+      const created = await res.json();
+      setCultivationDates((prev) => [created, ...prev]);
+      setSuccessMessage('Cultivation added successfully');
+      setTimeout(() => setSuccessMessage(''), 3000);
+      resetForm();
+      setIsAddingNew(false);
+    } catch (err) {
+      console.error('Error adding cultivation:', err);
+      setError(err?.message || 'Failed to add cultivation');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditCultivation = async () => {
+    if (!validateForm() || !isEditingId) return;
+
+    try {
+      setLoading(true);
+      setError('');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+      const payload = {
+        user_id: userId,
+        crop: formData.crop_name,
+        location: formData.location,
+        land_size: formData.land_size,
+        status: formData.status,
+        planning_date: formData.planting_date.toISOString(),
+        expected_harvest_date: formData.expected_harvest.toISOString(),
+        note: formData.notes,
+      };
+
+      const res = await fetch(`${apiBase}/api/v1/cultivations/${isEditingId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errData = await safeJson(res);
+        throw new Error(errData?.error || errData?.message || `HTTP ${res.status}`);
+      }
+
+      const updated = await res.json();
+      setCultivationDates((prev) => prev.map((r) => (r.id === isEditingId ? updated : r)));
+      setSuccessMessage('Cultivation updated successfully');
+      setTimeout(() => setSuccessMessage(''), 3000);
+      resetForm();
+      setIsEditingId(null);
+    } catch (err) {
+      console.error('Error updating cultivation:', err);
+      setError(err?.message || 'Failed to update cultivation');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteCultivation = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this cultivation record?')) return;
+
+    try {
+      setLoading(true);
+      setError('');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+      const res = await fetch(`${apiBase}/api/v1/cultivations/${id}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!res.ok) {
+        const errData = await safeJson(res);
+        throw new Error(errData?.error || errData?.message || `HTTP ${res.status}`);
+      }
+
+      const ok = await res.json();
+      if (ok?.success) {
+        setCultivationDates((prev) => prev.filter((r) => r.id !== id));
+        setSuccessMessage('Cultivation deleted successfully');
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        throw new Error('Failed to delete cultivation');
+      }
+    } catch (err) {
+      console.error('Error deleting cultivation:', err);
+      setError(err?.message || 'Failed to delete cultivation');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startEditing = (cultivation) => {
+    setIsEditingId(cultivation.id);
+    setFormData({
+      crop_id: cultivation.crop_id || '',
+      crop_name: cultivation.crop || '',
+      planting_date: cultivation.planning_date ? new Date(cultivation.planning_date) : new Date(),
+      expected_harvest: cultivation.expected_harvest_date
+        ? new Date(cultivation.expected_harvest_date)
+        : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+      location: cultivation.location || '',
+      land_size: cultivation.land_size || '',
+      status: cultivation.status || 'planning',
+      notes: cultivation.note || '',
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (isEditingId) handleEditCultivation();
+    else handleAddCultivation();
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'active':
+        return { bg: isDark ? 'rgba(34,197,94,0.2)' : 'rgba(34,197,94,0.1)', text: '#22C55E' };
+      case 'completed':
+        return { bg: isDark ? 'rgba(59,130,246,0.2)' : 'rgba(59,130,246,0.1)', text: '#3B82F6' };
+      case 'planned':
+      case 'planning':
+        return { bg: isDark ? 'rgba(234,179,8,0.2)' : 'rgba(234,179,8,0.1)', text: '#EAB308' };
+      default:
+        return { bg: isDark ? 'rgba(107,114,128,0.2)' : 'rgba(107,114,128,0.1)', text: '#6B7280' };
+    }
+  };
+
+  /* --------------------------------- Render -------------------------------- */
+
+  if (loading && !isAddingNew && !isEditingId && cultivationDates.length === 0) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: theme.colors.primary }} />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Error */}
+      {error && (
+        <div
+          className="mb-4 p-3 rounded-md"
+          style={{
+            backgroundColor: isDark ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.1)',
+            color: isDark ? '#F87171' : '#DC2626',
+            border: `1px solid ${isDark ? 'rgba(239,68,68,0.3)' : 'rgba(239,68,68,0.2)'}`,
+          }}
+        >
+          <div className="flex items-start">
+            <AlertTriangle className="h-5 w-5 mr-2 flex-shrink-0" />
+            <p>{error}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Success */}
+      {successMessage && (
+        <div
+          className="mb-4 p-3 rounded-md"
+          style={{
+            backgroundColor: isDark ? 'rgba(34,197,94,0.2)' : 'rgba(34,197,94,0.1)',
+            color: isDark ? '#4ADE80' : '#22C55E',
+            border: `1px solid ${isDark ? 'rgba(34,197,94,0.3)' : 'rgba(34,197,94,0.2)'}`,
+          }}
+        >
+          <p>{successMessage}</p>
+        </div>
+      )}
+
+      {/* Add button */}
+      {!isAddingNew && !isEditingId && (
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setIsAddingNew(true)}
+            className="flex items-center px-4 py-2 rounded-md text-white"
+            style={{ backgroundColor: theme.colors.primary }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Cultivation
+          </button>
+        </div>
+      )}
+
+      {/* Form */}
+      {(isAddingNew || isEditingId) && (
+        <div
+          className="mb-6 p-4 rounded-lg"
+          style={{
+            backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+          }}
+        >
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium" style={{ color: isDark ? '#eee' : '#333' }}>
+              {isEditingId ? 'Edit Cultivation' : 'Add New Cultivation'}
+            </h3>
+            <button
+              onClick={handleCancel}
+              className="p-1 rounded-full hover:bg-opacity-10"
+              style={{
+                color: isDark ? '#aaa' : '#666',
+                backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+              }}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Crop Name */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1" style={{ color: isDark ? '#ddd' : '#333' }}>
+                  Crop Name {validationErrors.crop_name && <span className="text-red-500">*</span>}
+                </label>
+                <input
+                  type="text"
+                  name="crop_name"
+                  value={formData.crop_name}
+                  onChange={handleChange}
+                  className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none"
+                  style={{
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'white',
+                    borderColor: validationErrors.crop_name ? '#f87171' : isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                    color: isDark ? '#eee' : '#333',
+                  }}
+                />
+                {validationErrors.crop_name && <p className="mt-1 text-xs text-red-500">{validationErrors.crop_name}</p>}
+              </div>
+
+              {/* Location */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1" style={{ color: isDark ? '#ddd' : '#333' }}>
+                  Location {validationErrors.location && <span className="text-red-500">*</span>}
+                </label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none"
+                  style={{
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'white',
+                    borderColor: validationErrors.location ? '#f87171' : isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                    color: isDark ? '#eee' : '#333',
+                  }}
+                  placeholder="Farm location or field name"
+                />
+                {validationErrors.location && <p className="mt-1 text-xs text-red-500">{validationErrors.location}</p>}
+              </div>
+
+              {/* Land Size */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1" style={{ color: isDark ? '#ddd' : '#333' }}>
+                  Land Size {validationErrors.land_size && <span className="text-red-500">*</span>}
+                </label>
+                <input
+                  type="text"
+                  name="land_size"
+                  value={formData.land_size}
+                  onChange={handleChange}
+                  className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none"
+                  style={{
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'white',
+                    borderColor: validationErrors.land_size ? '#f87171' : isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                    color: isDark ? '#eee' : '#333',
+                  }}
+                  placeholder="e.g., 1.0 acre / 0.4 ha / 20 perches"
+                />
+                {validationErrors.land_size && <p className="mt-1 text-xs text-red-500">{validationErrors.land_size}</p>}
+              </div>
+
+              {/* Status */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1" style={{ color: isDark ? '#ddd' : '#333' }}>
+                  Status
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none"
+                  style={{
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'white',
+                    borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                    color: isDark ? '#eee' : '#333',
+                  }}
+                >
+                  <option value="planning">Planned</option>
+                  <option value="active">Active</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+
+              {/* Planning Date */}
+              <DatePicker
+                value={formData.planting_date}
+                onChange={(date) => setFormData({ ...formData, planting_date: date })}
+                label="Planning Date"
+                isDark={isDark}
+                error={validationErrors.planting_date}
+              />
+
+              {/* Expected Harvest Date */}
+              <DatePicker
+                value={formData.expected_harvest}
+                onChange={(date) => setFormData({ ...formData, expected_harvest: date })}
+                label="Expected Harvest Date"
+                isDark={isDark}
+                error={validationErrors.expected_harvest}
+              />
+            </div>
+
+            {/* Notes */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1" style={{ color: isDark ? '#ddd' : '#333' }}>
+                Notes
+              </label>
+              <textarea
+                name="notes"
+                value={formData.notes}
+                onChange={handleChange}
+                rows="3"
+                className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none"
+                style={{
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'white',
+                  borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                  color: isDark ? '#eee' : '#333',
+                }}
+                placeholder="Optional notes about this cultivation"
+              />
+            </div>
+
+            {/* Buttons */}
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="px-4 py-2 rounded-md border"
+                style={{
+                  backgroundColor: 'transparent',
+                  borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                  color: isDark ? '#ddd' : '#333',
+                }}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex items-center px-4 py-2 rounded-md text-white"
+                style={{ backgroundColor: theme.colors.primary, opacity: loading ? 0.7 : 1 }}
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                {isEditingId ? 'Update' : 'Save'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* List */}
+      {!isAddingNew && !isEditingId && (
+        <>
+          {cultivationDates.length === 0 ? (
+            <div
+              className="text-center py-8 rounded-lg"
+              style={{
+                backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                border: `1px dashed ${isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}`,
+                color: isDark ? '#aaa' : '#666',
+              }}
+            >
+              <p>No cultivation records found</p>
+              <button
+                onClick={() => setIsAddingNew(true)}
+                className="mt-2 text-sm"
+                style={{ color: theme.colors.primary }}
+              >
+                Add your first cultivation
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {cultivationDates
+                .slice()
+                .sort((a, b) => new Date(b.planning_date) - new Date(a.planning_date))
+                .map((cultivation) => {
+                  const statusColor = getStatusColor(cultivation.status);
+                  const daysToHarvest = cultivation.expected_harvest_date
+                    ? Math.max(
+                        0,
+                        Math.floor(
+                          (new Date(cultivation.expected_harvest_date) - new Date()) / (1000 * 60 * 60 * 24)
+                        )
+                      )
+                    : null;
+
+                  return (
+                    <div
+                      key={cultivation.id}
+                      className="p-4 rounded-lg"
+                      style={{
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                        border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                      }}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="flex items-center">
+                            <h3 className="text-lg font-medium" style={{ color: isDark ? '#eee' : '#333' }}>
+                              {cultivation.crop}
+                            </h3>
+                            <span
+                              className="ml-2 px-2 py-0.5 text-xs rounded-full"
+                              style={{ backgroundColor: statusColor.bg, color: statusColor.text }}
+                            >
+                              {cultivation.status}
+                            </span>
+                          </div>
+
+                          <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                            <div>
+                              <p className="text-xs" style={{ color: isDark ? '#aaa' : '#666' }}>
+                                Location
+                              </p>
+                              <p className="text-sm" style={{ color: isDark ? '#ddd' : '#333' }}>
+                                {cultivation.location || '-'}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs" style={{ color: isDark ? '#aaa' : '#666' }}>
+                                Land Size
+                              </p>
+                              <p className="text-sm" style={{ color: isDark ? '#ddd' : '#333' }}>
+                                {cultivation.land_size || '-'}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs" style={{ color: isDark ? '#aaa' : '#666' }}>
+                                Planning Date
+                              </p>
+                              <p className="text-sm" style={{ color: isDark ? '#ddd' : '#333' }}>
+                                {formatDate(cultivation.planning_date)}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs" style={{ color: isDark ? '#aaa' : '#666' }}>
+                                Expected Harvest
+                              </p>
+                              <p className="text-sm" style={{ color: isDark ? '#ddd' : '#333' }}>
+                                {formatDate(cultivation.expected_harvest_date)}
+                                {daysToHarvest !== null && cultivation.status === 'active' && (
+                                  <span className="ml-2 text-xs" style={{ color: theme.colors.primary }}>
+                                    ({daysToHarvest} days left)
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+
+                          {cultivation.note && (
+                            <div className="mt-2">
+                              <p className="text-xs" style={{ color: isDark ? '#aaa' : '#666' }}>
+                                Notes
+                              </p>
+                              <p className="text-sm" style={{ color: isDark ? '#ddd' : '#333' }}>
+                                {cultivation.note}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex space-x-1">
+                          <button
+                            onClick={() => startEditing(cultivation)}
+                            className="p-1 rounded hover:bg-opacity-10"
+                            style={{
+                              color: theme.colors.primary,
+                              backgroundColor: isDark ? `${theme.colors.primary}20` : `${theme.colors.primary}10`,
+                            }}
+                            title="Edit"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCultivation(cultivation.id)}
+                            className="p-1 rounded hover:bg-opacity-10"
+                            style={{
+                              color: '#EF4444',
+                              backgroundColor: isDark ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.1)',
+                            }}
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------- small helpers ---------------------------- */
+
+async function safeJson(res) {
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
+}

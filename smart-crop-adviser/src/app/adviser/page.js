@@ -6,7 +6,8 @@ import { useTheme } from '@/context/ThemeContext';
 import ThemeWrapper from '@/components/ThemeWrapper';
 import {
   Leaf, BarChart3, AlertTriangle, CheckCircle, Droplets, Moon, Sun,
-  Loader2, AlertCircle, Info, Download, Users, Search, FileText, Sun as SunIcon
+  Loader2, AlertCircle, Info, Download, Users, Search, FileText,
+  Thermometer, PlayCircle
 } from 'lucide-react';
 
 // Lazy chart
@@ -163,9 +164,10 @@ export default function CropAdviserPage() {
   const [soilData, setSoilData] = useState({
     soilType: '', pH: '', nitrogen: '', phosphorus: '', potassium: '',
     district: '', agroZone: '', season: '', landArea: '',
-    // NEW: user-provided averages
+    // User-provided weather data
     avgHumidity: '',           // %
-    avgRainfall: ''            // mm
+    avgRainfall: '',           // mm
+    temperature: ''            // °C (NEW field)
   });
 
   const [predictions, setPredictions] = useState(null);
@@ -242,33 +244,38 @@ export default function CropAdviserPage() {
   // ----------------------
   // STATIC LISTS
   // ----------------------
-  const districts = {
-    Colombo: ['WL1a', 'WL2a', 'WL2b'],
-    Gampaha: ['WL1a', 'WL2a', 'WL2b'],
-    Kalutara: ['WL2a', 'WL2b', 'WL3'],
-    Kandy: ['WM1a', 'WM1b', 'WM2a', 'WM2b'],
-    Matale: ['WM1a', 'WM1b', 'WM2a', 'WM3'],
-    NuwaraEliya: ['WU1', 'WU2a', 'WU2b', 'WU3'],
-    Galle: ['WL3', 'WL4'],
-    Matara: ['WL3', 'WL4'],
-    Hambantota: ['DL1a', 'DL1b', 'DL3'],
-    Jaffna: ['DL1a', 'DL1b'],
-    Kilinochchi: ['DL1b', 'DL2a'],
-    Mannar: ['DL2a', 'DL2b'],
-    Vavuniya: ['DL1b', 'DL2b'],
-    Mullaitivu: ['DL1b', 'DL2a'],
-    Batticaloa: ['DL2a', 'DL3'],
-    Ampara: ['DL1b', 'DL3'],
-    Trincomalee: ['DL1b', 'DL2a'],
-    Kurunegala: ['IM1a', 'IM1b', 'IM2a'],
-    Puttalam: ['DL1b', 'IM1c'],
-    Anuradhapura: ['DL1b', 'DL1c'],
-    Polonnaruwa: ['DL1b', 'DL1c'],
-    Badulla: ['IM2a', 'IM2b', 'IM3a'],
-    Moneragala: ['DL3', 'IM3b'],
-    Ratnapura: ['WM2b', 'WM3', 'WL3'],
-    Kegalle: ['WM2a', 'WM2b', 'WL2b'],
-  };
+const districts = {
+  Colombo:      ['WL1a', 'WL2a', 'WL2b', 'WL3'],
+  Gampaha:      ['WL2a', 'WL2b', 'WL3'],
+  Kalutara:     ['WL2a', 'WL2b', 'WL3', 'WL5'],
+  Galle:        ['WL1a', 'WL5'],
+  Matara:       ['WL1a', 'WL2a'],
+  Ratnapura:    ['WL4', 'WM3a', 'WM3b'],
+  Kegalle:      ['WM1a', 'WM1b'],
+
+  Kandy:        ['WM2a', 'WM2b', 'WU3a', 'WU3b', 'IM1a', 'IM1b'],
+  Matale:       ['WM2a', 'WM2b', 'WU3a', 'WU3b', 'IL2', 'DM1a', 'DM1b'],
+  NuwaraEliya:  ['WU1a', 'WU1b'],
+
+  Badulla:      ['WU2a', 'WU2b', 'IM2a', 'IM2b', 'IU1', 'IU2', 'IU3d', 'IU3e', 'DM2', 'DU1'],
+  Monaragala:   ['IM2a', 'IM2b', 'DM1a', 'DM1b', 'DU2'],
+
+  Anuradhapura: ['DL1a', 'DL1b', 'DL1c', 'DL1d'],
+  Polonnaruwa:  ['DL2a', 'DL2b'],
+  Trincomalee:  ['DL1d', 'DL2a', 'DL2b'],
+
+  Vavuniya:     ['DL3'],
+  Mullaitivu:   ['DL3'],
+  Kilinochchi:  ['DL3'],
+  Jaffna:       ['DL4', 'AZ4'],
+  Mannar:       ['AZ1', 'DL3'],
+  Puttalam:     ['AZ2', 'IL1b'],
+
+  Kurunegala:   ['IL1a', 'IL1b'],
+  Batticaloa:   ['DL2a', 'DL2b'],
+  Ampara:       ['DL2a', 'DL2b', 'DL5a'],
+  Hambantota:   ['DL1a', 'DL5a', 'DL5b', 'AZ3']
+};
 
   const soilTypeMapping = {
     'Red Yellow Podzolic': 'Red Yellow Podzolic (RYP)',
@@ -307,7 +314,7 @@ export default function CropAdviserPage() {
     Anuradhapura: { lat: 8.3114, lon: 80.4036 },
     Polonnaruwa: { lat: 7.85, lon: 81.07 },
     Badulla: { lat: 6.9833, lon: 81.05 },
-    Moneragala: { lat: 6.8833, lon: 81.35 },
+    Monaragala: { lat: 6.8833, lon: 81.35 },
     Ratnapura: { lat: 6.6994, lon: 80.3847 },
     Kegalle: { lat: 7.25, lon: 80.3667 },
   };
@@ -315,10 +322,6 @@ export default function CropAdviserPage() {
   // ----------------------
   // HELPERS
   // ----------------------
-  const debounce = (fn, ms) => {
-    let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
-  };
-
   const getSuitabilityFromConfidence = (confidence) => {
     if (confidence >= 80) return 'Excellent';
     if (confidence >= 65) return 'Good';
@@ -334,7 +337,7 @@ export default function CropAdviserPage() {
   };
 
   // ----------------------
-  // WEATHER (no hardcoded fallbacks)
+  // WEATHER 
   // ----------------------
   useEffect(() => {
     const fetchWeather = async () => {
@@ -369,12 +372,39 @@ export default function CropAdviserPage() {
   }, [soilData.district]);
 
   // ----------------------
-  // RECOMMENDATIONS (UI)
+  // CORRECTED RECOMMENDATIONS FUNCTION
   // ----------------------
   const generateRecommendations = (mlResult, inputData) => {
     const fertilizers = [];
     const soilIssues = [];
     const managementTips = [];
+
+    // CRITICAL FIX: Validate and correct the ML response structure
+    let validPredictions = [];
+    
+    // Ensure we have a valid top_3_predictions array
+    if (Array.isArray(mlResult.top_3_predictions) && mlResult.top_3_predictions.length > 0) {
+      validPredictions = mlResult.top_3_predictions.filter(pred => pred && pred.crop && typeof pred.probability === 'number');
+    }
+    
+    // If no valid predictions, create from the original predicted_crop
+    if (validPredictions.length === 0) {
+      console.warn('No valid top_3_predictions found, using predicted_crop fallback');
+      validPredictions = [{
+        crop: mlResult.predicted_crop || 'Unknown',
+        probability: mlResult.confidence || 0
+      }];
+    }
+
+    // Sort by probability descending to get the true best crop
+    validPredictions.sort((a, b) => b.probability - a.probability);
+    
+    // The actual best crop is the one with highest probability
+    const actualBestCrop = validPredictions[0];
+    
+    console.log('Original predicted_crop:', mlResult.predicted_crop);
+    console.log('Top 3 predictions:', validPredictions);
+    console.log('Actual best crop:', actualBestCrop);
 
     const ph = Number(inputData.pH);
     const n  = Number(inputData.nitrogen);
@@ -390,7 +420,8 @@ export default function CropAdviserPage() {
     if (!Number.isNaN(p) && p < 15)   fertilizers.push('Apply phosphorus fertilizer (TSP) - 25-50 kg/ha');
     if (!Number.isNaN(k) && k < 150)  fertilizers.push('Apply potassium fertilizer (MOP) - 30-60 kg/ha');
 
-    const predictedCrop = (mlResult.predicted_crop || '').toLowerCase();
+    // Use actualBestCrop for crop-specific tips
+    const predictedCrop = (actualBestCrop.crop || '').toLowerCase();
     const cropTips = {
       potato: ['Hill up soil around plants', 'Plant during cool months'],
       onion:  ['Apply organic matter early', 'Raised beds improve drainage'],
@@ -403,23 +434,35 @@ export default function CropAdviserPage() {
       cucumber:['Provide trellis support', 'Harvest regularly'],
       eggplant:['Needs warm full sun', 'Support heavy fruit'],
       lettuce:['Prefers cooler temps', 'Harvest in morning'],
-      bean:   ['Fixes nitrogen in soil', 'Don’t disturb roots'],
+      bean:   ['Fixes nitrogen in soil', 'Don\'t disturb roots'],
     };
+    
     Object.entries(cropTips).forEach(([c, tips]) => {
-      if (predictedCrop.includes(c)) tips.forEach(t => managementTips.push(`${c[0].toUpperCase()+c.slice(1)}: ${t}`));
+      if (predictedCrop.includes(c)) {
+        tips.forEach(t => managementTips.push(`${c[0].toUpperCase()+c.slice(1)}: ${t}`));
+      }
     });
+    
     if (!managementTips.length) {
       managementTips.push('Ensure proper plant spacing');
       managementTips.push('Monitor moisture during dry spells');
       managementTips.push('Scout pests/diseases regularly');
     }
 
+    // Create completely corrected ML result
+    const correctedMlResult = {
+      ...mlResult,
+      predicted_crop: actualBestCrop.crop,
+      confidence: actualBestCrop.probability,
+      top_3_predictions: validPredictions
+    };
+
     return {
-      mlResult,
+      mlResult: correctedMlResult,
       fertilizers,
       soilIssues,
       managementTips,
-      crops: (mlResult.top_3_predictions || []).map(pred => ({
+      crops: validPredictions.map(pred => ({
         name: pred.crop,
         suitability: getSuitabilityFromConfidence(pred.probability),
         confidence: pred.probability
@@ -427,15 +470,16 @@ export default function CropAdviserPage() {
     };
   };
 
-  // Save prediction (backend). Now uses user-entered avgHumidity/avgRainfall if provided.
+  // Save prediction to backend
   const savePredictionToBackend = async (farmerId, mlResult) => {
     const userAvgHumidity = soilData.avgHumidity !== '' ? Number(soilData.avgHumidity) : null;
     const userAvgRainfall = soilData.avgRainfall !== '' ? Number(soilData.avgRainfall) : null;
+    const userTemperature = soilData.temperature !== '' ? Number(soilData.temperature) : null;
 
     const payload = {
       user_id: farmerId,
-      avg_humidity: userAvgHumidity, // user input (percent). Keep null if not provided.
-      temp: typeof weather?.temperature === 'number' ? weather.temperature : null,
+      avg_humidity: userAvgHumidity,
+      temp: userTemperature ?? (typeof weather?.temperature === 'number' ? weather.temperature : null),
       avg_rainfall: userAvgRainfall ?? (typeof weather?.precipitation === 'number' ? weather.precipitation : null),
       land_area: soilData.landArea ? Number(soilData.landArea) : null,
       soil_type: soilTypeMapping[soilData.soilType] || soilData.soilType || null,
@@ -446,7 +490,7 @@ export default function CropAdviserPage() {
       district: soilData.district || null,
       agro_ecological_zone: soilData.agroZone || null,
       cultivate_season: soilData.season || null,
-      crop_name: mlResult.predicted_crop || null
+      crop_name: mlResult.predicted_crop || null 
     };
 
     const res = await fetch(`${CORE_API}/predictions`, {
@@ -463,17 +507,21 @@ export default function CropAdviserPage() {
   };
 
   // ----------------------
-  // PREDICTION (NO HARDCODED INPUTS)
+  // MAIN PREDICTION FUNCTION (COMPLETELY FIXED)
   // ----------------------
   const getCropPrediction = async (data) => {
-    // Required fields
+    // Required fields validation
     if (!data.soilType || !data.pH || !data.nitrogen || !data.phosphorus || !data.potassium || !data.agroZone || !data.season) {
+      setError("Please fill in all required fields marked with *");
       return;
     }
-    setLoading(true); setError('');
+    
+    setLoading(true); 
+    setError('');
+    setPredictions(null); // Clear previous predictions
 
     try {
-      // Build ML request with ONLY provided values
+      // Build ML request payload
       const apiData = {
         soil_type: soilTypeMapping[data.soilType] || data.soilType,
         soil_ph: Number(data.pH),
@@ -484,23 +532,30 @@ export default function CropAdviserPage() {
         cultivation_season: data.season
       };
 
-      // Optional fields (user input takes priority)
+      // Optional fields
       if (data.district) apiData.district = data.district;
       if (data.landArea && !Number.isNaN(Number(data.landArea))) apiData.land_area_hectares = Number(data.landArea);
 
-      // NEW: avg_humidity / avg_rainfall (if user provided)
-      if (data.avgHumidity !== '' && !Number.isNaN(Number(data.avgHumidity))) {
-        apiData.avg_humidity = Number(data.avgHumidity); // percent
+      // Temperature handling
+      if (data.temperature !== '' && !Number.isNaN(Number(data.temperature))) {
+        apiData.temperature = Number(data.temperature);
+      } else if (typeof weather?.temperature === 'number') {
+        apiData.temperature = weather.temperature;
       }
-      // Rainfall: prefer user entry; else use live weather if available
+
+      // Humidity handling
+      if (data.avgHumidity !== '' && !Number.isNaN(Number(data.avgHumidity))) {
+        apiData.avg_humidity = Number(data.avgHumidity);
+      }
+      
+      // Rainfall handling
       if (data.avgRainfall !== '' && !Number.isNaN(Number(data.avgRainfall))) {
-        apiData.avg_rainfall = Number(data.avgRainfall); // mm
+        apiData.avg_rainfall = Number(data.avgRainfall);
       } else if (typeof weather?.precipitation === 'number') {
         apiData.avg_rainfall = weather.precipitation;
       }
 
-      // Also include live temperature if available
-      if (typeof weather?.temperature === 'number') apiData.temperature = weather.temperature;
+      console.log('Sending ML request with data:', apiData);
 
       const response = await fetch(`${ML_API}/predict-crop`, {
         method: 'POST',
@@ -510,24 +565,67 @@ export default function CropAdviserPage() {
 
       const text = await response.text();
       let result;
-      try { result = JSON.parse(text); } catch { throw new Error(`Invalid ML response: ${text.slice(0,120)}...`); }
+      
+      try { 
+        result = JSON.parse(text); 
+      } catch { 
+        throw new Error(`Invalid ML response: ${text.slice(0,120)}...`); 
+      }
+      
       if (!response.ok) throw new Error(result.detail || `HTTP ${response.status}`);
       if (!result.success) throw new Error(result.error || 'Prediction failed');
-      if (!result.predicted_crop || !Array.isArray(result.top_3_predictions)) throw new Error('Invalid prediction structure');
 
-      // Warn if model returns same crop for all options
-      if (result.top_3_predictions.length &&
-          result.top_3_predictions.every(p => p.crop === result.top_3_predictions[0].crop)) {
-        console.warn('Model returned identical alternatives.');
+      console.log('Raw ML API response:', result);
+
+      // CRITICAL FIX: Process and validate ML response
+      if (!Array.isArray(result.top_3_predictions)) {
+        console.warn('top_3_predictions is not a valid array:', result.top_3_predictions);
+        result.top_3_predictions = [];
       }
 
-      const recs = generateRecommendations(result, data);
-      setPredictions(recs);
+      // Filter out invalid predictions
+      result.top_3_predictions = result.top_3_predictions.filter(pred => 
+        pred && 
+        pred.crop && 
+        typeof pred.probability === 'number' && 
+        pred.probability >= 0
+      );
 
-      // Save to backend prediction history (only when farmer selected)
+      // If no valid predictions exist, create fallback
+      if (result.top_3_predictions.length === 0) {
+        if (result.predicted_crop) {
+          result.top_3_predictions = [{
+            crop: result.predicted_crop,
+            probability: result.confidence || 50
+          }];
+        } else {
+          throw new Error('No valid predictions returned from ML model');
+        }
+      }
+
+      // Sort by probability (highest first) - this is the critical fix
+      result.top_3_predictions.sort((a, b) => b.probability - a.probability);
+
+      // Override the predicted_crop with the actual highest probability crop
+      const trueBestCrop = result.top_3_predictions[0];
+      result.predicted_crop = trueBestCrop.crop;
+      result.confidence = trueBestCrop.probability;
+
+      console.log('Corrected ML response - Best crop:', result.predicted_crop, 'Confidence:', result.confidence);
+      console.log('All predictions sorted:', result.top_3_predictions);
+
+      // Generate recommendations with corrected data
+      const recommendations = generateRecommendations(result, data);
+      setPredictions(recommendations);
+
+      // Save to backend if farmer is selected
       if (selectedFarmer?.id) {
-        try { await savePredictionToBackend(selectedFarmer.id, result); }
-        catch (e) { console.error(e); setError(prev => prev ? `${prev} | Failed to save to history.` : 'Failed to save to history.'); }
+        try { 
+          await savePredictionToBackend(selectedFarmer.id, recommendations.mlResult); 
+        } catch (e) { 
+          console.error('Backend save error:', e); 
+          setError(prev => prev ? `${prev} | Failed to save to history.` : 'Failed to save to history.'); 
+        }
       }
 
     } catch (e) {
@@ -539,23 +637,13 @@ export default function CropAdviserPage() {
     }
   };
 
-  const debouncedPredict = useCallback(debounce((d) => getCropPrediction(d), 900), [weather, selectedFarmer]);
-
-  useEffect(() => {
-    if (soilData.soilType && soilData.pH && soilData.nitrogen && soilData.phosphorus && soilData.potassium && soilData.agroZone && soilData.season) {
-      debouncedPredict(soilData);
-    } else {
-      setPredictions(null);
-    }
-  }, [soilData, debouncedPredict]);
-
   // ----------------------
   // UI helpers
   // ----------------------
   const filteredFarmers = farmers.filter(f => (f.name || '').toLowerCase().includes(searchTerm.toLowerCase()));
 
   // ----------------------
-  // PDFs (unchanged except we add humidity/rainfall lines)
+  // PDF GENERATION
   // ----------------------
   const [pdfGenerating, setPdfGenerating] = useState(false);
 
@@ -588,14 +676,15 @@ export default function CropAdviserPage() {
       write(`Season: ${SD.season}`); if (SD.landArea) write(`Land Area: ${SD.landArea} hectares`);
       if (SD.avgHumidity !== '') write(`Avg Humidity (user): ${SD.avgHumidity}%`);
       if (SD.avgRainfall !== '') write(`Avg Rainfall (user): ${SD.avgRainfall} mm`);
+      if (SD.temperature !== '') write(`Temperature (user): ${SD.temperature}°C`);
       y+=4;
 
       if (weather) {
         doc.setFontSize(14); doc.setTextColor(0,102,204);
         doc.text('Weather Conditions',14,y); y+=10;
         doc.setTextColor(40,40,40); doc.setFontSize(10);
-        if (typeof weather.temperature === 'number') write(`Temperature: ${weather.temperature}°C`);
-        if (typeof weather.precipitation === 'number') write(`Precipitation (live): ${weather.precipitation} mm`);
+        if (typeof weather.temperature === 'number' && SD.temperature === '') write(`Temperature (live): ${weather.temperature}°C`);
+        if (typeof weather.precipitation === 'number' && SD.avgRainfall === '') write(`Precipitation (live): ${weather.precipitation} mm`);
         if (typeof weather.windspeed === 'number') write(`Wind Speed: ${weather.windspeed} m/s`);
         y+=4;
       }
@@ -714,12 +803,12 @@ export default function CropAdviserPage() {
       else if (lc.includes('onion')) { add('• Harvest when tops fall; cure well; store 0–4°C'); }
       else { add('• Harvest at proper maturity; handle gently'); }
 
-      // Show inputs if provided
       const line = (t)=>{ doc.text(t,14,y); y+=6; };
       y+=6; doc.setFontSize(12); doc.setTextColor(0,102,204);
       doc.text('Provided Averages',14,y); y+=8; doc.setTextColor(40,40,40); doc.setFontSize(10);
       if (soilData.avgHumidity !== '') line(`Avg Humidity (user): ${soilData.avgHumidity}%`);
       if (soilData.avgRainfall !== '') line(`Avg Rainfall (user): ${soilData.avgRainfall} mm`);
+      if (soilData.temperature !== '') line(`Temperature (user): ${soilData.temperature}°C`);
 
       doc.setFontSize(10); doc.setTextColor(100,100,100);
       doc.text('Guide is AI-assisted. Consult local extension for specifics.',105,285,{align:'center'});
@@ -734,7 +823,7 @@ export default function CropAdviserPage() {
   };
 
   // ----------------------
-  // UI
+  // MAIN UI RENDER
   // ----------------------
   return (
     <ThemeWrapper>
@@ -791,7 +880,7 @@ export default function CropAdviserPage() {
             <Search className="absolute left-3 top-2.5 h-4 w-4" style={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }} />
           </div>
 
-          {/* List */}
+          {/* Farmer List */}
           <div className="max-h-64 overflow-y-auto border rounded-md" style={{ borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)' }}>
             {loadingFarmers ? (
               <div className="flex items-center justify-center p-4">
@@ -825,7 +914,7 @@ export default function CropAdviserPage() {
             )}
           </div>
 
-          {/* Selected */}
+          {/* Selected Farmer Info */}
           {selectedFarmer && (
             <div className="mt-4 p-3 rounded-lg" style={{ backgroundColor: isDark ? 'rgba(59,130,246,0.2)' : 'rgba(59,130,246,0.1)' }}>
               <div className="flex justify-between items-start">
@@ -860,7 +949,7 @@ export default function CropAdviserPage() {
               {loading && <Loader2 className="h-4 w-4 animate-spin text-blue-500" />}
             </h2>
 
-            {/* API Status Indicator (non-blocking) */}
+            {/* API Status */}
             <div className="mb-4 p-3 rounded-lg" style={{
               backgroundColor: modelState.error
                 ? (isDark ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.1)')
@@ -877,7 +966,7 @@ export default function CropAdviserPage() {
                     <CheckCircle className="h-4 w-4 text-green-500" />
                     <span className="text-sm text-green-500">
                       ML Model: {modelState.loaded ? 'Connected' : 'Not connected'} — 
-                      {modelState.testMode ? ' Running in test mode' : ' Predictions update automatically'}
+                      {modelState.testMode ? ' Running in test mode' : ' Ready for predictions'}
                     </span>
                   </>
                 )}
@@ -903,42 +992,59 @@ export default function CropAdviserPage() {
                 {/* pH */}
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>Soil pH Level *</label>
-                  <input type="number" step="0.1" min="3" max="10" value={soilData.pH}
-                         onChange={(e)=>setSoilData({ ...soilData, pH: e.target.value })}
-                         className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
-                         style={{ backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : '#fff', borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)', color: isDark ? '#fff' : '#000' }}
-                         placeholder="e.g., 6.5" />
+                  <input 
+                    type="number" 
+                    step="0.1" 
+                    min="3" 
+                    max="10" 
+                    value={soilData.pH}
+                    onChange={(e)=>setSoilData({ ...soilData, pH: e.target.value })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
+                    style={{ backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : '#fff', borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)', color: isDark ? '#fff' : '#000' }}
+                    placeholder="e.g., 6.5" 
+                  />
                 </div>
 
-                {/* N/P/K */}
+                {/* Nitrogen */}
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>Nitrogen (N) ppm *</label>
-                  <input type="number" value={soilData.nitrogen}
-                         onChange={(e)=>setSoilData({ ...soilData, nitrogen: e.target.value })}
-                         className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
-                         style={{ backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : '#fff', borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)', color: isDark ? '#fff' : '#000' }}
-                         placeholder="e.g., 25" />
+                  <input 
+                    type="number" 
+                    value={soilData.nitrogen}
+                    onChange={(e)=>setSoilData({ ...soilData, nitrogen: e.target.value })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
+                    style={{ backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : '#fff', borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)', color: isDark ? '#fff' : '#000' }}
+                    placeholder="e.g., 25" 
+                  />
                 </div>
 
+                {/* Phosphorus */}
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>Phosphorus (P) ppm *</label>
-                  <input type="number" value={soilData.phosphorus}
-                         onChange={(e)=>setSoilData({ ...soilData, phosphorus: e.target.value })}
-                         className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
-                         style={{ backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : '#fff', borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)', color: isDark ? '#fff' : '#000' }}
-                         placeholder="e.g., 18" />
+                  <input 
+                    type="number" 
+                    value={soilData.phosphorus}
+                    onChange={(e)=>setSoilData({ ...soilData, phosphorus: e.target.value })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
+                    style={{ backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : '#fff', borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)', color: isDark ? '#fff' : '#000' }}
+                    placeholder="e.g., 18" 
+                  />
                 </div>
 
+                {/* Potassium */}
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>Potassium (K) ppm *</label>
-                  <input type="number" value={soilData.potassium}
-                         onChange={(e)=>setSoilData({ ...soilData, potassium: e.target.value })}
-                         className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
-                         style={{ backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : '#fff', borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)', color: isDark ? '#fff' : '#000' }}
-                         placeholder="e.g., 200" />
+                  <input 
+                    type="number" 
+                    value={soilData.potassium}
+                    onChange={(e)=>setSoilData({ ...soilData, potassium: e.target.value })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
+                    style={{ backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : '#fff', borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)', color: isDark ? '#fff' : '#000' }}
+                    placeholder="e.g., 200" 
+                  />
                 </div>
 
-                {/* District / Zone / Season / Area */}
+                {/* District */}
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>District</label>
                   <select
@@ -952,6 +1058,7 @@ export default function CropAdviserPage() {
                   </select>
                 </div>
 
+                {/* Agro Zone */}
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>Agro-ecological Zone *</label>
                   <select
@@ -972,6 +1079,7 @@ export default function CropAdviserPage() {
                   </select>
                 </div>
 
+                {/* Season */}
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>Cultivation Season *</label>
                   <select
@@ -985,10 +1093,13 @@ export default function CropAdviserPage() {
                   </select>
                 </div>
 
+                {/* Land Area */}
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>Land Area (hectares)</label>
                   <input
-                    type="number" step="0.1" value={soilData.landArea}
+                    type="number" 
+                    step="0.1" 
+                    value={soilData.landArea}
                     onChange={(e)=>setSoilData({ ...soilData, landArea: e.target.value })}
                     className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
                     style={{ backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : '#fff', borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)', color: isDark ? '#fff' : '#000' }}
@@ -996,13 +1107,35 @@ export default function CropAdviserPage() {
                   />
                 </div>
 
-                {/* NEW: Avg Humidity */}
+                {/* Temperature */}
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
+                    <Thermometer className="h-3 w-3 inline mr-1" /> Temperature (°C)
+                  </label>
+                  <input
+                    type="number" 
+                    step="0.1" 
+                    min="-10" 
+                    max="50" 
+                    value={soilData.temperature}
+                    onChange={(e)=>setSoilData({ ...soilData, temperature: e.target.value })}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
+                    style={{ backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : '#fff', borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)', color: isDark ? '#fff' : '#000' }}
+                    placeholder={weather?.temperature ? `Live: ${weather.temperature}°C` : "e.g., 28"}
+                  />
+                </div>
+
+                {/* Humidity */}
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
                     Avg Humidity (%)
                   </label>
                   <input
-                    type="number" step="0.1" min="0" max="100" value={soilData.avgHumidity}
+                    type="number" 
+                    step="0.1" 
+                    min="0" 
+                    max="100" 
+                    value={soilData.avgHumidity}
                     onChange={(e)=>setSoilData({ ...soilData, avgHumidity: e.target.value })}
                     className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
                     style={{ backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : '#fff', borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)', color: isDark ? '#fff' : '#000' }}
@@ -1010,28 +1143,60 @@ export default function CropAdviserPage() {
                   />
                 </div>
 
-                {/* NEW: Avg Rainfall */}
+                {/* Rainfall */}
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}>
                     Avg Rainfall (mm)
                   </label>
                   <input
-                    type="number" step="0.1" min="0" value={soilData.avgRainfall}
+                    type="number" 
+                    step="0.1" 
+                    min="0" 
+                    value={soilData.avgRainfall}
                     onChange={(e)=>setSoilData({ ...soilData, avgRainfall: e.target.value })}
                     className="w-full p-2 border rounded-md focus:ring-2 focus:outline-none"
                     style={{ backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : '#fff', borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)', color: isDark ? '#fff' : '#000' }}
-                    placeholder="e.g., 120"
+                    placeholder={weather?.precipitation ? `Live: ${weather.precipitation} mm` : "e.g., 120"}
                   />
                 </div>
               </div>
 
+              {/* Prediction Button */}
+              <button
+                onClick={() => getCropPrediction(soilData)}
+                disabled={loading}
+                className="w-full mt-4 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+                style={{
+                  backgroundColor: isDark ? 'rgba(16,185,129,0.2)' : 'rgba(16,185,129,0.1)',
+                  color: isDark ? '#6EE7B7' : '#059669',
+                  border: `2px solid ${isDark ? 'rgba(16,185,129,0.3)' : 'rgba(16,185,129,0.2)'}`,
+                  opacity: loading ? 0.7 : 1,
+                  cursor: loading ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <PlayCircle className="h-5 w-5" />}
+                <span>{loading ? 'Processing...' : 'Start Forecast'}</span>
+              </button>
+
+              {error && (
+                <div className="p-3 rounded-lg mt-4" style={{
+                  backgroundColor: isDark ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.1)',
+                  color: isDark ? '#F87171' : '#DC2626'
+                }}>
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-5 w-5 mt-0.5" />
+                    <p className="text-sm">{error}</p>
+                  </div>
+                </div>
+              )}
+
               <div className="text-xs" style={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}>
-                * Required fields — Predictions update automatically as you type
+                * Required fields — Click "Start Forecast" when ready
               </div>
             </div>
           </div>
 
-          {/* Right Column: Recommendations, Charts, etc. */}
+          {/* Right Column: Results */}
           <div className="space-y-6">
             {loading && (
               <div className="rounded-lg shadow-lg p-6 border" style={{ backgroundColor: theme.colors.card, borderColor: theme.colors.border }}>
@@ -1044,7 +1209,7 @@ export default function CropAdviserPage() {
 
             {predictions && (
               <>
-                {/* Prediction Card */}
+                {/* FIXED: Main Prediction Card */}
                 <div className="rounded-lg shadow-lg p-6 border" style={{ backgroundColor: theme.colors.card, borderColor: theme.colors.border }}>
                   <div className="flex justify-between items-start mb-4">
                     <h2 className="text-xl font-semibold flex items-center gap-2" style={{ color: theme.colors.text }}>
@@ -1060,7 +1225,7 @@ export default function CropAdviserPage() {
                       )}
                     </h2>
 
-                    {/* PDFs */}
+                    {/* PDF Download Buttons */}
                     <div className="flex gap-2">
                       <button
                         onClick={generatePredictionPDF}
@@ -1069,7 +1234,8 @@ export default function CropAdviserPage() {
                         style={{
                           backgroundColor: isDark ? 'rgba(59,130,246,0.2)' : 'rgba(59,130,246,0.1)',
                           color: isDark ? '#93C5FD' : '#2563EB',
-                          opacity: pdfGenerating ? 0.5 : 1, cursor: pdfGenerating ? 'not-allowed' : 'pointer'
+                          opacity: pdfGenerating ? 0.5 : 1, 
+                          cursor: pdfGenerating ? 'not-allowed' : 'pointer'
                         }}
                       >
                         {pdfGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
@@ -1082,7 +1248,8 @@ export default function CropAdviserPage() {
                         style={{
                           backgroundColor: isDark ? 'rgba(34,197,94,0.2)' : 'rgba(34,197,94,0.1)',
                           color: isDark ? '#86EFAC' : '#16A34A',
-                          opacity: pdfGenerating ? 0.5 : 1, cursor: pdfGenerating ? 'not-allowed' : 'pointer'
+                          opacity: pdfGenerating ? 0.5 : 1, 
+                          cursor: pdfGenerating ? 'not-allowed' : 'pointer'
                         }}
                       >
                         {pdfGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
@@ -1091,24 +1258,29 @@ export default function CropAdviserPage() {
                     </div>
                   </div>
 
-                  {/* Best match */}
+                  {/* FIXED: Best Match Display */}
                   <div className="mb-4 p-4 rounded-lg" style={{
                     backgroundColor: isDark ? 'rgba(34,197,94,0.2)' : 'rgba(34,197,94,0.1)',
                     border: `2px solid ${isDark ? 'rgba(34,197,94,0.3)' : 'rgba(34,197,94,0.2)'}`
                   }}>
                     <h3 className="text-lg font-semibold mb-2" style={{ color: isDark ? '#86EFAC' : '#16A34A' }}>
-                      🎯 Best Match: {predictions.mlResult.predicted_crop}
+                      🎯 Best Match: {predictions.crops[0]?.name || predictions.mlResult.predicted_crop}
                     </h3>
-                    <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-4 text-sm flex-wrap">
                       <span style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)' }}>
-                        Confidence: <strong>{predictions.mlResult.confidence}%</strong>
+                        Confidence: <strong>{predictions.crops[0]?.confidence || predictions.mlResult.confidence}%</strong>
+                      </span>
+                      <span style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)' }}>
+                        Suitability: <strong>{predictions.crops[0]?.suitability || 'Unknown'}</strong>
                       </span>
                       <span style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)' }}>
                         Model Accuracy: <strong>{predictions.mlResult.ml_model_accuracy}%</strong>
                       </span>
-                      <span style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)' }}>
-                        Processing: <strong>{predictions.mlResult.processing_time_ms}ms</strong>
-                      </span>
+                      {predictions.mlResult.processing_time_ms && (
+                        <span style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)' }}>
+                          Processing: <strong>{predictions.mlResult.processing_time_ms}ms</strong>
+                        </span>
+                      )}
                     </div>
 
                     {selectedFarmer && (
@@ -1119,24 +1291,26 @@ export default function CropAdviserPage() {
                     )}
                   </div>
 
-                  {/* Alternatives */}
-                  <div className="space-y-3">
-                    <h4 className="font-medium" style={{ color: theme.colors.text }}>Alternative Options:</h4>
-                    {predictions.crops.slice(1).map((crop, i) => {
-                      const c = getSuitabilityStyle(crop.suitability);
-                      return (
-                        <div key={i} className="border rounded-lg p-3" style={{ borderColor: theme.colors.border, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.01)' }}>
-                          <div className="flex justify-between items-center">
-                            <h5 className="font-medium" style={{ color: theme.colors.text }}>{crop.name}</h5>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>{crop.confidence}%</span>
-                              <span className="px-2 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: c.bg, color: c.text }}>{crop.suitability}</span>
+                  {/* Alternative Options */}
+                  {predictions.crops.length > 1 && (
+                    <div className="space-y-3">
+                      <h4 className="font-medium" style={{ color: theme.colors.text }}>Alternative Options:</h4>
+                      {predictions.crops.slice(1).map((crop, i) => {
+                        const c = getSuitabilityStyle(crop.suitability);
+                        return (
+                          <div key={i} className="border rounded-lg p-3" style={{ borderColor: theme.colors.border, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.01)' }}>
+                            <div className="flex justify-between items-center">
+                              <h5 className="font-medium" style={{ color: theme.colors.text }}>{crop.name}</h5>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>{crop.confidence}%</span>
+                                <span className="px-2 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: c.bg, color: c.text }}>{crop.suitability}</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Nutrient Chart */}
@@ -1167,7 +1341,7 @@ export default function CropAdviserPage() {
                   />
                 </div>
 
-                {/* Fertilizers */}
+                {/* Fertilizer Recommendations */}
                 {predictions.fertilizers.length > 0 && (
                   <div className="rounded-lg shadow-lg p-6 border" style={{ backgroundColor: theme.colors.card, borderColor: theme.colors.border }}>
                     <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" style={{ color: theme.colors.text }}>
@@ -1196,28 +1370,52 @@ export default function CropAdviserPage() {
                   </div>
                 )}
 
-                {/* Weather */}
+                {/* Weather Display */}
                 {soilData.district && (
                   <div className="rounded-lg shadow-lg p-6 border" style={{ backgroundColor: theme.colors.card, borderColor: theme.colors.border }}>
                     <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" style={{ color: theme.colors.text }}>
-                      <SunIcon className="h-5 w-5 text-yellow-500" />
+                      <Sun className="h-5 w-5 text-yellow-500" />
                       Live Weather in {soilData.district}
                     </h2>
                     {loadingWeather && <p style={{ color: theme.colors.text }}>Loading weather...</p>}
                     {weatherError && <p style={{ color: '#EF4444' }}>{weatherError}</p>}
                     {weather && (
                       <div className="grid grid-cols-2 gap-4 text-sm">
-                        {typeof weather.temperature === 'number' && (
-                          <div><span style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>Temperature:</span>
-                            <span className="ml-2 font-medium" style={{ color: theme.colors.text }}>{weather.temperature}°C</span></div>
+                        {typeof weather.temperature === 'number' && soilData.temperature === '' && (
+                          <div>
+                            <span style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>Temperature:</span>
+                            <span className="ml-2 font-medium" style={{ color: theme.colors.text }}>{weather.temperature}°C</span>
+                          </div>
+                        )}
+                        {soilData.temperature !== '' && (
+                          <div>
+                            <span style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>Temperature (user):</span>
+                            <span className="ml-2 font-medium" style={{ color: theme.colors.text }}>{soilData.temperature}°C</span>
+                          </div>
                         )}
                         {typeof weather.windspeed === 'number' && (
-                          <div><span style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>Wind Speed:</span>
-                            <span className="ml-2 font-medium" style={{ color: theme.colors.text }}>{weather.windspeed} m/s</span></div>
+                          <div>
+                            <span style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>Wind Speed:</span>
+                            <span className="ml-2 font-medium" style={{ color: theme.colors.text }}>{weather.windspeed} m/s</span>
+                          </div>
                         )}
-                        {typeof weather.precipitation === 'number' && (
-                          <div><span style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>Precipitation:</span>
-                            <span className="ml-2 font-medium" style={{ color: theme.colors.text }}>{weather.precipitation} mm</span></div>
+                        {typeof weather.precipitation === 'number' && soilData.avgRainfall === '' && (
+                          <div>
+                            <span style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>Precipitation:</span>
+                            <span className="ml-2 font-medium" style={{ color: theme.colors.text }}>{weather.precipitation} mm</span>
+                          </div>
+                        )}
+                        {soilData.avgRainfall !== '' && (
+                          <div>
+                            <span style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>Rainfall (user):</span>
+                            <span className="ml-2 font-medium" style={{ color: theme.colors.text }}>{soilData.avgRainfall} mm</span>
+                          </div>
+                        )}
+                        {soilData.avgHumidity !== '' && (
+                          <div>
+                            <span style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>Humidity (user):</span>
+                            <span className="ml-2 font-medium" style={{ color: theme.colors.text }}>{soilData.avgHumidity}%</span>
+                          </div>
                         )}
                       </div>
                     )}

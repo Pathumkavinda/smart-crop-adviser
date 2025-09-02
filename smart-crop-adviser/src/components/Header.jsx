@@ -7,17 +7,17 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
-import { 
-  Leaf, 
-  Menu, 
-  X, 
-  LogOut, 
-  User, 
-  BarChart, 
-  History as HistoryIcon, 
-  Info, 
-  Home, 
-  LogIn, 
+import {
+  Leaf,
+  Menu,
+  X,
+  LogOut,
+  User,
+  BarChart,
+  History as HistoryIcon,
+  Info,
+  Home,
+  LogIn,
   UserPlus,
   Moon,
   Sun,
@@ -31,6 +31,10 @@ export default function Header() {
   const { language, setLanguage, translations } = useLanguage();
   const { theme, toggleTheme } = useTheme();
 
+  // ✅ Prevent hydration mismatch: render only after mount
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
@@ -40,19 +44,23 @@ export default function Header() {
   const userMenuRef = useRef(null);
   const langMenuRef = useRef(null);
 
-  // Scroll shadow / blur
+  // Scroll effect (client-only)
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Click outside to close menus
+  // Outside click close
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setIsUserMenuOpen(false);
-      if (langMenuRef.current && !langMenuRef.current.contains(e.target)) setIsLangMenuOpen(false);
-    };
+    function handleClickOutside(event) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
+      if (langMenuRef.current && !langMenuRef.current.contains(event.target)) {
+        setIsLangMenuOpen(false);
+      }
+    }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -66,46 +74,56 @@ export default function Header() {
 
   const isActive = (path) => pathname === path || pathname.startsWith(`${path}/`);
 
-  // Language helpers
   const languages = [
     { code: 'en', name: 'English' },
     { code: 'si', name: 'සිංහල' },
     { code: 'ta', name: 'தமிழ்' }
   ];
+
   const handleLanguageChange = (code) => {
     setLanguage(code);
     setIsLangMenuOpen(false);
   };
+
+  // Role-aware paths
+  const getHistoryPath = (role) => {
+    switch (role) {
+      case 'admin': return '/admin/predictions';
+      case 'agent': return '/adviser/history'; // change to '/dashboard/history' if that's your adviser route
+      case 'researcher': return '/research/history';
+      default: return '/profile/history'; // farmer / default
+    }
+  };
+
+  const getProfilePath = () => {
+    if (!user) return '/login';
+    const role = user.userlevel;
+    return role === 'admin' ? '/admin/profile'
+      : role === 'agent' ? '/adviser/profile'
+      : role === 'researcher' ? '/research/profile'
+      : '/profile';
+  };
+
+  const getDashboardPath = () => {
+    if (!user) return '/login';
+    const role = user.userlevel;
+    return role === 'admin' ? '/admin/dashboard'
+      : role === 'agent' ? '/dashboard'
+      : role === 'researcher' ? '/research/dashboard'
+      : '/profile/Dashboard';
+  };
+
   const getLocalizedFontSize = (defaultSize) => {
     if (language === 'ta') return '0.7rem';
     if (language === 'si') return '0.8rem';
     return defaultSize;
   };
-  const getLanguageOptionFontSize = (code) => {
-    if (code === 'ta') return '0.7rem';
-    if (code === 'si') return '0.8rem';
+  const getLanguageOptionFontSize = (langCode) => {
+    if (langCode === 'ta') return '0.7rem';
+    if (langCode === 'si') return '0.8rem';
     return undefined;
   };
 
-  // Role-aware paths
-  const getProfilePath = () => {
-    if (!user) return '/login';
-    const role = user.userlevel;
-    return role === 'admin' ? '/Admin/profile'
-      : role === 'agent' ? '/adviser/profile'
-      : role === 'researcher' ? '/research/profile'
-      : '/profile';
-  };
-  const getDashboardPath = () => {
-    if (!user) return '/login';
-    const role = user.userlevel;
-    return role === 'admin' ? '/Admin'
-      : role === 'agent' ? '/dashboard'
-      : role === 'researcher' ? '/research/dashboard'
-      : '/profile/Dashboard'; // normalized
-  };
-
-  // Primary nav (role-aware)
   const getNavLinks = () => {
     const baseLinks = [
       { href: '/', label: translations?.nav?.home || 'Home', icon: <Home className="h-4 w-4" /> },
@@ -118,34 +136,56 @@ export default function Header() {
       ];
     }
 
-    const role = user.userlevel;
+    const userRole = user.userlevel;
+
     const dashboardLink = {
       href: getDashboardPath(),
       label: translations?.nav?.dashboard || 'Dashboard',
       icon: <BarChart className="h-4 w-4" />
     };
 
+    const historyLink = {
+      href: getHistoryPath(userRole),
+      label: translations?.nav?.history || 'History',
+      icon: <HistoryIcon className="h-4 w-4" />
+    };
+
     const authLinks = [
       dashboardLink,
-      { href: '/profile/history', label: translations?.nav?.history || 'History', icon: <HistoryIcon className="h-4 w-4" /> },
+      historyLink,
       { href: '/info', label: translations?.nav?.info || 'Information', icon: <Info className="h-4 w-4" /> }
     ];
 
-    if (role === 'admin') {
+    if (userRole === 'admin') {
       return [
         ...baseLinks,
         { href: '/adviser', label: translations?.nav?.adviser || 'Adviser', icon: <Leaf className="h-4 w-4" /> },
         ...authLinks
       ];
     }
+
     return [...baseLinks, ...authLinks];
   };
+
+  // ✅ Don’t render until mounted to avoid SSR/client style drift
+  if (!mounted) {
+    return (
+      <header
+        className="sticky top-0 z-50 h-16"
+        aria-hidden
+      />
+    );
+  }
 
   const navLinks = getNavLinks();
 
   return (
     <header
-      className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'shadow-md' : 'backdrop-blur-sm'}`}
+      // ✅ Allow React to ignore dynamic mismatches here if any remain
+      suppressHydrationWarning
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        isDark ? (isScrolled ? 'shadow-md' : 'backdrop-blur-sm') : (isScrolled ? 'shadow-md' : 'backdrop-blur-sm')
+      }`}
       style={{
         backgroundColor: isScrolled ? theme.colors.navBg : `${theme.colors.navBg}cc`,
         color: theme.colors.navText,
@@ -189,9 +229,9 @@ export default function Header() {
             </nav>
           </div>
 
-          {/* Desktop: Theme, Language, User */}
+          {/* Desktop: Theme, Language, User menu */}
           <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
-            {/* Theme toggle */}
+            {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
               className="p-2 rounded-full transition-colors duration-200 flex items-center justify-center"
@@ -204,7 +244,7 @@ export default function Header() {
               {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
 
-            {/* Language selector */}
+            {/* Language Selector */}
             <div className="relative" ref={langMenuRef}>
               <button
                 onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
@@ -220,7 +260,7 @@ export default function Header() {
                   className="ml-1 text-sm font-medium hidden md:inline"
                   style={{ fontSize: getLocalizedFontSize('0.875rem') }}
                 >
-                  {languages.find(l => l.code === language)?.name || 'English'}
+                  {languages.find((l) => l.code === language)?.name || 'English'}
                 </span>
                 <ChevronDown className="ml-1 h-4 w-4 opacity-75" />
               </button>
@@ -228,7 +268,11 @@ export default function Header() {
               {isLangMenuOpen && (
                 <div
                   className="absolute right-0 mt-2 w-40 rounded-md shadow-lg py-1 ring-1 ring-opacity-5 focus:outline-none"
-                  style={{ backgroundColor: theme.colors.card, borderColor: theme.colors.border, color: theme.colors.text }}
+                  style={{
+                    backgroundColor: theme.colors.card,
+                    borderColor: theme.colors.border,
+                    color: theme.colors.text
+                  }}
                 >
                   {languages.map((lang) => (
                     <button
@@ -236,9 +280,10 @@ export default function Header() {
                       onClick={() => handleLanguageChange(lang.code)}
                       className="block w-full text-left px-4 py-2 text-sm transition-colors duration-200"
                       style={{
-                        backgroundColor: language === lang.code
-                          ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)')
-                          : 'transparent',
+                        backgroundColor:
+                          language === lang.code
+                            ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)')
+                            : 'transparent',
                         color: language === lang.code ? theme.colors.primary : theme.colors.text,
                         fontSize: getLanguageOptionFontSize(lang.code)
                       }}
@@ -250,32 +295,40 @@ export default function Header() {
               )}
             </div>
 
-            {/* User menu (desktop) */}
+            {/* Auth-dependent */}
             {user ? (
               <div className="relative ml-3" ref={userMenuRef}>
-                <button
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center text-sm rounded-md px-3 py-2 transition-colors duration-200"
-                  style={{
-                    backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                    color: theme.colors.text,
-                    fontSize: getLocalizedFontSize('0.875rem')
-                  }}
-                >
-                  <div
-                    className="h-8 w-8 rounded-full flex items-center justify-center mr-2"
-                    style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : `${theme.colors.primary}22` }}
+                <div>
+                  <button
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="flex items-center text-sm rounded-md px-3 py-2 transition-colors duration-200"
+                    style={{
+                      backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                      color: theme.colors.text,
+                      fontSize: getLocalizedFontSize('0.875rem')
+                    }}
                   >
-                    <User className="h-5 w-5" style={{ color: theme.colors.primary }} />
-                  </div>
-                  <span className="font-medium">{user.name || user.username || user.full_name || 'User'}</span>
-                  <ChevronDown className="ml-1 h-4 w-4 opacity-75" />
-                </button>
+                    <div
+                      className="h-8 w-8 rounded-full flex items-center justify-center mr-2"
+                      style={{
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : theme.colors.primary + '22'
+                      }}
+                    >
+                      <User className="h-5 w-5" style={{ color: theme.colors.primary }} />
+                    </div>
+                    <span className="font-medium">{user.name || user.username || user.full_name || 'User'}</span>
+                    <ChevronDown className="ml-1 h-4 w-4 opacity-75" />
+                  </button>
+                </div>
 
                 {isUserMenuOpen && (
                   <div
                     className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 focus:outline-none"
-                    style={{ backgroundColor: theme.colors.card, borderColor: theme.colors.border, color: theme.colors.text }}
+                    style={{
+                      backgroundColor: theme.colors.card,
+                      borderColor: theme.colors.border,
+                      color: theme.colors.text
+                    }}
                   >
                     <Link
                       href={getProfilePath()}
@@ -320,10 +373,15 @@ export default function Header() {
                   <LogIn className="mr-1.5 h-4 w-4" />
                   {translations?.auth?.login || 'Login'}
                 </Link>
+
                 <Link
                   href="/register"
                   className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md text-white transition-colors duration-200"
-                  style={{ backgroundColor: theme.colors.primary, color: '#fff', fontSize: getLocalizedFontSize('0.875rem') }}
+                  style={{
+                    backgroundColor: theme.colors.primary,
+                    color: '#ffffff',
+                    fontSize: getLocalizedFontSize('0.875rem')
+                  }}
                 >
                   <UserPlus className="mr-1.5 h-4 w-4" />
                   {translations?.auth?.register || 'Sign Up'}
@@ -332,12 +390,15 @@ export default function Header() {
             )}
           </div>
 
-          {/* Mobile toggles */}
+          {/* Mobile: Theme toggle + burger */}
           <div className="flex items-center sm:hidden space-x-2">
             <button
               onClick={toggleTheme}
               className="p-2 rounded-full transition-colors duration-200"
-              style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', color: theme.colors.text }}
+              style={{
+                backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                color: theme.colors.text
+              }}
               aria-label={`Switch to ${isDark ? 'light' : 'dark'} theme`}
             >
               {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
@@ -355,15 +416,17 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile Menu */}
       <div className={`sm:hidden ${isMenuOpen ? 'block' : 'hidden'}`}>
-        {/* User chip */}
+        {/* Logged-in user info */}
         {user && (
           <div className="px-4 py-3" style={{ backgroundColor: theme.colors.navBg }}>
             <div className="flex items-center">
               <div
                 className="h-10 w-10 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : `${theme.colors.primary}22` }}
+                style={{
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : theme.colors.primary + '22'
+                }}
               >
                 <User className="h-6 w-6" style={{ color: theme.colors.primary }} />
               </div>
@@ -377,7 +440,10 @@ export default function Header() {
                 {user.email && (
                   <div
                     className="text-sm"
-                    style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)', fontSize: getLocalizedFontSize('0.875rem') }}
+                    style={{
+                      color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                      fontSize: getLocalizedFontSize('0.875rem')
+                    }}
                   >
                     {user.email}
                   </div>
@@ -389,7 +455,7 @@ export default function Header() {
 
         {/* Mobile nav links */}
         <div className="pt-2 pb-3 space-y-1" style={{ backgroundColor: theme.colors.navBg }}>
-          {navLinks.map((link) => (
+          {getNavLinks().map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -401,7 +467,6 @@ export default function Header() {
                 color: isActive(link.href) ? theme.colors.primary : theme.colors.text,
                 fontSize: getLocalizedFontSize('1rem')
               }}
-              onClick={() => setIsMenuOpen(false)}
             >
               <div className="flex items-center">
                 <span className="mr-2">{link.icon}</span>
@@ -410,7 +475,7 @@ export default function Header() {
             </Link>
           ))}
 
-          {/* Quick Profile link */}
+          {/* Profile link when logged in */}
           {user && (
             <Link
               href={getProfilePath()}
@@ -422,7 +487,6 @@ export default function Header() {
                 color: isActive(getProfilePath()) ? theme.colors.primary : theme.colors.text,
                 fontSize: getLocalizedFontSize('1rem')
               }}
-              onClick={() => setIsMenuOpen(false)}
             >
               <div className="flex items-center">
                 <User className="mr-2 h-5 w-5" />
@@ -432,7 +496,7 @@ export default function Header() {
           )}
         </div>
 
-        {/* Mobile auth / actions */}
+        {/* Mobile auth buttons */}
         <div
           className="pt-4 pb-3 border-t"
           style={{ backgroundColor: theme.colors.navBg, borderColor: theme.colors.border }}
@@ -440,7 +504,7 @@ export default function Header() {
           {user ? (
             <div className="px-4">
               <button
-                onClick={() => { logout(); setIsMenuOpen(false); }}
+                onClick={logout}
                 className="flex items-center w-full px-3 py-2 text-base font-medium rounded-md transition-colors duration-200"
                 style={{
                   backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
@@ -462,7 +526,6 @@ export default function Header() {
                   color: theme.colors.text,
                   fontSize: getLocalizedFontSize('1rem')
                 }}
-                onClick={() => setIsMenuOpen(false)}
               >
                 <LogIn className="mr-2 h-5 w-5" />
                 <span>{translations?.auth?.login || 'Login'}</span>
@@ -471,8 +534,11 @@ export default function Header() {
               <Link
                 href="/register"
                 className="flex items-center justify-center w-full px-3 py-2 text-base font-medium rounded-md text-white transition-colors duration-200"
-                style={{ backgroundColor: theme.colors.primary, color: '#ffffff', fontSize: getLocalizedFontSize('1rem') }}
-                onClick={() => setIsMenuOpen(false)}
+                style={{
+                  backgroundColor: theme.colors.primary,
+                  color: '#ffffff',
+                  fontSize: getLocalizedFontSize('1rem')
+                }}
               >
                 <UserPlus className="mr-2 h-5 w-5" />
                 <span>{translations?.auth?.register || 'Sign Up'}</span>
@@ -481,14 +547,17 @@ export default function Header() {
           )}
         </div>
 
-        {/* Mobile language */}
+        {/* Mobile language selector */}
         <div
           className="px-4 py-2 border-t"
           style={{ backgroundColor: theme.colors.navBg, borderColor: theme.colors.border }}
         >
           <p
             className="text-sm font-medium"
-            style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)', fontSize: getLocalizedFontSize('0.875rem') }}
+            style={{
+              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+              fontSize: getLocalizedFontSize('0.875rem')
+            }}
           >
             {translations?.language?.select || 'Language'}
           </p>
@@ -499,9 +568,10 @@ export default function Header() {
                 onClick={() => handleLanguageChange(lang.code)}
                 className="px-3 py-1 text-sm rounded-md transition-colors duration-200"
                 style={{
-                  backgroundColor: language === lang.code
-                    ? theme.colors.primary
-                    : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'),
+                  backgroundColor:
+                    language === lang.code
+                      ? theme.colors.primary
+                      : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'),
                   color: language === lang.code ? '#ffffff' : theme.colors.text,
                   fontSize: getLanguageOptionFontSize(lang.code)
                 }}

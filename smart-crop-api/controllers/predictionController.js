@@ -45,11 +45,8 @@ exports.createPrediction = async (req, res) => {
 // GET /api/v1/predictions?user_id=1&crop_name=Potato&date_from=2025-08-01&date_to=2025-08-25&page=1&limit=20
 exports.getAllPredictions = async (req, res) => {
   try {
-    const page = Math.max(parseInt(req.query.page || "1", 10), 1);
-    const limit = Math.min(Math.max(parseInt(req.query.limit || "20", 10), 1), 100);
-    const offset = (page - 1) * limit;
-
     const where = {};
+
     if (req.query.user_id) where.user_id = req.query.user_id;
     if (req.query.crop_name) where.crop_name = req.query.crop_name;
 
@@ -60,18 +57,18 @@ exports.getAllPredictions = async (req, res) => {
       if (date_to) where.created_at[Op.lte] = new Date(date_to);
     }
 
-    const { rows, count } = await PredictionHistory.findAndCountAll({
+    const rows = await PredictionHistory.findAll({
       where,
-      limit,
-      offset,
       order: [["id", "ASC"]],
-      include: [{ model: User, as: "user", attributes: ["id", "username", "email"] }],
+      include: [
+        { model: User, as: "user", attributes: ["id", "username", "email"] },
+      ],
     });
 
     res.json({
       success: true,
       data: rows,
-      meta: { page, limit, total: count, pages: Math.ceil(count / limit) },
+      meta: { total: rows.length }, // optional metadata
     });
   } catch (err) {
     console.error("getAllPredictions error:", err);
