@@ -1,14 +1,19 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useTheme } from '@/context/ThemeContext';
 import ThemeWrapper from '@/components/ThemeWrapper';
+
 import {
   Leaf, BarChart3, AlertTriangle, CheckCircle, Droplets, Moon, Sun,
   Loader2, AlertCircle, Info, Download, Users, Search, FileText,
   Thermometer, PlayCircle
 } from 'lucide-react';
+
+// Multilingual Fertilizer PDF + Section (local files)
+import { generateFertilizerPDF } from './pdfGenerator';
+import FertilizerReportSection from './FertilizerReportSection';
 
 // Lazy chart
 const ChartComponent = dynamic(() => import('./ChartComponent'), {
@@ -164,10 +169,7 @@ export default function CropAdviserPage() {
   const [soilData, setSoilData] = useState({
     soilType: '', pH: '', nitrogen: '', phosphorus: '', potassium: '',
     district: '', agroZone: '', season: '', landArea: '',
-    // User-provided weather data
-    avgHumidity: '',           // %
-    avgRainfall: '',           // mm
-    temperature: ''            // °C (NEW field)
+    avgHumidity: '', avgRainfall: '', temperature: ''
   });
 
   const [predictions, setPredictions] = useState(null);
@@ -177,6 +179,10 @@ export default function CropAdviserPage() {
   const [loadingWeather, setLoadingWeather] = useState(false);
   const [weatherError, setWeatherError] = useState('');
   const [modelState, setModelState] = useState({ loaded: false, testMode: false, error: null });
+
+  // language for top PDF buttons (Fertilizer Guide)
+  const [pdfLanguage, setPdfLanguage] = useState('english');
+  const [pdfGenerating, setPdfGenerating] = useState(false);
 
   // ----------------------
   // FETCH FARMERS
@@ -244,38 +250,38 @@ export default function CropAdviserPage() {
   // ----------------------
   // STATIC LISTS
   // ----------------------
-const districts = {
-  Colombo:      ['WL1a', 'WL2a', 'WL2b', 'WL3'],
-  Gampaha:      ['WL2a', 'WL2b', 'WL3'],
-  Kalutara:     ['WL2a', 'WL2b', 'WL3', 'WL5'],
-  Galle:        ['WL1a', 'WL5'],
-  Matara:       ['WL1a', 'WL2a'],
-  Ratnapura:    ['WL4', 'WM3a', 'WM3b'],
-  Kegalle:      ['WM1a', 'WM1b'],
+  const districts = {
+    Colombo:      ['WL1a', 'WL2a', 'WL2b', 'WL3'],
+    Gampaha:      ['WL2a', 'WL2b', 'WL3'],
+    Kalutara:     ['WL2a', 'WL2b', 'WL3', 'WL5'],
+    Galle:        ['WL1a', 'WL5'],
+    Matara:       ['WL1a', 'WL2a'],
+    Ratnapura:    ['WL4', 'WM3a', 'WM3b'],
+    Kegalle:      ['WM1a', 'WM1b'],
 
-  Kandy:        ['WM2a', 'WM2b', 'WU3a', 'WU3b', 'IM1a', 'IM1b'],
-  Matale:       ['WM2a', 'WM2b', 'WU3a', 'WU3b', 'IL2', 'DM1a', 'DM1b'],
-  NuwaraEliya:  ['WU1a', 'WU1b'],
+    Kandy:        ['WM2a', 'WM2b', 'WU3a', 'WU3b', 'IM1a', 'IM1b'],
+    Matale:       ['WM2a', 'WM2b', 'WU3a', 'WU3b', 'IL2', 'DM1a', 'DM1b'],
+    NuwaraEliya:  ['WU1a', 'WU1b'],
 
-  Badulla:      ['WU2a', 'WU2b', 'IM2a', 'IM2b', 'IU1', 'IU2', 'IU3d', 'IU3e', 'DM2', 'DU1'],
-  Monaragala:   ['IM2a', 'IM2b', 'DM1a', 'DM1b', 'DU2'],
+    Badulla:      ['WU2a', 'WU2b', 'IM2a', 'IM2b', 'IU1', 'IU2', 'IU3d', 'IU3e', 'DM2', 'DU1'],
+    Monaragala:   ['IM2a', 'IM2b', 'DM1a', 'DM1b', 'DU2'],
 
-  Anuradhapura: ['DL1a', 'DL1b', 'DL1c', 'DL1d'],
-  Polonnaruwa:  ['DL2a', 'DL2b'],
-  Trincomalee:  ['DL1d', 'DL2a', 'DL2b'],
+    Anuradhapura: ['DL1a', 'DL1b', 'DL1c', 'DL1d'],
+    Polonnaruwa:  ['DL2a', 'DL2b'],
+    Trincomalee:  ['DL1d', 'DL2a', 'DL2b'],
 
-  Vavuniya:     ['DL3'],
-  Mullaitivu:   ['DL3'],
-  Kilinochchi:  ['DL3'],
-  Jaffna:       ['DL4', 'AZ4'],
-  Mannar:       ['AZ1', 'DL3'],
-  Puttalam:     ['AZ2', 'IL1b'],
+    Vavuniya:     ['DL3'],
+    Mullaitivu:   ['DL3'],
+    Kilinochchi:  ['DL3'],
+    Jaffna:       ['DL4', 'AZ4'],
+    Mannar:       ['AZ1', 'DL3'],
+    Puttalam:     ['AZ2', 'IL1b'],
 
-  Kurunegala:   ['IL1a', 'IL1b'],
-  Batticaloa:   ['DL2a', 'DL2b'],
-  Ampara:       ['DL2a', 'DL2b', 'DL5a'],
-  Hambantota:   ['DL1a', 'DL5a', 'DL5b', 'AZ3']
-};
+    Kurunegala:   ['IL1a', 'IL1b'],
+    Batticaloa:   ['DL2a', 'DL2b'],
+    Ampara:       ['DL2a', 'DL2b', 'DL5a'],
+    Hambantota:   ['DL1a', 'DL5a', 'DL5b', 'AZ3']
+  };
 
   const soilTypeMapping = {
     'Red Yellow Podzolic': 'Red Yellow Podzolic (RYP)',
@@ -372,39 +378,25 @@ const districts = {
   }, [soilData.district]);
 
   // ----------------------
-  // CORRECTED RECOMMENDATIONS FUNCTION
+  // RECOMMENDATIONS
   // ----------------------
   const generateRecommendations = (mlResult, inputData) => {
     const fertilizers = [];
     const soilIssues = [];
     const managementTips = [];
 
-    // CRITICAL FIX: Validate and correct the ML response structure
     let validPredictions = [];
-    
-    // Ensure we have a valid top_3_predictions array
     if (Array.isArray(mlResult.top_3_predictions) && mlResult.top_3_predictions.length > 0) {
       validPredictions = mlResult.top_3_predictions.filter(pred => pred && pred.crop && typeof pred.probability === 'number');
     }
-    
-    // If no valid predictions, create from the original predicted_crop
     if (validPredictions.length === 0) {
-      console.warn('No valid top_3_predictions found, using predicted_crop fallback');
       validPredictions = [{
         crop: mlResult.predicted_crop || 'Unknown',
         probability: mlResult.confidence || 0
       }];
     }
-
-    // Sort by probability descending to get the true best crop
     validPredictions.sort((a, b) => b.probability - a.probability);
-    
-    // The actual best crop is the one with highest probability
     const actualBestCrop = validPredictions[0];
-    
-    console.log('Original predicted_crop:', mlResult.predicted_crop);
-    console.log('Top 3 predictions:', validPredictions);
-    console.log('Actual best crop:', actualBestCrop);
 
     const ph = Number(inputData.pH);
     const n  = Number(inputData.nitrogen);
@@ -420,7 +412,6 @@ const districts = {
     if (!Number.isNaN(p) && p < 15)   fertilizers.push('Apply phosphorus fertilizer (TSP) - 25-50 kg/ha');
     if (!Number.isNaN(k) && k < 150)  fertilizers.push('Apply potassium fertilizer (MOP) - 30-60 kg/ha');
 
-    // Use actualBestCrop for crop-specific tips
     const predictedCrop = (actualBestCrop.crop || '').toLowerCase();
     const cropTips = {
       potato: ['Hill up soil around plants', 'Plant during cool months'],
@@ -434,22 +425,17 @@ const districts = {
       cucumber:['Provide trellis support', 'Harvest regularly'],
       eggplant:['Needs warm full sun', 'Support heavy fruit'],
       lettuce:['Prefers cooler temps', 'Harvest in morning'],
-      bean:   ['Fixes nitrogen in soil', 'Don\'t disturb roots'],
+      bean:   ['Fixes nitrogen in soil', "Don't disturb roots"],
     };
-    
     Object.entries(cropTips).forEach(([c, tips]) => {
-      if (predictedCrop.includes(c)) {
-        tips.forEach(t => managementTips.push(`${c[0].toUpperCase()+c.slice(1)}: ${t}`));
-      }
+      if (predictedCrop.includes(c)) tips.forEach(t => managementTips.push(`${c[0].toUpperCase()+c.slice(1)}: ${t}`));
     });
-    
     if (!managementTips.length) {
       managementTips.push('Ensure proper plant spacing');
       managementTips.push('Monitor moisture during dry spells');
       managementTips.push('Scout pests/diseases regularly');
     }
 
-    // Create completely corrected ML result
     const correctedMlResult = {
       ...mlResult,
       predicted_crop: actualBestCrop.crop,
@@ -507,10 +493,9 @@ const districts = {
   };
 
   // ----------------------
-  // MAIN PREDICTION FUNCTION (COMPLETELY FIXED)
+  // MAIN PREDICTION FUNCTION
   // ----------------------
   const getCropPrediction = async (data) => {
-    // Required fields validation
     if (!data.soilType || !data.pH || !data.nitrogen || !data.phosphorus || !data.potassium || !data.agroZone || !data.season) {
       setError("Please fill in all required fields marked with *");
       return;
@@ -518,10 +503,9 @@ const districts = {
     
     setLoading(true); 
     setError('');
-    setPredictions(null); // Clear previous predictions
+    setPredictions(null);
 
     try {
-      // Build ML request payload
       const apiData = {
         soil_type: soilTypeMapping[data.soilType] || data.soilType,
         soil_ph: Number(data.pH),
@@ -532,30 +516,23 @@ const districts = {
         cultivation_season: data.season
       };
 
-      // Optional fields
       if (data.district) apiData.district = data.district;
       if (data.landArea && !Number.isNaN(Number(data.landArea))) apiData.land_area_hectares = Number(data.landArea);
 
-      // Temperature handling
       if (data.temperature !== '' && !Number.isNaN(Number(data.temperature))) {
         apiData.temperature = Number(data.temperature);
       } else if (typeof weather?.temperature === 'number') {
         apiData.temperature = weather.temperature;
       }
 
-      // Humidity handling
       if (data.avgHumidity !== '' && !Number.isNaN(Number(data.avgHumidity))) {
         apiData.avg_humidity = Number(data.avgHumidity);
       }
-      
-      // Rainfall handling
       if (data.avgRainfall !== '' && !Number.isNaN(Number(data.avgRainfall))) {
         apiData.avg_rainfall = Number(data.avgRainfall);
       } else if (typeof weather?.precipitation === 'number') {
         apiData.avg_rainfall = weather.precipitation;
       }
-
-      console.log('Sending ML request with data:', apiData);
 
       const response = await fetch(`${ML_API}/predict-crop`, {
         method: 'POST',
@@ -565,7 +542,6 @@ const districts = {
 
       const text = await response.text();
       let result;
-      
       try { 
         result = JSON.parse(text); 
       } catch { 
@@ -575,50 +551,28 @@ const districts = {
       if (!response.ok) throw new Error(result.detail || `HTTP ${response.status}`);
       if (!result.success) throw new Error(result.error || 'Prediction failed');
 
-      console.log('Raw ML API response:', result);
-
-      // CRITICAL FIX: Process and validate ML response
       if (!Array.isArray(result.top_3_predictions)) {
-        console.warn('top_3_predictions is not a valid array:', result.top_3_predictions);
         result.top_3_predictions = [];
       }
-
-      // Filter out invalid predictions
       result.top_3_predictions = result.top_3_predictions.filter(pred => 
-        pred && 
-        pred.crop && 
-        typeof pred.probability === 'number' && 
-        pred.probability >= 0
+        pred && pred.crop && typeof pred.probability === 'number' && pred.probability >= 0
       );
-
-      // If no valid predictions exist, create fallback
       if (result.top_3_predictions.length === 0) {
         if (result.predicted_crop) {
-          result.top_3_predictions = [{
-            crop: result.predicted_crop,
-            probability: result.confidence || 50
-          }];
+          result.top_3_predictions = [{ crop: result.predicted_crop, probability: result.confidence || 50 }];
         } else {
           throw new Error('No valid predictions returned from ML model');
         }
       }
-
-      // Sort by probability (highest first) - this is the critical fix
       result.top_3_predictions.sort((a, b) => b.probability - a.probability);
 
-      // Override the predicted_crop with the actual highest probability crop
       const trueBestCrop = result.top_3_predictions[0];
       result.predicted_crop = trueBestCrop.crop;
       result.confidence = trueBestCrop.probability;
 
-      console.log('Corrected ML response - Best crop:', result.predicted_crop, 'Confidence:', result.confidence);
-      console.log('All predictions sorted:', result.top_3_predictions);
-
-      // Generate recommendations with corrected data
       const recommendations = generateRecommendations(result, data);
       setPredictions(recommendations);
 
-      // Save to backend if farmer is selected
       if (selectedFarmer?.id) {
         try { 
           await savePredictionToBackend(selectedFarmer.id, recommendations.mlResult); 
@@ -638,15 +592,8 @@ const districts = {
   };
 
   // ----------------------
-  // UI helpers
+  // PDF GENERATION HANDLERS (FIXED)
   // ----------------------
-  const filteredFarmers = farmers.filter(f => (f.name || '').toLowerCase().includes(searchTerm.toLowerCase()));
-
-  // ----------------------
-  // PDF GENERATION
-  // ----------------------
-  const [pdfGenerating, setPdfGenerating] = useState(false);
-
   const generatePredictionPDF = async () => {
     if (!predictions) return;
     setPdfGenerating(true);
@@ -695,7 +642,11 @@ const districts = {
       doc.text(`Best Match: ${predictions.mlResult.predicted_crop}`,14,y); y+=6;
       doc.setFontSize(10);
       doc.text(`Confidence: ${predictions.mlResult.confidence}%`,14,y); y+=6;
-      doc.text(`Model Accuracy: ${predictions.mlResult.ml_model_accuracy}%`,14,y); y+=10;
+      if (typeof predictions.mlResult.ml_model_accuracy === 'number') {
+        doc.text(`Model Accuracy: ${predictions.mlResult.ml_model_accuracy}%`,14,y); y+=10;
+      } else {
+        y+=4;
+      }
 
       doc.setFontSize(12); doc.text('Alternative Options:',14,y); y+=6;
       predictions.crops.slice(1).forEach(c => { doc.setFontSize(10); doc.text(`${c.name} - ${c.suitability} (${c.confidence}%)`,20,y); y+=6; });
@@ -723,6 +674,35 @@ const districts = {
       doc.save(filename);
     } catch (e) {
       console.error(e); setError('Failed to generate PDF report');
+    } finally {
+      setPdfGenerating(false);
+    }
+  };
+
+  const handleGenerateFertilizerReport = async () => {
+    if (!predictions?.mlResult?.predicted_crop) return;
+    setPdfGenerating(true);
+    try {
+      // IMPORTANT: generateFertilizerPDF returns an object that has a save() method
+      const result = await generateFertilizerPDF(
+        predictions.mlResult.predicted_crop,
+        soilData,
+        predictions,
+        selectedFarmer,
+        pdfLanguage
+      );
+
+      if (result && typeof result.save === 'function') {
+        result.save();
+      } else if (result?.doc && typeof result.doc.save === 'function') {
+        // fallback if your generator returns { doc, save }
+        result.doc.save();
+      } else {
+        throw new Error('Invalid response from pdfGenerator.generateFertilizerPDF');
+      }
+    } catch (e) {
+      console.error(e);
+      setError('Failed to generate Fertilizer Guide PDF');
     } finally {
       setPdfGenerating(false);
     }
@@ -821,6 +801,11 @@ const districts = {
       setPdfGenerating(false);
     }
   };
+
+  // ----------------------
+  // FILTERED FARMERS
+  // ----------------------
+  const filteredFarmers = farmers.filter(f => (f.name || '').toLowerCase().includes(searchTerm.toLowerCase()));
 
   // ----------------------
   // MAIN UI RENDER
@@ -1089,7 +1074,7 @@ const districts = {
                     style={{ backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : '#fff', borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)', color: isDark ? '#fff' : '#000' }}
                   >
                     <option value="">Select Season</option>
-                    {seasons.map(s => <option key={s} value={s}>{s}</option>)}
+                    {['Yala','Maha','Intermonsoon'].map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
 
@@ -1209,9 +1194,9 @@ const districts = {
 
             {predictions && (
               <>
-                {/* FIXED: Main Prediction Card */}
+                {/* Main Prediction Card */}
                 <div className="rounded-lg shadow-lg p-6 border" style={{ backgroundColor: theme.colors.card, borderColor: theme.colors.border }}>
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4">
                     <h2 className="text-xl font-semibold flex items-center gap-2" style={{ color: theme.colors.text }}>
                       <Leaf className="h-5 w-5" style={{ color: theme.colors.primary }} />
                       AI Crop Recommendations
@@ -1225,40 +1210,88 @@ const districts = {
                       )}
                     </h2>
 
-                    {/* PDF Download Buttons */}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={generatePredictionPDF}
-                        disabled={pdfGenerating}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-                        style={{
-                          backgroundColor: isDark ? 'rgba(59,130,246,0.2)' : 'rgba(59,130,246,0.1)',
-                          color: isDark ? '#93C5FD' : '#2563EB',
-                          opacity: pdfGenerating ? 0.5 : 1, 
-                          cursor: pdfGenerating ? 'not-allowed' : 'pointer'
-                        }}
-                      >
-                        {pdfGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                        <span>Recommendation PDF</span>
-                      </button>
-                      <button
-                        onClick={generateAgronomicPracticesPDF}
-                        disabled={pdfGenerating}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-                        style={{
-                          backgroundColor: isDark ? 'rgba(34,197,94,0.2)' : 'rgba(34,197,94,0.1)',
-                          color: isDark ? '#86EFAC' : '#16A34A',
-                          opacity: pdfGenerating ? 0.5 : 1, 
-                          cursor: pdfGenerating ? 'not-allowed' : 'pointer'
-                        }}
-                      >
-                        {pdfGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-                        <span>Agronomic Guide</span>
-                      </button>
+                    {/* PDF Download Buttons + Language */}
+                    <div className="flex flex-col items-stretch md:items-end gap-2 w-full md:w-auto">
+                      <div className="w-full md:w-56">
+                        <select
+                          value={pdfLanguage}
+                          onChange={(e)=>setPdfLanguage(e.target.value)}
+                          className="w-full px-3 py-2 border rounded-md text-sm"
+                          style={{
+                            backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : '#fff',
+                            borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                            color: theme.colors.text
+                          }}
+                        >
+                          <option value="english">English</option>
+                          <option value="sinhala">සිංහල (Sinhala)</option>
+                          <option value="tamil">தமிழ் (Tamil)</option>
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full">
+                        <button
+                          onClick={generatePredictionPDF}
+                          disabled={pdfGenerating}
+                          className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 disabled:hover:scale-100"
+                          style={{
+                            backgroundColor: isDark ? 'rgba(59,130,246,0.2)' : 'rgba(59,130,246,0.1)',
+                            color: isDark ? '#93C5FD' : '#2563EB',
+                            border: `1px solid ${isDark ? 'rgba(59,130,246,0.3)' : 'rgba(59,130,246,0.2)'}`,
+                            opacity: pdfGenerating ? 0.6 : 1, 
+                            cursor: pdfGenerating ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          {pdfGenerating ? <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" /> : <Download className="h-4 w-4 flex-shrink-0" />}
+                          <span className="truncate">Recommendation PDF</span>
+                        </button>
+
+                        <button
+                          onClick={handleGenerateFertilizerReport}
+                          disabled={pdfGenerating}
+                          className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 disabled:hover:scale-100"
+                          style={{
+                            backgroundColor: isDark ? 'rgba(34,197,94,0.2)' : 'rgba(34,197,94,0.1)',
+                            color: isDark ? '#86EFAC' : '#16A34A',
+                            border: `1px solid ${isDark ? 'rgba(34,197,94,0.3)' : 'rgba(34,197,94,0.2)'}`,
+                            opacity: pdfGenerating ? 0.6 : 1, 
+                            cursor: pdfGenerating ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          {pdfGenerating ? <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" /> : <FileText className="h-4 w-4 flex-shrink-0" />}
+                          <span className="truncate">Fertilizer Guide</span>
+                        </button>
+
+                        <button
+                          onClick={generateAgronomicPracticesPDF}
+                          disabled={pdfGenerating}
+                          className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 disabled:hover:scale-100 sm:col-span-2 lg:col-span-1"
+                          style={{
+                            backgroundColor: isDark ? 'rgba(249,115,22,0.2)' : 'rgba(249,115,22,0.1)',
+                            color: isDark ? '#FDBA74' : '#EA580C',
+                            border: `1px solid ${isDark ? 'rgba(249,115,22,0.3)' : 'rgba(249,115,22,0.2)'}`,
+                            opacity: pdfGenerating ? 0.6 : 1, 
+                            cursor: pdfGenerating ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          {pdfGenerating ? <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" /> : <FileText className="h-4 w-4 flex-shrink-0" />}
+                          <span className="truncate">Agronomic Guide</span>
+                        </button>
+                      </div>
+
+                      {pdfGenerating && (
+                        <div className="flex items-center justify-center gap-2 p-3 rounded-lg w-full" style={{
+                          backgroundColor: isDark ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.05)',
+                          color: isDark ? '#93C5FD' : '#2563EB'
+                        }}>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="text-sm">Generating PDF...</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* FIXED: Best Match Display */}
+                  {/* Best Match */}
                   <div className="mb-4 p-4 rounded-lg" style={{
                     backgroundColor: isDark ? 'rgba(34,197,94,0.2)' : 'rgba(34,197,94,0.1)',
                     border: `2px solid ${isDark ? 'rgba(34,197,94,0.3)' : 'rgba(34,197,94,0.2)'}`
@@ -1273,9 +1306,11 @@ const districts = {
                       <span style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)' }}>
                         Suitability: <strong>{predictions.crops[0]?.suitability || 'Unknown'}</strong>
                       </span>
-                      <span style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)' }}>
-                        Model Accuracy: <strong>{predictions.mlResult.ml_model_accuracy}%</strong>
-                      </span>
+                      {typeof predictions.mlResult.ml_model_accuracy === 'number' && (
+                        <span style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)' }}>
+                          Model Accuracy: <strong>{predictions.mlResult.ml_model_accuracy}%</strong>
+                        </span>
+                      )}
                       {predictions.mlResult.processing_time_ms && (
                         <span style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)' }}>
                           Processing: <strong>{predictions.mlResult.processing_time_ms}ms</strong>
@@ -1291,7 +1326,7 @@ const districts = {
                     )}
                   </div>
 
-                  {/* Alternative Options */}
+                  {/* Alternatives */}
                   {predictions.crops.length > 1 && (
                     <div className="space-y-3">
                       <h4 className="font-medium" style={{ color: theme.colors.text }}>Alternative Options:</h4>
@@ -1351,8 +1386,8 @@ const districts = {
                     <div className="space-y-4">
                       {predictions.fertilizers.map((f, i) => {
                         const m = f.match(/(\d+)-(\d+) kg\/ha/);
-                        const minRate = parseInt(m?.[1] || 0);
-                        const maxRate = parseInt(m?.[2] || 0);
+                        const minRate = parseInt(m?.[1] || 0, 10);
+                        const maxRate = parseInt(m?.[2] || 0, 10);
                         const area = parseFloat(soilData.landArea) || 0;
                         const minTotal = (minRate * area).toFixed(1);
                         const maxTotal = (maxRate * area).toFixed(1);
@@ -1370,7 +1405,7 @@ const districts = {
                   </div>
                 )}
 
-                {/* Weather Display */}
+                {/* Weather */}
                 {soilData.district && (
                   <div className="rounded-lg shadow-lg p-6 border" style={{ backgroundColor: theme.colors.card, borderColor: theme.colors.border }}>
                     <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" style={{ color: theme.colors.text }}>
@@ -1459,6 +1494,15 @@ const districts = {
                     </div>
                   </div>
                 )}
+
+                {/* Multilingual Fertilizer Section */}
+                <FertilizerReportSection 
+                  soilData={soilData}
+                  predictions={predictions}
+                  selectedFarmer={selectedFarmer}
+                  theme={theme}
+                  isDark={isDark}
+                />
               </>
             )}
           </div>
