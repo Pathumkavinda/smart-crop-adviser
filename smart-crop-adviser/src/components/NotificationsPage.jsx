@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext'; // Import language context
 import {
   Bell, MessageSquare, Paperclip, FileText, BarChart3,
   CheckCircle2, Clock, Loader2, RefreshCw, Filter, Eye, ArrowLeft,
@@ -22,6 +23,160 @@ const authHeader = (token) => (token ? { Authorization: `Bearer ${token}` } : {}
 
 const safeJSON = async (res) => {
   try { return await res.json(); } catch { return null; }
+};
+
+/* ------------------------------ Translations ------------------------------ */
+const translations = {
+  en: {
+    title: "Notifications",
+    signIn: "Sign in to view notifications",
+    signInMessage: "You must be logged in to access your notifications.",
+    back: "Back",
+    refresh: "Refresh",
+    loading: "Loading notifications...",
+    empty: "You don't have any notifications yet.",
+    total: "total",
+    unread: "unread",
+    markAllRead: "Mark all read",
+    clearRead: "Clear Read",
+    loadMore: "Load more",
+    filter: {
+      all: "All notifications",
+      unread: "Unread only",
+      messages: "Messages",
+      files: "Message Attachments",
+      userFiles: "Farmer/Adviser Files", 
+      predictions: "Predictions"
+    },
+    items: {
+      message: "New message",
+      messageSender: "from",
+      messageFile: "New message attachment",
+      userFile: "New file uploaded",
+      fileCategory: "",
+      prediction: "New prediction result",
+      size: "Size:",
+      suitability: "Suitability:",
+      notification: "Notification"
+    },
+    actions: {
+      markRead: "Mark read",
+      markUnread: "Mark unread",
+      view: "View"
+    },
+    time: {
+      justNow: "Just now",
+      minutesAgo: "m ago",
+      hoursAgo: "h ago",
+      daysAgo: "d ago"
+    },
+    errors: {
+      loadFailed: "Failed to load notifications."
+    },
+    confirmation: {
+      clearRead: "Clear all read states? This will mark all files and predictions as unread."
+    }
+  },
+  si: {
+    title: "දැනුම්දීම්",
+    signIn: "දැනුම්දීම් බැලීමට පිවිසෙන්න",
+    signInMessage: "ඔබගේ දැනුම්දීම් ප්‍රවේශ වීමට ඔබ පුරන්නට අවශ්‍යයි.",
+    back: "ආපසු",
+    refresh: "නැවුම් කරන්න",
+    loading: "දැනුම්දීම් පූරණය වෙමින්...",
+    empty: "ඔබට තවම දැනුම්දීම් කිසිවක් නැත.",
+    total: "මුළු ගණන",
+    unread: "නොකියවූ",
+    markAllRead: "සියල්ල කියවූ ලෙස සලකුණු කරන්න",
+    clearRead: "කියවූ ඒවා ඉවත් කරන්න",
+    loadMore: "තව පූරණය කරන්න",
+    filter: {
+      all: "සියලු දැනුම්දීම්",
+      unread: "නොකියවූ පමණයි",
+      messages: "පණිවිඩ",
+      files: "පණිවිඩ ඇමුණුම්",
+      userFiles: "ගොවි/උපදේශක ගොනු", 
+      predictions: "අනාවැකි"
+    },
+    items: {
+      message: "නව පණිවිඩය",
+      messageSender: "වෙතින්",
+      messageFile: "නව පණිවිඩ ඇමුණුම",
+      userFile: "නව ගොනුව උඩුගත කර ඇත",
+      fileCategory: "",
+      prediction: "නව අනාවැකි ප්‍රතිඵලය",
+      size: "ප්‍රමාණය:",
+      suitability: "සුදුසුකම:",
+      notification: "දැනුම්දීම"
+    },
+    actions: {
+      markRead: "කියවූ ලෙස සලකුණු කරන්න",
+      markUnread: "නොකියවූ ලෙස සලකුණු කරන්න",
+      view: "බලන්න"
+    },
+    time: {
+      justNow: "දැන්මයි",
+      minutesAgo: "විනාඩි පෙර",
+      hoursAgo: "පැය පෙර",
+      daysAgo: "දින පෙර"
+    },
+    errors: {
+      loadFailed: "දැනුම්දීම් පූරණය කිරීම අසාර්ථක විය."
+    },
+    confirmation: {
+      clearRead: "සියලු කියවීම් තත්වයන් ඉවත් කරන්නද? මෙය සියලු ගොනු සහ අනාවැකි නොකියවූ ලෙස සලකුණු කරයි."
+    }
+  },
+  ta: {
+    title: "அறிவிப்புகள்",
+    signIn: "அறிவிப்புகளைக் காண உள்நுழையவும்",
+    signInMessage: "உங்கள் அறிவிப்புகளை அணுக நீங்கள் உள்நுழைந்திருக்க வேண்டும்.",
+    back: "பின்செல்",
+    refresh: "புதுப்பிக்க",
+    loading: "அறிவிப்புகள் ஏற்றப்படுகின்றன...",
+    empty: "உங்களுக்கு இதுவரை அறிவிப்புகள் எதுவும் இல்லை.",
+    total: "மொத்தம்",
+    unread: "படிக்காதவை",
+    markAllRead: "அனைத்தையும் படித்ததாகக் குறி",
+    clearRead: "படித்தவற்றை நீக்கு",
+    loadMore: "மேலும் ஏற்று",
+    filter: {
+      all: "அனைத்து அறிவிப்புகளும்",
+      unread: "படிக்காதவை மட்டும்",
+      messages: "செய்திகள்",
+      files: "செய்தி இணைப்புகள்",
+      userFiles: "விவசாயி/ஆலோசகர் கோப்புகள்", 
+      predictions: "கணிப்புகள்"
+    },
+    items: {
+      message: "புதிய செய்தி",
+      messageSender: "இருந்து",
+      messageFile: "புதிய செய்தி இணைப்பு",
+      userFile: "புதிய கோப்பு பதிவேற்றப்பட்டது",
+      fileCategory: "",
+      prediction: "புதிய கணிப்பு முடிவு",
+      size: "அளவு:",
+      suitability: "பொருத்தம்:",
+      notification: "அறிவிப்பு"
+    },
+    actions: {
+      markRead: "படித்ததாகக் குறி",
+      markUnread: "படிக்காததாகக் குறி",
+      view: "காண்க"
+    },
+    time: {
+      justNow: "இப்போதுதான்",
+      minutesAgo: "நிமி முன்",
+      hoursAgo: "மணி முன்",
+      daysAgo: "நாட்கள் முன்"
+    },
+    errors: {
+      loadFailed: "அறிவிப்புகளை ஏற்றுவதில் தோல்வி."
+    },
+    confirmation: {
+      clearRead: "அனைத்து படித்த நிலைகளையும் அழிக்கவா? இது அனைத்து கோப்புகள் மற்றும் கணிப்புகளை படிக்காததாகக் குறிக்கும்."
+    }
+  }
 };
 
 /* ------------------------------ Helper utils ------------------------------ */
@@ -83,7 +238,9 @@ const clearAllReadStates = () => {
   } catch { /* ignore */ }
 };
 
-function formatDate(d) {
+function formatDate(d, language = 'en') {
+  const trans = translations[language] || translations.en;
+  
   if (!d) return '—';
   const dt = new Date(d);
   if (Number.isNaN(dt.getTime())) return '—';
@@ -96,10 +253,10 @@ function formatDate(d) {
   const diffDay = Math.floor(diffHour / 24);
 
   if (diffDay < 1) {
-    if (diffHour < 1) return diffMin < 1 ? 'Just now' : `${diffMin}m ago`;
-    return `${diffHour}h ago`;
+    if (diffHour < 1) return diffMin < 1 ? trans.time.justNow : `${diffMin}${trans.time.minutesAgo}`;
+    return `${diffHour}${trans.time.hoursAgo}`;
   } else if (diffDay < 7) {
-    return `${diffDay}d ago`;
+    return `${diffDay}${trans.time.daysAgo}`;
   }
   return dt.toLocaleDateString();
 }
@@ -137,11 +294,23 @@ export default function NotificationsPage({
   pageSize = 30,
   farmerOnly = true,
   dashboardUrl = '/profile/Dashboard',
+  language = 'en', // Add language prop
 }) {
   const { theme } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
   const isDark = theme.name === 'dark';
+  
+  // Use the language context if available, or fall back to the language prop
+  const { language: contextLanguage } = useLanguage || {};
+  const currentLanguage = language || contextLanguage || 'en';
+  const trans = translations[currentLanguage] || translations.en;
+  
+  // Text style based on language
+  const getTextStyle = (s = {}) => ({ 
+    ...s, 
+    lineHeight: currentLanguage === 'si' ? 1.7 : currentLanguage === 'ta' ? 1.8 : 1.5 
+  });
 
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
@@ -265,11 +434,11 @@ export default function NotificationsPage({
       setItems(all);
     } catch (e) {
       // keep quiet to avoid noise; show compact UI error if needed
-      setErr('Failed to load notifications.');
+      setErr(trans.errors.loadFailed);
     } finally {
       setLoading(false);
     }
-  }, [user?.id, fetchMessages, fetchUserFiles, fetchPredictions, fetchMessageFiles]);
+  }, [user?.id, fetchMessages, fetchUserFiles, fetchPredictions, fetchMessageFiles, trans.errors.loadFailed]);
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
@@ -421,7 +590,7 @@ export default function NotificationsPage({
 
   // Debug function to clear all read states (useful for testing)
   const clearAllRead = () => {
-    if (window.confirm('Clear all read states? This will mark all files and predictions as unread.')) {
+    if (window.confirm(trans.confirmation.clearRead)) {
       clearAllReadStates();
       // Refresh the page state
       setItems(prev => prev.map(item => ({
@@ -469,24 +638,24 @@ export default function NotificationsPage({
   const ItemTitle = ({ item }) => {
     if (item._type === 'message') {
       return (
-        <div className="font-medium" style={{ color: theme.colors.text }}>
-          New message
-          {item.sender_id && <span className="text-sm opacity-75"> from #{item.sender_id}</span>}
+        <div className="font-medium" style={{ ...getTextStyle(), color: theme.colors.text }}>
+          {trans.items.message}
+          {item.sender_id && <span className="text-sm opacity-75"> {trans.items.messageSender} #{item.sender_id}</span>}
         </div>
       );
     }
     if (item._type === 'message_file') {
       return (
-        <div className="font-medium" style={{ color: theme.colors.text }}>
-          New message attachment
+        <div className="font-medium" style={{ ...getTextStyle(), color: theme.colors.text }}>
+          {trans.items.messageFile}
           <span className="block text-sm mt-0.5 opacity-90">{item.original_name}</span>
         </div>
       );
     }
     if (item._type === 'user_file') {
       return (
-        <div className="font-medium" style={{ color: theme.colors.text }}>
-          New file uploaded
+        <div className="font-medium" style={{ ...getTextStyle(), color: theme.colors.text }}>
+          {trans.items.userFile}
           <span className="block text-sm mt-0.5 opacity-90">
             {item.original_name} {item.category && <span className="opacity-75">({item.category})</span>}
           </span>
@@ -495,28 +664,28 @@ export default function NotificationsPage({
     }
     if (item._type === 'prediction') {
       return (
-        <div className="font-medium" style={{ color: theme.colors.text }}>
-          New prediction result
+        <div className="font-medium" style={{ ...getTextStyle(), color: theme.colors.text }}>
+          {trans.items.prediction}
           <span className="block text-sm mt-0.5 opacity-90">{item.crop_name}</span>
         </div>
       );
     }
-    return <div className="font-medium" style={{ color: theme.colors.text }}>Notification</div>;
+    return <div className="font-medium" style={{ ...getTextStyle(), color: theme.colors.text }}>{trans.items.notification}</div>;
   };
 
   const ItemContent = ({ item }) => {
     if (item._type === 'message' && item.text) {
       const preview = item.text.length > 100 ? `${item.text.slice(0, 100)}...` : item.text;
       return (
-        <div className="mt-1 text-sm opacity-80" style={{ color: theme.colors.text }}>
+        <div className="mt-1 text-sm opacity-80" style={{ ...getTextStyle(), color: theme.colors.text }}>
           {preview}
         </div>
       );
     }
     if ((item._type === 'message_file' || item._type === 'user_file') && item.size_bytes) {
       return (
-        <div className="mt-1 text-sm opacity-70" style={{ color: theme.colors.text }}>
-          Size: {bytes(item.size_bytes)}
+        <div className="mt-1 text-sm opacity-70" style={{ ...getTextStyle(), color: theme.colors.text }}>
+          {trans.items.size} {bytes(item.size_bytes)}
         </div>
       );
     }
@@ -528,8 +697,8 @@ export default function NotificationsPage({
       else color = isDark ? '#F87171' : '#EF4444';
 
       return (
-        <div className="mt-1 text-sm flex items-center gap-2" style={{ color: theme.colors.text }}>
-          <span className="opacity-70">Suitability:</span>
+        <div className="mt-1 text-sm flex items-center gap-2" style={{ ...getTextStyle(), color: theme.colors.text }}>
+          <span className="opacity-70">{trans.items.suitability}</span>
           <div className="flex-1 bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden max-w-[100px]">
             <div className="h-full rounded-full" style={{ width: `${score}%`, backgroundColor: color }} />
           </div>
@@ -571,14 +740,14 @@ export default function NotificationsPage({
           value={filter}
           onChange={e => { setPage(1); setFilter(e.target.value); }}
           className="appearance-none bg-transparent border-0 p-0 pr-6 focus:outline-none text-sm"
-          style={{ color: theme.colors.text }}
+          style={{ ...getTextStyle(), color: theme.colors.text }}
         >
-          <option value="all">All notifications</option>
-          <option value="unread">Unread only</option>
-          <option value="messages">Messages</option>
-          <option value="files">Message Attachments</option>
-          <option value="user_files">Farmer/Adviser Files</option>
-          <option value="predictions">Predictions</option>
+          <option value="all">{trans.filter.all}</option>
+          <option value="unread">{trans.filter.unread}</option>
+          <option value="messages">{trans.filter.messages}</option>
+          <option value="files">{trans.filter.files}</option>
+          <option value="user_files">{trans.filter.userFiles}</option>
+          <option value="predictions">{trans.filter.predictions}</option>
         </select>
       </div>
     </div>
@@ -595,8 +764,8 @@ export default function NotificationsPage({
         }}
       >
         <Bell className="h-12 w-12 mx-auto mb-4 opacity-30" />
-        <h3 className="text-lg font-medium mb-2">Sign in to view notifications</h3>
-        <p className="text-sm opacity-75">You must be logged in to access your notifications.</p>
+        <h3 className="text-lg font-medium mb-2" style={getTextStyle()}>{trans.signIn}</h3>
+        <p className="text-sm opacity-75" style={getTextStyle()}>{trans.signInMessage}</p>
       </div>
     );
   }
@@ -616,7 +785,7 @@ export default function NotificationsPage({
           }}
         >
           <ArrowLeft className="h-4 w-4" />
-          <span className="text-sm">Back</span>
+          <span className="text-sm" style={getTextStyle()}>{trans.back}</span>
         </button>
 
         <div className="flex items-center gap-3 flex-1">
@@ -630,10 +799,10 @@ export default function NotificationsPage({
             <Bell className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold" style={{ color: theme.colors.text }}>Notifications</h2>
+            <h2 className="text-lg font-semibold" style={{ ...getTextStyle(), color: theme.colors.text }}>{trans.title}</h2>
             {!loading && (
-              <div className="text-xs opacity-75" style={{ color: theme.colors.text }}>
-                {items.length} total • {unreadCount} unread
+              <div className="text-xs opacity-75" style={{ ...getTextStyle(), color: theme.colors.text }}>
+                {items.length} {trans.total} • {unreadCount} {trans.unread}
               </div>
             )}
           </div>
@@ -654,7 +823,7 @@ export default function NotificationsPage({
               }}
             >
               <CheckCircle2 className="h-4 w-4" />
-              Mark all read ({unreadCount})
+              <span style={getTextStyle()}>{trans.markAllRead} ({unreadCount})</span>
             </button>
           )}
           
@@ -671,7 +840,7 @@ export default function NotificationsPage({
               title="Development only: Clear all read states"
             >
               <CircleX className="h-4 w-4" />
-              Clear Read
+              <span style={getTextStyle()}>{trans.clearRead}</span>
             </button>
           )}
           
@@ -686,14 +855,14 @@ export default function NotificationsPage({
             disabled={refreshing}
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-            <span className="text-sm">Refresh</span>
+            <span className="text-sm" style={getTextStyle()}>{trans.refresh}</span>
           </button>
         </div>
       </div>
 
       {/* Error display */}
       {err && (
-        <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+        <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm" style={getTextStyle()}>
           {err}
         </div>
       )}
@@ -709,12 +878,12 @@ export default function NotificationsPage({
         {loading ? (
           <div className="p-10 flex flex-col items-center justify-center gap-3">
             <Loader2 className="h-8 w-8 animate-spin opacity-40" style={{ color: theme.colors.primary }} />
-            <p className="text-sm opacity-75" style={{ color: theme.colors.text }}>Loading notifications...</p>
+            <p className="text-sm opacity-75" style={{ ...getTextStyle(), color: theme.colors.text }}>{trans.loading}</p>
           </div>
         ) : items.length === 0 ? (
           <div className="p-10 text-center">
             <Bell className="h-12 w-12 mx-auto mb-3 opacity-25" style={{ color: theme.colors.text }} />
-            <p className="text-sm opacity-75" style={{ color: theme.colors.text }}>You don't have any notifications yet.</p>
+            <p className="text-sm opacity-75" style={{ ...getTextStyle(), color: theme.colors.text }}>{trans.empty}</p>
           </div>
         ) : (
           <ul className="divide-y" style={{ borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
@@ -755,9 +924,9 @@ export default function NotificationsPage({
                       <ItemContent item={item} />
 
                       <div className="flex items-center justify-between mt-2 pt-1">
-                        <div className="flex items-center text-xs opacity-60" style={{ color: theme.colors.text }}>
+                        <div className="flex items-center text-xs opacity-60" style={{ ...getTextStyle(), color: theme.colors.text }}>
                           <Clock className="h-3 w-3 mr-1" />
-                          {formatDate(item.created_at)}
+                          {formatDate(item.created_at, currentLanguage)}
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -777,14 +946,14 @@ export default function NotificationsPage({
                             }}
                           >
                             {read ? <CircleX className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                            {read ? 'Mark unread' : 'Mark read'}
+                            <span style={getTextStyle()}>{read ? trans.actions.markUnread : trans.actions.markRead}</span>
                           </button>
 
                           <button
                             onClick={(e) => { e.stopPropagation(); openItem(item); }}
                             className="p-1 rounded opacity-70 hover:opacity-100"
                             style={{ color: theme.colors.text }}
-                            title="View"
+                            title={trans.actions.view}
                           >
                             <Eye className="h-4 w-4" />
                           </button>
@@ -811,7 +980,7 @@ export default function NotificationsPage({
               color: theme.colors.text,
             }}
           >
-            Load more
+            <span style={getTextStyle()}>{trans.loadMore}</span>
           </button>
         </div>
       )}

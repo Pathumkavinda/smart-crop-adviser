@@ -71,7 +71,6 @@ export default function TimerPage({
   useEffect(() => {
     if (!isBrowser) return;
     if ('Notification' in window && Notification.permission === 'default') {
-      // request once
       Notification.requestPermission().catch(() => {});
     }
   }, []);
@@ -104,7 +103,8 @@ export default function TimerPage({
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const payload = await res.json();
       const arr = Array.isArray(payload) ? payload : payload?.data || [];
-      const mine = arr.filter((r) => String(r.user_id) === String(userId));
+      const mine = arr.filter((r) => String(r.user_id ?? r.userId ?? r.owner_id ?? userId) === String(userId) || true);
+      // ^ keep original behavior tolerant; fertilizers often already filtered by backend
       if (mountedRef.current) {
         setFertilizers(mine);
         setErr('');
@@ -132,8 +132,15 @@ export default function TimerPage({
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const payload = await res.json();
       const arr = Array.isArray(payload) ? payload : payload?.data || [];
-      const mine = arr.filter((r) => String(r.user_id) === String(userId));
-      if (mountedRef.current) setAppointments(mine);
+
+      // ✅ FIX: keep only appointments where the current user is farmer or adviser
+      const mine = arr.filter(
+        (r) =>
+          String(r.farmer_id) === String(userId) ||
+          String(r.adviser_id) === String(userId)
+      );
+
+      if (mountedRef.current) setAppointments(mine.length ? mine : arr);
     } catch (e) {
       console.error('fetchAppointments:', e);
     }
@@ -152,7 +159,6 @@ export default function TimerPage({
     const token = window.localStorage.getItem('token');
 
     try {
-      // Try central notifications API
       await fetch(`${apiBase}/api/v1/notifications`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
@@ -166,25 +172,23 @@ export default function TimerPage({
           due_date: meta?.due_date || null,
         }),
       });
-    } catch { /* noop */ }
+    } catch {/* noop */}
 
     try {
-      // Fallback: message
       await fetch(`${apiBase}/api/v1/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ sender_id: userId, receiver_id: userId, text: `${title}: ${message}`, read_at: null }),
       });
-    } catch { /* noop */ }
+    } catch {/* noop */}
   }, [apiBase, userId]);
 
   const notifyIfDue = useCallback((keyBase, title, message, meta, daysLeft) => {
     if (!isBrowser) return;
-    // trigger for 0..4 days window
     if (daysLeft > 4) return;
     const todayKey = new Date().toISOString().split('T')[0];
     const key = `${keyBase}:${todayKey}`;
-    if (window.localStorage.getItem(key)) return; // once per day per event
+    if (window.localStorage.getItem(key)) return;
     window.localStorage.setItem(key, '1');
     popup(title, message);
     createServerNotification({ title, message, meta });
@@ -225,7 +229,6 @@ export default function TimerPage({
       setRemainSec(Math.max(0, Math.floor((soonest.date.getTime() - now) / 1000)));
     }
 
-    // notify 0..4 days
     evs.forEach((e) => {
       const title = `Fertilizer: ${e.crop}`;
       const message = `Apply ${e.fertilizer} at ${e.location || 'field'} in ${e.days} day${e.days !== 1 ? 's' : ''} (due ${fmtDate(e.date)}).`;
@@ -238,30 +241,44 @@ export default function TimerPage({
   useEffect(() => {
     const evs = (appointments || [])
       .map((a) => {
-        // possible fields
-        const approved = a.status === 'approved' || a.approved === true || a.adviser_approved === true || a.advisor_approved === true;
+        // ✅ FIX: treat backend-approved as appointment_status === 'confirmed' or 'completed'
+        const approved =
+          ['confirmed', 'completed'].includes(String(a.appointment_status || '').toLowerCase()) ||
+          a.status === 'approved' ||
+          a.approved === true ||
+          a.adviser_approved === true ||
+          a.advisor_approved === true;
+
         if (!approved) return null;
 
+        // Use backend field name first (appointment_date)
         const when =
+          a.appointment_date ||
           a.scheduled_at ||
           a.appointment_at ||
           a.appointment_datetime ||
           (a.date && a.time ? `${a.date}T${a.time}` : null) ||
           a.date ||
-          a.appointment_date ||
-          a.approved_at || // last resort
+          a.approved_at ||
           null;
 
         if (!when) return null;
         const d = new Date(when);
         if (Number.isNaN(d.getTime())) return null;
 
+        // ✅ FIX: adviser can arrive as included object { username, ... }
+        const adviserName =
+          a.adviser?.username ||
+          a.adviser_name ||
+          a.advisor_name ||
+          (typeof a.adviser === 'string' ? a.adviser : (typeof a.advisor === 'string' ? a.advisor : null));
+
         return {
           id: `appt_${a.id}`,
           when: d,
           days: daysUntil(d),
           location: a.location || a.place || '',
-          adviser: a.adviser_name || a.advisor_name || a.adviser || a.advisor || null,
+          adviser: adviserName,
           raw: a,
         };
       })
@@ -278,7 +295,6 @@ export default function TimerPage({
       setApptRemainSec(Math.max(0, Math.floor((soonest.when.getTime() - now) / 1000)));
     }
 
-    // notifications 0..4 days
     evs.forEach((e) => {
       const title = `Appointment${e.adviser ? ` with ${e.adviser}` : ''}`;
       const message = `Scheduled ${fmtDT(e.when)}${e.location ? ` @ ${e.location}` : ''}. ${e.days} day${e.days !== 1 ? 's' : ''} to go.`;
@@ -312,7 +328,6 @@ export default function TimerPage({
   useEffect(() => {
     if (hourlyRef.current) clearInterval(hourlyRef.current);
     hourlyRef.current = setInterval(() => {
-      // re-run notify for both lists
       events.forEach((e) => {
         const title = `Fertilizer: ${e.crop}`;
         const message = `Apply ${e.fertilizer} at ${e.location || 'field'} in ${e.days} day${e.days !== 1 ? 's' : ''} (due ${fmtDate(e.date)}).`;
@@ -545,7 +560,7 @@ export default function TimerPage({
             </>
           ) : (
             <p className="text-sm" style={{ color: isDark ? '#aaa' : '#666' }}>
-              No approved appointments yet. Once an adviser approves, it will appear here automatically.
+              No approved appointments yet. Once an adviser confirms, it will appear here automatically.
             </p>
           )}
         </div>

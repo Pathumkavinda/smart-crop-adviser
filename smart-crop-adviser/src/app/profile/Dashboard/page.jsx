@@ -105,7 +105,7 @@ const daysUntil = (d) => {
   return Math.round((target - today) / (1000 * 60 * 60 * 24));
 };
 
-// ---- Translations (trimmed)
+// ---- Translations (complete)
 const translations = {
   en: {
     title: 'User Dashboard',
@@ -153,6 +153,106 @@ const translations = {
       humidity: 'Humidity',
       rainfall: 'Rainfall',
       backToPredictions: 'Back to Predictions',
+    },
+  },
+  
+  // Sinhala translations
+  si: {
+    title: 'පරිශීලක ඩැෂ්බෝඩ්',
+    sections: {
+      lastPrediction: 'අවසන් අනාවැකිය',
+      predictionHistory: 'අනාවැකි ඉතිහාසය',
+      adviserDocuments: 'උපදේශකගෙන් ලැබුණු ලේඛන',
+      cultivationDates: 'වගා දින',
+      fertilizerCalendar: 'පොහොර යෙදීමේ දින දර්ශනය',
+      notifications: 'දැනුම්දීම්',
+      timer: 'කාල ගණකය',
+      contactAdvisor: 'උපදේශක සම්බන්ධ කර ගන්න',
+      messages: 'පණිවිඩ',
+    },
+    lastPrediction: {
+      title: 'අවසන් අනාවැකිය',
+      subtitle: 'ඔබගේ නවතම බෝග අනාවැකි විස්තර',
+      date: 'දිනය',
+      suitability: 'සුදුසුකම',
+      noPrediction: 'මෑත අනාවැකි නොමැත',
+      viewAllPredictions: 'සියලුම අනාවැකි බලන්න',
+    },
+    predictionHistory: {
+      title: 'අනාවැකි ඉතිහාසය',
+      subtitle: 'ඔබගේ බෝග අනාවැකි ඉතිහාසය බලන්න',
+      date: 'දිනය',
+      crop: 'බෝගය',
+      district: 'දිස්ත්‍රික්කය',
+      suitability: 'සුදුසුකම',
+      viewDetails: 'විස්තර බලන්න',
+      noPredictions: 'අනාවැකි ඉතිහාසයක් නොමැත',
+      highSuitability: 'ඉහළ සුදුසුකම',
+      mediumSuitability: 'මධ්‍යම සුදුසුකම',
+      lowSuitability: 'අඩු සුදුසුකම',
+      predictionResult: 'අනාවැකි ප්‍රතිඵලය',
+      adviserName: 'උපදේශකගේ නම',
+      soilParameters: 'පස් පරාමිතීන්',
+      soilType: 'පස් වර්ගය',
+      soilPh: 'පස් pH අගය',
+      nitrogen: 'නයිට්‍රජන්',
+      phosphate: 'පොස්පේට්',
+      potassium: 'පොටෑසියම්',
+      environmentalConditions: 'පාරිසරික තත්ත්වයන්',
+      temperature: 'උෂ්ණත්වය',
+      humidity: 'ආර්ද්‍රතාවය',
+      rainfall: 'වර්ෂාපතනය',
+      backToPredictions: 'අනාවැකි වෙත ආපසු යන්න',
+    },
+  },
+  
+  // Tamil translations
+  ta: {
+    title: 'பயனர் டாஷ்போர்டு',
+    sections: {
+      lastPrediction: 'கடைசி கணிப்பு',
+      predictionHistory: 'கணிப்பு வரலாறு',
+      adviserDocuments: 'ஆலோசகரின் ஆவணங்கள்',
+      cultivationDates: 'சாகுபடி திகதிகள்',
+      fertilizerCalendar: 'உர பயன்பாட்டு காலண்டர்',
+      notifications: 'அறிவிப்புகள்',
+      timer: 'டைமர்',
+      contactAdvisor: 'ஆலோசகரை தொடர்புகொள்ளவும்',
+      messages: 'செய்திகள்',
+    },
+    lastPrediction: {
+      title: 'கடைசி கணிப்பு',
+      subtitle: 'உங்கள் சமீபத்திய பயிர் கணிப்பின் விவரங்கள்',
+      date: 'திகதி',
+      suitability: 'பொருத்தம்',
+      noPrediction: 'சமீபத்திய கணிப்பு இல்லை',
+      viewAllPredictions: 'அனைத்து கணிப்புகளையும் காண',
+    },
+    predictionHistory: {
+      title: 'கணிப்பு வரலாறு',
+      subtitle: 'உங்கள் பயிர் கணிப்பு வரலாற்றைக் காண்க',
+      date: 'திகதி',
+      crop: 'பயிர்',
+      district: 'மாவட்டம்',
+      suitability: 'பொருத்தம்',
+      viewDetails: 'விவரங்களைக் காண',
+      noPredictions: 'கணிப்பு வரலாறு இல்லை',
+      highSuitability: 'அதிக பொருத்தம்',
+      mediumSuitability: 'நடுத்தர பொருத்தம்',
+      lowSuitability: 'குறைந்த பொருத்தம்',
+      predictionResult: 'கணிப்பு முடிவு',
+      adviserName: 'ஆலோசகர் பெயர்',
+      soilParameters: 'மண் அளவுருக்கள்',
+      soilType: 'மண் வகை',
+      soilPh: 'மண் pH',
+      nitrogen: 'நைட்ரஜன்',
+      phosphate: 'பாஸ்பேட்',
+      potassium: 'பொட்டாசியம்',
+      environmentalConditions: 'சுற்றுச்சூழல் நிலைமைகள்',
+      temperature: 'வெப்பநிலை',
+      humidity: 'ஈரப்பதம்',
+      rainfall: 'மழைப்பொழிவு',
+      backToPredictions: 'கணிப்புகளுக்குத் திரும்பு',
     },
   },
 };
@@ -209,7 +309,7 @@ export default function UserDashboard() {
     };
   }, []);
 
-  // predictions fetch (route exists)
+  // FIXED: Enhanced predictions fetch to get adviser names
   const fetchPredictionHistory = useCallback(async () => {
     if (!user?.id) return;
     try {
@@ -222,7 +322,35 @@ export default function UserDashboard() {
       if (res.ok) {
         const json = await res.json();
         const mine = (json?.data || json || []).filter((p) => p.user_id === user.id);
-        setPredictionHistory(mine);
+        
+        // Fetch adviser details for each prediction with adviser_id
+        const enhancedPredictions = await Promise.all(mine.map(async (prediction) => {
+          if (prediction.adviser_id) {
+            try {
+              const adviserRes = await safeFetch(`${API_URL}/api/v1/users/${prediction.adviser_id}`, {
+                headers: authHeader(token),
+                signal: abortControllerRef.current?.signal
+              });
+              if (adviserRes.ok) {
+                const adviserData = await adviserRes.json();
+                const adviser = adviserData.data || {};
+                return {
+                  ...prediction,
+                  adviser_name: adviser.username || adviser.name || 'Unknown Adviser'
+                };
+              }
+            } catch (e) {
+              if (e.name !== 'AbortError') console.error(`Adviser fetch failed for ID ${prediction.adviser_id}:`, e);
+            }
+          }
+          // Return the original prediction if no adviser_id or fetch fails
+          return {
+            ...prediction,
+            adviser_name: prediction.adviser_name || 'No Adviser Assigned'
+          };
+        }));
+        
+        setPredictionHistory(enhancedPredictions);
       }
     } catch (e) {
       if (e.name !== 'AbortError') console.error('Predictions fetch failed:', e);
@@ -576,8 +704,8 @@ export default function UserDashboard() {
                           </h3>
                           <div className="mt-1 space-y-1 text-sm" style={{ color: isDark ? '#bbb' : '#333' }}>
                             <div>{trans.lastPrediction.date}: {new Date(latestPrediction.created_at).toLocaleDateString()}</div>
-                            <div>{translations.en.predictionHistory.district}: {latestPrediction.district || '-'}</div>
-                            <div>{translations.en.predictionHistory.adviserName}: {latestPrediction.adviser_name || '-'}</div>
+                            <div>{trans.predictionHistory.district}: {latestPrediction.district || '-'}</div>
+                            <div>{trans.predictionHistory.adviserName}: {latestPrediction.adviser_name || '-'}</div>
                           </div>
                         </div>
                       </div>
@@ -626,7 +754,7 @@ export default function UserDashboard() {
                       style={{ backgroundColor: theme.colors.primary }}
                     >
                       <Eye className="mr-2 h-4 w-4" />
-                      {translations.en.predictionHistory.viewDetails}
+                      {trans.predictionHistory.viewDetails}
                     </button>
                   </div>
                 </div>
@@ -755,7 +883,7 @@ export default function UserDashboard() {
             <div className="px-4 py-5 sm:px-6 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileText className="h-5 w-5" style={{ color: theme.colors.primary }} />
-                <h2 className="text-lg font-medium">Documents from Adviser</h2>
+                <h2 className="text-lg font-medium">{trans.sections.adviserDocuments}</h2>
               </div>
 
               <a
@@ -831,7 +959,7 @@ export default function UserDashboard() {
             <div className="px-4 py-5 sm:px-6 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Bell className="mr-2 h-5 w-5" style={{ color: theme.colors.primary }} />
-                <h2 className="text-lg font-medium" style={{ color: theme.colors.text }}>Notifications</h2>
+                <h2 className="text-lg font-medium" style={{ color: theme.colors.text }}>{trans.sections.notifications}</h2>
               </div>
               <a
                 href={NOTIFICATIONS_URL}

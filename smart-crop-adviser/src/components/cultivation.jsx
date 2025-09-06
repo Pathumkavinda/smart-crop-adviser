@@ -39,6 +39,116 @@ const DatePicker = ({ value, onChange, label, isDark, error }) => (
   </div>
 );
 
+/* ------------------------------- Translations --------------------------- */
+const translations = {
+  en: {
+    addCultivation: "Add Cultivation",
+    editCultivation: "Edit Cultivation",
+    addNewCultivation: "Add New Cultivation",
+    cropName: "Crop Name",
+    location: "Location",
+    locationPlaceholder: "Farm location or field name",
+    landSize: "Land Size",
+    landSizePlaceholder: "e.g., 1.0 acre / 0.4 ha / 20 perches",
+    status: "Status",
+    statusOptions: {
+      planning: "Planned",
+      active: "Active",
+      completed: "Completed"
+    },
+    planningDate: "Planning Date",
+    expectedHarvestDate: "Expected Harvest Date",
+    notes: "Notes",
+    notesPlaceholder: "Optional notes about this cultivation",
+    cancel: "Cancel",
+    update: "Update",
+    save: "Save",
+    noCultivationsFound: "No cultivation records found",
+    addFirstCultivation: "Add your first cultivation",
+    daysLeft: "days left",
+    validation: {
+      cropRequired: "Crop name is required",
+      planningDateRequired: "Planning date is required",
+      harvestDateRequired: "Expected harvest date is required",
+      harvestAfterPlanning: "Harvest date must be after planning date",
+      locationRequired: "Location is required",
+      landSizeRequired: "Land size is required"
+    }
+  },
+  
+  // Sinhala translations
+  si: {
+    addCultivation: "වගාව එකතු කරන්න",
+    editCultivation: "වගාව සංස්කරණය කරන්න",
+    addNewCultivation: "නව වගාවක් එකතු කරන්න",
+    cropName: "බෝග නාමය",
+    location: "ස්ථානය",
+    locationPlaceholder: "ගොවිපළ ස්ථානය හෝ කෙත් නම",
+    landSize: "ඉඩම් ප්‍රමාණය",
+    landSizePlaceholder: "උදා: අක්කර 1.0 / හෙක්ටයාර 0.4 / පර්චස් 20",
+    status: "තත්ත්වය",
+    statusOptions: {
+      planning: "සැලසුම් කළ",
+      active: "ක්‍රියාකාරී",
+      completed: "සම්පූර්ණ කළ"
+    },
+    planningDate: "සැලසුම් දිනය",
+    expectedHarvestDate: "අපේක්ෂිත අස්වනු දිනය",
+    notes: "සටහන්",
+    notesPlaceholder: "මෙම වගාව පිළිබඳ විකල්ප සටහන්",
+    cancel: "අවලංගු කරන්න",
+    update: "යාවත්කාලීන කරන්න",
+    save: "සුරකින්න",
+    noCultivationsFound: "වගා වාර්තා හමු නොවීය",
+    addFirstCultivation: "ඔබගේ පළමු වගාව එකතු කරන්න",
+    daysLeft: "දින ඉතිරිය",
+    validation: {
+      cropRequired: "බෝග නාමය අවශ්‍යයි",
+      planningDateRequired: "සැලසුම් දිනය අවශ්‍යයි",
+      harvestDateRequired: "අපේක්ෂිත අස්වනු දිනය අවශ්‍යයි",
+      harvestAfterPlanning: "අස්වනු දිනය සැලසුම් දිනයට පසු විය යුතුය",
+      locationRequired: "ස්ථානය අවශ්‍යයි",
+      landSizeRequired: "ඉඩම් ප්‍රමාණය අවශ්‍යයි"
+    }
+  },
+  
+  // Tamil translations
+  ta: {
+    addCultivation: "சாகுபடியை சேர்க்க",
+    editCultivation: "சாகுபடியைத் திருத்த",
+    addNewCultivation: "புதிய சாகுபடி சேர்க்க",
+    cropName: "பயிர் பெயர்",
+    location: "இடம்",
+    locationPlaceholder: "பண்ணை இடம் அல்லது நிலத்தின் பெயர்",
+    landSize: "நில அளவு",
+    landSizePlaceholder: "உ.தா., 1.0 ஏக்கர் / 0.4 ஹெக்டேர் / 20 பேர்ச்",
+    status: "நிலை",
+    statusOptions: {
+      planning: "திட்டமிடப்பட்டது",
+      active: "செயலில்",
+      completed: "முடிக்கப்பட்டது"
+    },
+    planningDate: "திட்டமிடல் திகதி",
+    expectedHarvestDate: "எதிர்பார்க்கப்படும் அறுவடை திகதி",
+    notes: "குறிப்புகள்",
+    notesPlaceholder: "இந்த சாகுபடி பற்றிய விருப்ப குறிப்புகள்",
+    cancel: "ரத்து செய்க",
+    update: "புதுப்பிக்க",
+    save: "சேமி",
+    noCultivationsFound: "சாகுபடி பதிவுகள் எதுவும் இல்லை",
+    addFirstCultivation: "உங்கள் முதல் சாகுபடியைச் சேர்க்கவும்",
+    daysLeft: "நாட்கள் மீதம்",
+    validation: {
+      cropRequired: "பயிர் பெயர் தேவை",
+      planningDateRequired: "திட்டமிடல் திகதி தேவை",
+      harvestDateRequired: "எதிர்பார்க்கப்படும் அறுவடை திகதி தேவை",
+      harvestAfterPlanning: "அறுவடை திகதி திட்டமிடல் திகதிக்குப் பிறகு இருக்க வேண்டும்",
+      locationRequired: "இடம் தேவை",
+      landSizeRequired: "நில அளவு தேவை"
+    }
+  }
+};
+
 /* ------------------------------- Main Component --------------------------- */
 
 export default function CultivationDates({
@@ -55,6 +165,12 @@ export default function CultivationDates({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [trans, setTrans] = useState(translations.en);
+
+  // Set language
+  useEffect(() => {
+    setTrans(translations[language] || translations.en);
+  }, [language]);
 
   // Local form state (UI names); we map to API on submit
   const [formData, setFormData] = useState({
@@ -72,14 +188,14 @@ export default function CultivationDates({
 
   const validateForm = () => {
     const errors = {};
-    if (!formData.crop_name) errors.crop_name = 'Crop name is required';
-    if (!formData.planting_date) errors.planting_date = 'Planning date is required';
-    if (!formData.expected_harvest) errors.expected_harvest = 'Expected harvest date is required';
+    if (!formData.crop_name) errors.crop_name = trans.validation.cropRequired;
+    if (!formData.planting_date) errors.planting_date = trans.validation.planningDateRequired;
+    if (!formData.expected_harvest) errors.expected_harvest = trans.validation.harvestDateRequired;
     if (formData.expected_harvest <= formData.planting_date) {
-      errors.expected_harvest = 'Harvest date must be after planning date';
+      errors.expected_harvest = trans.validation.harvestAfterPlanning;
     }
-    if (!formData.location) errors.location = 'Location is required';
-    if (!formData.land_size) errors.land_size = 'Land size is required';
+    if (!formData.location) errors.location = trans.validation.locationRequired;
+    if (!formData.land_size) errors.land_size = trans.validation.landSizeRequired;
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -317,6 +433,12 @@ export default function CultivationDates({
     }
   };
 
+  // Get text style based on language
+  const getTextStyle = (s = {}) => ({ 
+    ...s, 
+    lineHeight: language === 'si' ? 1.7 : language === 'ta' ? 1.8 : 1.5 
+  });
+
   /* --------------------------------- Render -------------------------------- */
 
   if (loading && !isAddingNew && !isEditingId && cultivationDates.length === 0) {
@@ -341,7 +463,7 @@ export default function CultivationDates({
         >
           <div className="flex items-start">
             <AlertTriangle className="h-5 w-5 mr-2 flex-shrink-0" />
-            <p>{error}</p>
+            <p style={getTextStyle()}>{error}</p>
           </div>
         </div>
       )}
@@ -356,7 +478,7 @@ export default function CultivationDates({
             border: `1px solid ${isDark ? 'rgba(34,197,94,0.3)' : 'rgba(34,197,94,0.2)'}`,
           }}
         >
-          <p>{successMessage}</p>
+          <p style={getTextStyle()}>{successMessage}</p>
         </div>
       )}
 
@@ -369,7 +491,7 @@ export default function CultivationDates({
             style={{ backgroundColor: theme.colors.primary }}
           >
             <Plus className="h-4 w-4 mr-2" />
-            Add Cultivation
+            <span style={getTextStyle()}>{trans.addCultivation}</span>
           </button>
         </div>
       )}
@@ -384,8 +506,8 @@ export default function CultivationDates({
           }}
         >
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium" style={{ color: isDark ? '#eee' : '#333' }}>
-              {isEditingId ? 'Edit Cultivation' : 'Add New Cultivation'}
+            <h3 className="text-lg font-medium" style={{ ...getTextStyle(), color: isDark ? '#eee' : '#333' }}>
+              {isEditingId ? trans.editCultivation : trans.addNewCultivation}
             </h3>
             <button
               onClick={handleCancel}
@@ -403,8 +525,8 @@ export default function CultivationDates({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Crop Name */}
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1" style={{ color: isDark ? '#ddd' : '#333' }}>
-                  Crop Name {validationErrors.crop_name && <span className="text-red-500">*</span>}
+                <label className="block text-sm font-medium mb-1" style={{ ...getTextStyle(), color: isDark ? '#ddd' : '#333' }}>
+                  {trans.cropName} {validationErrors.crop_name && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="text"
@@ -418,13 +540,13 @@ export default function CultivationDates({
                     color: isDark ? '#eee' : '#333',
                   }}
                 />
-                {validationErrors.crop_name && <p className="mt-1 text-xs text-red-500">{validationErrors.crop_name}</p>}
+                {validationErrors.crop_name && <p className="mt-1 text-xs text-red-500" style={getTextStyle()}>{validationErrors.crop_name}</p>}
               </div>
 
               {/* Location */}
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1" style={{ color: isDark ? '#ddd' : '#333' }}>
-                  Location {validationErrors.location && <span className="text-red-500">*</span>}
+                <label className="block text-sm font-medium mb-1" style={{ ...getTextStyle(), color: isDark ? '#ddd' : '#333' }}>
+                  {trans.location} {validationErrors.location && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="text"
@@ -437,15 +559,15 @@ export default function CultivationDates({
                     borderColor: validationErrors.location ? '#f87171' : isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
                     color: isDark ? '#eee' : '#333',
                   }}
-                  placeholder="Farm location or field name"
+                  placeholder={trans.locationPlaceholder}
                 />
-                {validationErrors.location && <p className="mt-1 text-xs text-red-500">{validationErrors.location}</p>}
+                {validationErrors.location && <p className="mt-1 text-xs text-red-500" style={getTextStyle()}>{validationErrors.location}</p>}
               </div>
 
               {/* Land Size */}
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1" style={{ color: isDark ? '#ddd' : '#333' }}>
-                  Land Size {validationErrors.land_size && <span className="text-red-500">*</span>}
+                <label className="block text-sm font-medium mb-1" style={{ ...getTextStyle(), color: isDark ? '#ddd' : '#333' }}>
+                  {trans.landSize} {validationErrors.land_size && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="text"
@@ -458,15 +580,15 @@ export default function CultivationDates({
                     borderColor: validationErrors.land_size ? '#f87171' : isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
                     color: isDark ? '#eee' : '#333',
                   }}
-                  placeholder="e.g., 1.0 acre / 0.4 ha / 20 perches"
+                  placeholder={trans.landSizePlaceholder}
                 />
-                {validationErrors.land_size && <p className="mt-1 text-xs text-red-500">{validationErrors.land_size}</p>}
+                {validationErrors.land_size && <p className="mt-1 text-xs text-red-500" style={getTextStyle()}>{validationErrors.land_size}</p>}
               </div>
 
               {/* Status */}
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1" style={{ color: isDark ? '#ddd' : '#333' }}>
-                  Status
+                <label className="block text-sm font-medium mb-1" style={{ ...getTextStyle(), color: isDark ? '#ddd' : '#333' }}>
+                  {trans.status}
                 </label>
                 <select
                   name="status"
@@ -479,9 +601,9 @@ export default function CultivationDates({
                     color: isDark ? '#eee' : '#333',
                   }}
                 >
-                  <option value="planning">Planned</option>
-                  <option value="active">Active</option>
-                  <option value="completed">Completed</option>
+                  <option value="planning">{trans.statusOptions.planning}</option>
+                  <option value="active">{trans.statusOptions.active}</option>
+                  <option value="completed">{trans.statusOptions.completed}</option>
                 </select>
               </div>
 
@@ -489,7 +611,7 @@ export default function CultivationDates({
               <DatePicker
                 value={formData.planting_date}
                 onChange={(date) => setFormData({ ...formData, planting_date: date })}
-                label="Planning Date"
+                label={trans.planningDate}
                 isDark={isDark}
                 error={validationErrors.planting_date}
               />
@@ -498,7 +620,7 @@ export default function CultivationDates({
               <DatePicker
                 value={formData.expected_harvest}
                 onChange={(date) => setFormData({ ...formData, expected_harvest: date })}
-                label="Expected Harvest Date"
+                label={trans.expectedHarvestDate}
                 isDark={isDark}
                 error={validationErrors.expected_harvest}
               />
@@ -506,8 +628,8 @@ export default function CultivationDates({
 
             {/* Notes */}
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1" style={{ color: isDark ? '#ddd' : '#333' }}>
-                Notes
+              <label className="block text-sm font-medium mb-1" style={{ ...getTextStyle(), color: isDark ? '#ddd' : '#333' }}>
+                {trans.notes}
               </label>
               <textarea
                 name="notes"
@@ -520,7 +642,7 @@ export default function CultivationDates({
                   borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
                   color: isDark ? '#eee' : '#333',
                 }}
-                placeholder="Optional notes about this cultivation"
+                placeholder={trans.notesPlaceholder}
               />
             </div>
 
@@ -537,7 +659,7 @@ export default function CultivationDates({
                 }}
                 disabled={loading}
               >
-                Cancel
+                <span style={getTextStyle()}>{trans.cancel}</span>
               </button>
               <button
                 type="submit"
@@ -550,7 +672,7 @@ export default function CultivationDates({
                 ) : (
                   <Save className="h-4 w-4 mr-2" />
                 )}
-                {isEditingId ? 'Update' : 'Save'}
+                <span style={getTextStyle()}>{isEditingId ? trans.update : trans.save}</span>
               </button>
             </div>
           </form>
@@ -569,13 +691,13 @@ export default function CultivationDates({
                 color: isDark ? '#aaa' : '#666',
               }}
             >
-              <p>No cultivation records found</p>
+              <p style={getTextStyle()}>{trans.noCultivationsFound}</p>
               <button
                 onClick={() => setIsAddingNew(true)}
                 className="mt-2 text-sm"
                 style={{ color: theme.colors.primary }}
               >
-                Add your first cultivation
+                <span style={getTextStyle()}>{trans.addFirstCultivation}</span>
               </button>
             </div>
           ) : (
@@ -606,37 +728,37 @@ export default function CultivationDates({
                       <div className="flex justify-between items-start">
                         <div>
                           <div className="flex items-center">
-                            <h3 className="text-lg font-medium" style={{ color: isDark ? '#eee' : '#333' }}>
+                            <h3 className="text-lg font-medium" style={{ ...getTextStyle(), color: isDark ? '#eee' : '#333' }}>
                               {cultivation.crop}
                             </h3>
                             <span
                               className="ml-2 px-2 py-0.5 text-xs rounded-full"
                               style={{ backgroundColor: statusColor.bg, color: statusColor.text }}
                             >
-                              {cultivation.status}
+                              {trans.statusOptions[cultivation.status] || cultivation.status}
                             </span>
                           </div>
 
                           <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
                             <div>
                               <p className="text-xs" style={{ color: isDark ? '#aaa' : '#666' }}>
-                                Location
+                                {trans.location}
                               </p>
-                              <p className="text-sm" style={{ color: isDark ? '#ddd' : '#333' }}>
+                              <p className="text-sm" style={{ ...getTextStyle(), color: isDark ? '#ddd' : '#333' }}>
                                 {cultivation.location || '-'}
                               </p>
                             </div>
                             <div>
                               <p className="text-xs" style={{ color: isDark ? '#aaa' : '#666' }}>
-                                Land Size
+                                {trans.landSize}
                               </p>
-                              <p className="text-sm" style={{ color: isDark ? '#ddd' : '#333' }}>
+                              <p className="text-sm" style={{ ...getTextStyle(), color: isDark ? '#ddd' : '#333' }}>
                                 {cultivation.land_size || '-'}
                               </p>
                             </div>
                             <div>
                               <p className="text-xs" style={{ color: isDark ? '#aaa' : '#666' }}>
-                                Planning Date
+                                {trans.planningDate}
                               </p>
                               <p className="text-sm" style={{ color: isDark ? '#ddd' : '#333' }}>
                                 {formatDate(cultivation.planning_date)}
@@ -644,13 +766,13 @@ export default function CultivationDates({
                             </div>
                             <div>
                               <p className="text-xs" style={{ color: isDark ? '#aaa' : '#666' }}>
-                                Expected Harvest
+                                {trans.expectedHarvestDate}
                               </p>
                               <p className="text-sm" style={{ color: isDark ? '#ddd' : '#333' }}>
                                 {formatDate(cultivation.expected_harvest_date)}
                                 {daysToHarvest !== null && cultivation.status === 'active' && (
                                   <span className="ml-2 text-xs" style={{ color: theme.colors.primary }}>
-                                    ({daysToHarvest} days left)
+                                    ({daysToHarvest} {trans.daysLeft})
                                   </span>
                                 )}
                               </p>
@@ -660,9 +782,9 @@ export default function CultivationDates({
                           {cultivation.note && (
                             <div className="mt-2">
                               <p className="text-xs" style={{ color: isDark ? '#aaa' : '#666' }}>
-                                Notes
+                                {trans.notes}
                               </p>
-                              <p className="text-sm" style={{ color: isDark ? '#ddd' : '#333' }}>
+                              <p className="text-sm" style={{ ...getTextStyle(), color: isDark ? '#ddd' : '#333' }}>
                                 {cultivation.note}
                               </p>
                             </div>
