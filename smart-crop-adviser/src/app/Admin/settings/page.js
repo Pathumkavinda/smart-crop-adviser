@@ -1,619 +1,532 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Save, AlertTriangle, Check, Shield, Bell, Database, Server, Lock, Mail, Globe, Upload, RefreshCw } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
+import {
+  User, Mail, Phone, Lock, Save, ArrowLeft, AlertCircle, CheckCircle2, Eye, EyeOff
+} from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-export default function AdminSettings() {
-  // Settings state
-  const [generalSettings, setGeneralSettings] = useState({
-    siteName: 'Smart Crop',
-    siteDescription: 'Crop recommendation and management platform',
-    contactEmail: 'admin@smartcrop.com',
-    maintenanceMode: false
+// Simple Toast Component
+function Toast({ message, type, onClose }) {
+  const isSuccess = type === 'success';
+  const bgColor = isSuccess ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
+  const textColor = isSuccess ? 'text-green-800' : 'text-red-800';
+  const iconColor = isSuccess ? 'text-green-600' : 'text-red-600';
+
+  return (
+    <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg border ${bgColor} ${textColor} shadow-lg max-w-sm`}>
+      <div className="flex items-center gap-2">
+        {isSuccess ? <CheckCircle2 className={`w-5 h-5 ${iconColor}`} /> : <AlertCircle className={`w-5 h-5 ${iconColor}`} />}
+        <span className="text-sm font-medium">{message}</span>
+        <button onClick={onClose} className="ml-auto text-gray-400 hover:text-gray-600">
+          ×
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Translation strings
+const UI_STRINGS = {
+  en: {
+    title: 'Admin Settings',
+    subtitle: 'Manage your profile and account settings',
+    back: 'Back to Dashboard',
+    personalInfo: 'Personal Information',
+    fullName: 'Full Name',
+    fullNamePlaceholder: 'Enter your full name',
+    email: 'Email Address',
+    emailPlaceholder: 'Enter your email',
+    phone: 'Phone Number',
+    phonePlaceholder: 'Enter your phone number',
+    security: 'Security',
+    currentPassword: 'Current Password',
+    newPassword: 'New Password',
+    confirmPassword: 'Confirm New Password',
+    passwordPlaceholder: 'Enter password',
+    saveChanges: 'Save Changes',
+    saving: 'Saving...',
+    successMessage: 'Settings updated successfully!',
+    errorMessage: 'Failed to update settings. Please try again.',
+    validation: {
+      nameRequired: 'Full name is required',
+      emailRequired: 'Email is required',
+      emailInvalid: 'Please enter a valid email address',
+      phoneInvalid: 'Please enter a valid phone number',
+      passwordMismatch: 'Passwords do not match',
+      passwordLength: 'Password must be at least 8 characters'
+    }
+  },
+  si: {
+    title: 'පරිපාලක සැකසුම්',
+    subtitle: 'ඔබේ පැතිකඩ සහ ගිණුම් සැකසුම් කළමනාකරණය කරන්න',
+    back: 'පුවරුවට ආපසු',
+    personalInfo: 'පුද්ගලික තොරතුරු',
+    fullName: 'සම්පූර්ණ නාමය',
+    fullNamePlaceholder: 'ඔබේ සම්පූර්ණ නාමය ඇතුලත් කරන්න',
+    email: 'විද්‍යුත් තැපෑල',
+    emailPlaceholder: 'ඔබේ විද්‍යුත් තැපෑල ඇතුලත් කරන්න',
+    phone: 'දුරකථන අංකය',
+    phonePlaceholder: 'ඔබේ දුරකථන අංකය ඇතුලත් කරන්න',
+    security: 'ආරක්ෂාව',
+    currentPassword: 'වත්මන් මුරපදය',
+    newPassword: 'නව මුරපදය',
+    confirmPassword: 'නව මුරපදය තහවුරු කරන්න',
+    passwordPlaceholder: 'මුරපදය ඇතුලත් කරන්න',
+    saveChanges: 'වෙනස්කම් සුරකින්න',
+    saving: 'සුරකිමින්...',
+    successMessage: 'සැකසුම් සාර්ථකව යාවත්කාලීන කරන ලදී!',
+    errorMessage: 'සැකසුම් යාවත්කාලීන කිරීම අසාර්ථකයි. කරුණාකර නැවත උත්සාහ කරන්න.',
+    validation: {
+      nameRequired: 'සම්පූර්ණ නාමය අවශ්‍යයි',
+      emailRequired: 'විද්‍යුත් තැපෑල අවශ්‍යයි',
+      emailInvalid: 'කරුණාකර වලංගු විද්‍යුත් තැපෑලක් ඇතුලත් කරන්න',
+      phoneInvalid: 'කරුණාකර වලංගු දුරකථන අංකයක් ඇතුලත් කරන්න',
+      passwordMismatch: 'මුරපද නොගැලපේ',
+      passwordLength: 'මුරපදය අකුරු 8කට වැඩියි විය යුතුය'
+    }
+  },
+  ta: {
+    title: 'நிர்வாகி அமைப்புகள்',
+    subtitle: 'உங்கள் சுயவிவரம் மற்றும் கணக்கு அமைப்புகளை நிர்வகிக்கவும்',
+    back: 'டாஷ்போர்டுக்கு திரும்பு',
+    personalInfo: 'தனிப்பட்ட தகவல்',
+    fullName: 'முழுப் பெயர்',
+    fullNamePlaceholder: 'உங்கள் முழுப் பெயரை உள்ளிடவும்',
+    email: 'மின்னஞ்சல் முகவரி',
+    emailPlaceholder: 'உங்கள் மின்னஞ்சலை உள்ளிடவும்',
+    phone: 'தொலைபேசி எண்',
+    phonePlaceholder: 'உங்கள் தொலைபேசி எண்ணை உள்ளிடவும்',
+    security: 'பாதுகாப்பு',
+    currentPassword: 'தற்போதைய கடவுச்சொல்',
+    newPassword: 'புதிய கடவுச்சொல்',
+    confirmPassword: 'புதிய கடவுச்சொல்லை உறுதிப்படுத்தவும்',
+    passwordPlaceholder: 'கடவுச்சொல்லை உள்ளிடவும்',
+    saveChanges: 'மாற்றங்களைச் சேமிக்கவும்',
+    saving: 'சேமிக்கிறது...',
+    successMessage: 'அமைப்புகள் வெற்றிகரமாக புதுப்பிக்கப்பட்டன!',
+    errorMessage: 'அமைப்புகளை புதுப்பிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.',
+    validation: {
+      nameRequired: 'முழுப் பெயர் தேவையானது',
+      emailRequired: 'மின்னஞ்சல் தேவையானது',
+      emailInvalid: 'செல்லுபடியாகும் மின்னஞ்சல் முகவரியை உள்ளிடவும்',
+      phoneInvalid: 'செல்லுபடியாகும் தொலைபேசி எண்ணை உள்ளிடவும்',
+      passwordMismatch: 'கடவுச்சொற்கள் பொருந்தவில்லை',
+      passwordLength: 'கடவுச்சொல் குறைந்தது 8 எழுத்துகள்'
+    }
+  }
+};
+
+export default function AdminSettingsPage() {
+  const router = useRouter();
+  const { user, setUser } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme.name === 'dark';
+  
+  const langCtx = useLanguage();
+  const activeLang = langCtx?.language || 'en';
+  const t = UI_STRINGS[activeLang] || UI_STRINGS.en;
+
+  // State management
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   });
-
-  const [securitySettings, setSecuritySettings] = useState({
-    requireStrongPasswords: true,
-    loginAttempts: '5',
-    sessionTimeout: '120',
-    twoFactorAuth: false
+  
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false
   });
+  const [errors, setErrors] = useState({});
+  const [toast, setToast] = useState(null);
 
-  const [notificationSettings, setNotificationSettings] = useState({
-    emailNotifications: true,
-    userRegistration: true,
-    predictionAlerts: true,
-    systemUpdates: false
-  });
-
-  const [backupSettings, setBackupSettings] = useState({
-    backupFrequency: 'daily',
-    retentionPeriod: '30',
-    lastBackup: new Date().toISOString()
-  });
-
-  // Status message for form submissions
-  const [statusMessage, setStatusMessage] = useState({ type: '', message: '' });
-  const [loading, setLoading] = useState(false);
-
-  // Load settings from localStorage on component mount
-  useEffect(() => {
-    const loadSettings = () => {
-      try {
-        // Load settings from localStorage if available
-        const storedGeneral = localStorage.getItem('admin_general_settings');
-        const storedSecurity = localStorage.getItem('admin_security_settings');
-        const storedNotification = localStorage.getItem('admin_notification_settings');
-        const storedBackup = localStorage.getItem('admin_backup_settings');
-        
-        if (storedGeneral) setGeneralSettings(JSON.parse(storedGeneral));
-        if (storedSecurity) setSecuritySettings(JSON.parse(storedSecurity));
-        if (storedNotification) setNotificationSettings(JSON.parse(storedNotification));
-        if (storedBackup) setBackupSettings(JSON.parse(storedBackup));
-      } catch (error) {
-        console.error('Error loading settings:', error);
+  // Load user data
+  const loadUserData = useCallback(async () => {
+    if (!user?.id) return;
+    
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/v1/users/${user.id}`, {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          const userData = data.data;
+          setFormData({
+            name: userData.name || userData.full_name || userData.username || '',
+            email: userData.email || '',
+            phone: userData.phone || userData.phone_number || '',
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: ''
+          });
+        }
       }
-    };
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      setToast({ message: t.errorMessage, type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, t.errorMessage]);
+
+  useEffect(() => {
+    loadUserData();
+  }, [loadUserData]);
+
+  // Form validation
+  const validateForm = () => {
+    const newErrors = {};
     
-    loadSettings();
-  }, []);
-
-  // Handle input changes for each settings group
-  const handleGeneralChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setGeneralSettings({
-      ...generalSettings,
-      [name]: type === 'checkbox' ? checked : value
-    });
+    if (!formData.name.trim()) {
+      newErrors.name = t.validation.nameRequired;
+    }
+    
+    if (!formData.email.trim()) {
+      newErrors.email = t.validation.emailRequired;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = t.validation.emailInvalid;
+    }
+    
+    if (formData.phone && !/^[\+]?[1-9][\d]{0,15}$/.test(formData.phone.replace(/\s/g, ''))) {
+      newErrors.phone = t.validation.phoneInvalid;
+    }
+    
+    if (formData.newPassword) {
+      if (formData.newPassword.length < 8) {
+        newErrors.newPassword = t.validation.passwordLength;
+      }
+      if (formData.newPassword !== formData.confirmPassword) {
+        newErrors.confirmPassword = t.validation.passwordMismatch;
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleSecurityChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setSecuritySettings({
-      ...securitySettings,
-      [name]: type === 'checkbox' ? checked : value
-    });
-  };
-
-  const handleNotificationChange = (e) => {
-    const { name, checked } = e.target;
-    setNotificationSettings({
-      ...notificationSettings,
-      [name]: checked
-    });
-  };
-
-  const handleBackupChange = (e) => {
+  // Handle input changes
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setBackupSettings({
-      ...backupSettings,
-      [name]: value
-    });
-  };
-
-  // Form submission handlers - using localStorage as fallback
-  const saveGeneralSettings = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+    setFormData(prev => ({ ...prev, [name]: value }));
     
-    try {
-      // Since there's no specific admin settings API, we'll use localStorage
-      localStorage.setItem('admin_general_settings', JSON.stringify(generalSettings));
-      
-      // Show success message
-      setStatusMessage({
-        type: 'success',
-        message: 'General settings saved successfully'
-      });
-    } catch (error) {
-      console.error('Error saving general settings:', error);
-      setStatusMessage({
-        type: 'error',
-        message: 'Failed to save settings: ' + error.message
-      });
-    } finally {
-      setLoading(false);
-      // Clear message after delay
-      setTimeout(() => setStatusMessage({ type: '', message: '' }), 5000);
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
-  const saveSecuritySettings = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    try {
-      localStorage.setItem('admin_security_settings', JSON.stringify(securitySettings));
-      
-      setStatusMessage({
-        type: 'success',
-        message: 'Security settings saved successfully'
-      });
-    } catch (error) {
-      console.error('Error saving security settings:', error);
-      setStatusMessage({
-        type: 'error',
-        message: 'Failed to save settings: ' + error.message
-      });
-    } finally {
-      setLoading(false);
-      setTimeout(() => setStatusMessage({ type: '', message: '' }), 5000);
-    }
+  // Toggle password visibility
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
   };
 
-  const saveNotificationSettings = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  // Save settings
+  const handleSave = async () => {
+    if (!validateForm()) return;
     
+    setSaving(true);
     try {
-      localStorage.setItem('admin_notification_settings', JSON.stringify(notificationSettings));
-      
-      setStatusMessage({
-        type: 'success',
-        message: 'Notification settings saved successfully'
-      });
-    } catch (error) {
-      console.error('Error saving notification settings:', error);
-      setStatusMessage({
-        type: 'error',
-        message: 'Failed to save settings: ' + error.message
-      });
-    } finally {
-      setLoading(false);
-      setTimeout(() => setStatusMessage({ type: '', message: '' }), 5000);
-    }
-  };
-
-  const saveBackupSettings = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    try {
-      localStorage.setItem('admin_backup_settings', JSON.stringify(backupSettings));
-      
-      setStatusMessage({
-        type: 'success',
-        message: 'Backup settings saved successfully'
-      });
-    } catch (error) {
-      console.error('Error saving backup settings:', error);
-      setStatusMessage({
-        type: 'error',
-        message: 'Failed to save settings: ' + error.message
-      });
-    } finally {
-      setLoading(false);
-      setTimeout(() => setStatusMessage({ type: '', message: '' }), 5000);
-    }
-  };
-
-  const triggerBackup = () => {
-    setStatusMessage({
-      type: 'info',
-      message: 'Backup in progress...'
-    });
-    
-    setLoading(true);
-    
-    // Simulate backup process
-    setTimeout(() => {
-      const now = new Date();
-      const newBackupSettings = {
-        ...backupSettings,
-        lastBackup: now.toISOString()
+      const updateData = {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim() || null
       };
       
-      setBackupSettings(newBackupSettings);
-      localStorage.setItem('admin_backup_settings', JSON.stringify(newBackupSettings));
+      // Only include password if new password is provided
+      if (formData.newPassword) {
+        updateData.password = formData.newPassword;
+        updateData.currentPassword = formData.currentPassword;
+      }
       
-      setStatusMessage({
-        type: 'success',
-        message: 'Manual backup completed successfully'
+      const response = await fetch(`${API_URL}/api/v1/users/${user.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData)
       });
       
-      setLoading(false);
-      setTimeout(() => setStatusMessage({ type: '', message: '' }), 5000);
-    }, 3000);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setToast({ message: t.successMessage, type: 'success' });
+          
+          // Update user context
+          if (setUser && data.data) {
+            setUser(data.data);
+          }
+          
+          // Clear password fields
+          setFormData(prev => ({
+            ...prev,
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: ''
+          }));
+        } else {
+          setToast({ message: data.message || t.errorMessage, type: 'error' });
+        }
+    } else {
+        setToast({ message: t.errorMessage, type: 'error' });
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      setToast({ message: t.errorMessage, type: 'error' });
+    } finally {
+      setSaving(false);
+    }
   };
+
+  // Close toast
+  const closeToast = () => {
+    setToast(null);
+  };
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading settings...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
-      <div className="p-6">
+      {/* Toast */}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={closeToast} />}
+      
+      <div className="max-w-4xl mx-auto p-6">
+        {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2">Admin Settings</h1>
-          <p className="text-gray-500">Configure system settings and preferences</p>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <User className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t.title}</h1>
+              <p className="text-gray-600 dark:text-gray-400">{t.subtitle}</p>
+            </div>
+          </div>
         </div>
 
-        {/* Status Message */}
-        {statusMessage.message && (
-          <div className={`mb-6 p-4 rounded-md ${
-            statusMessage.type === 'success' ? 'bg-green-50 text-green-800' : 
-            statusMessage.type === 'error' ? 'bg-red-50 text-red-800' :
-            'bg-blue-50 text-blue-800'
-          }`}>
-            <div className="flex items-center">
-              {statusMessage.type === 'success' ? <Check className="w-5 h-5 mr-2" /> : 
-              statusMessage.type === 'error' ? <AlertTriangle className="w-5 h-5 mr-2" /> :
-              <Bell className="w-5 h-5 mr-2" />}
-              <p>{statusMessage.message}</p>
-            </div>
-          </div>
-        )}
+        {/* Settings Form */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="p-8">
+            {/* Personal Information Section */}
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-6">
+                <User className="w-5 h-5 text-indigo-600" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{t.personalInfo}</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Full Name */}
+                  <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t.fullName}
+                    </label>
+                    <input
+                      type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder={t.fullNamePlaceholder}
+                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
+                      errors.name 
+                        ? 'border-red-300 dark:border-red-600' 
+                        : 'border-gray-300 dark:border-gray-600'
+                    } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                  />
+                  {errors.name && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>
+                  )}
+                  </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* General Settings */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center">
-              <Globe className="h-5 w-5 mr-2 text-indigo-600" />
-              <h2 className="text-lg font-medium text-gray-800">General Settings</h2>
-            </div>
-            <form onSubmit={saveGeneralSettings} className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="siteName" className="block text-sm font-medium text-gray-700 mb-1">
-                    Site Name
-                  </label>
-                  <input
-                    type="text"
-                    id="siteName"
-                    name="siteName"
-                    value={generalSettings.siteName}
-                    onChange={handleGeneralChange}
-                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                {/* Email */}
+                  <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t.email}
+                    </label>
+                      <input
+                        type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder={t.emailPlaceholder}
+                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
+                      errors.email 
+                        ? 'border-red-300 dark:border-red-600' 
+                        : 'border-gray-300 dark:border-gray-600'
+                    } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
                   />
-                </div>
-                
-                <div>
-                  <label htmlFor="siteDescription" className="block text-sm font-medium text-gray-700 mb-1">
-                    Site Description
-                  </label>
-                  <textarea
-                    id="siteDescription"
-                    name="siteDescription"
-                    rows="2"
-                    value={generalSettings.siteDescription}
-                    onChange={handleGeneralChange}
-                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  ></textarea>
-                </div>
-                
-                <div>
-                  <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700 mb-1">
-                    Contact Email
-                  </label>
-                  <input
-                    type="email"
-                    id="contactEmail"
-                    name="contactEmail"
-                    value={generalSettings.contactEmail}
-                    onChange={handleGeneralChange}
-                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  />
-                </div>
-                
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="maintenanceMode"
-                    name="maintenanceMode"
-                    checked={generalSettings.maintenanceMode}
-                    onChange={handleGeneralChange}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="maintenanceMode" className="ml-2 block text-sm text-gray-700">
-                    Maintenance Mode
-                  </label>
-                </div>
-              </div>
-              
-              <div className="mt-6">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-                >
-                  {loading ? (
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4 mr-2" />
+                  {errors.email && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
                   )}
-                  Save Settings
-                </button>
-              </div>
-            </form>
-          </div>
-          
-          {/* Security Settings */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center">
-              <Shield className="h-5 w-5 mr-2 text-indigo-600" />
-              <h2 className="text-lg font-medium text-gray-800">Security Settings</h2>
-            </div>
-            <form onSubmit={saveSecuritySettings} className="p-6">
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="requireStrongPasswords"
-                    name="requireStrongPasswords"
-                    checked={securitySettings.requireStrongPasswords}
-                    onChange={handleSecurityChange}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="requireStrongPasswords" className="ml-2 block text-sm text-gray-700">
-                    Require Strong Passwords
-                  </label>
-                </div>
-                
-                <div>
-                  <label htmlFor="loginAttempts" className="block text-sm font-medium text-gray-700 mb-1">
-                    Max Login Attempts
-                  </label>
-                  <select
-                    id="loginAttempts"
-                    name="loginAttempts"
-                    value={securitySettings.loginAttempts}
-                    onChange={handleSecurityChange}
-                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  >
-                    <option value="3">3 attempts</option>
-                    <option value="5">5 attempts</option>
-                    <option value="10">10 attempts</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label htmlFor="sessionTimeout" className="block text-sm font-medium text-gray-700 mb-1">
-                    Session Timeout (minutes)
+                    </div>
+
+                {/* Phone */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t.phone}
                   </label>
                   <input
-                    type="number"
-                    id="sessionTimeout"
-                    name="sessionTimeout"
-                    min="5"
-                    max="1440"
-                    value={securitySettings.sessionTimeout}
-                    onChange={handleSecurityChange}
-                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    placeholder={t.phonePlaceholder}
+                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
+                      errors.phone 
+                        ? 'border-red-300 dark:border-red-600' 
+                        : 'border-gray-300 dark:border-gray-600'
+                    } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
                   />
-                </div>
-                
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="twoFactorAuth"
-                    name="twoFactorAuth"
-                    checked={securitySettings.twoFactorAuth}
-                    onChange={handleSecurityChange}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="twoFactorAuth" className="ml-2 block text-sm text-gray-700">
-                    Enable Two-Factor Authentication
-                  </label>
-                </div>
-              </div>
-              
-              <div className="mt-6">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-                >
-                  {loading ? (
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Lock className="h-4 w-4 mr-2" />
+                  {errors.phone && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone}</p>
                   )}
-                  Save Security Settings
-                </button>
-              </div>
-            </form>
-          </div>
-          
-          {/* Notification Settings */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center">
-              <Bell className="h-5 w-5 mr-2 text-indigo-600" />
-              <h2 className="text-lg font-medium text-gray-800">Notification Settings</h2>
-            </div>
-            <form onSubmit={saveNotificationSettings} className="p-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700">Email Notifications</h4>
-                    <p className="text-xs text-gray-500">Send email notifications for system events</p>
-                  </div>
-                  <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                    <input 
-                      type="checkbox" 
-                      name="emailNotifications" 
-                      id="emailNotifications" 
-                      checked={notificationSettings.emailNotifications}
-                      onChange={handleNotificationChange}
-                      className="absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 checked:border-indigo-600"
-                    />
-                    <label 
-                      htmlFor="emailNotifications" 
-                      className="block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"
-                    ></label>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700">System Updates</h4>
-                    <p className="text-xs text-gray-500">Notify admins about system updates</p>
-                  </div>
-                  <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                    <input 
-                      type="checkbox" 
-                      name="systemUpdates" 
-                      id="systemUpdates" 
-                      checked={notificationSettings.systemUpdates}
-                      onChange={handleNotificationChange}
-                      className="absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 checked:border-indigo-600"
-                    />
-                    <label 
-                      htmlFor="systemUpdates" 
-                      className="block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"
-                    ></label>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700">Prediction Alerts</h4>
-                    <p className="text-xs text-gray-500">Notify admins of new predictions</p>
-                  </div>
-                  <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                    <input 
-                      type="checkbox" 
-                      name="predictionAlerts" 
-                      id="predictionAlerts" 
-                      checked={notificationSettings.predictionAlerts}
-                      onChange={handleNotificationChange}
-                      className="absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 checked:border-indigo-600"
-                    />
-                    <label 
-                      htmlFor="predictionAlerts" 
-                      className="block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"
-                    ></label>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700">User Registration</h4>
-                    <p className="text-xs text-gray-500">Notify admins when new users register</p>
-                  </div>
-                  <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                    <input 
-                      type="checkbox" 
-                      name="userRegistration" 
-                      id="userRegistration" 
-                      checked={notificationSettings.userRegistration}
-                      onChange={handleNotificationChange}
-                      className="absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 checked:border-indigo-600"
-                    />
-                    <label 
-                      htmlFor="userRegistration" 
-                      className="block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"
-                    ></label>
                   </div>
                 </div>
               </div>
+
+            {/* Security Section */}
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-6">
+                <Lock className="w-5 h-5 text-indigo-600" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{t.security}</h2>
+                    </div>
               
-              <div className="mt-6">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-                >
-                  {loading ? (
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Mail className="h-4 w-4 mr-2" />
-                  )}
-                  Save Notification Settings
-                </button>
-              </div>
-            </form>
-          </div>
-          
-          {/* Backup & Maintenance */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center">
-              <Database className="h-5 w-5 mr-2 text-indigo-600" />
-              <h2 className="text-lg font-medium text-gray-800">Backup & Maintenance</h2>
-            </div>
-            <form onSubmit={saveBackupSettings} className="p-6">
-              <div className="space-y-4">
+              <div className="space-y-6">
+                {/* Current Password */}
                 <div>
-                  <label htmlFor="backupFrequency" className="block text-sm font-medium text-gray-700 mb-1">
-                    Backup Frequency
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t.currentPassword}
                   </label>
-                  <select
-                    id="backupFrequency"
-                    name="backupFrequency"
-                    value={backupSettings.backupFrequency}
-                    onChange={handleBackupChange}
-                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  >
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label htmlFor="retentionPeriod" className="block text-sm font-medium text-gray-700 mb-1">
-                    Retention Period (days)
-                  </label>
-                  <input
-                    type="number"
-                    id="retentionPeriod"
-                    name="retentionPeriod"
-                    min="1"
-                    max="365"
-                    value={backupSettings.retentionPeriod}
-                    onChange={handleBackupChange}
-                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  />
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700">Last Backup</h4>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {new Date(backupSettings.lastBackup).toLocaleString()}
-                  </p>
-                  <div className="mt-2">
+                  <div className="relative">
+                      <input
+                      type={showPasswords.current ? 'text' : 'password'}
+                      name="currentPassword"
+                      value={formData.currentPassword}
+                      onChange={handleInputChange}
+                      placeholder={t.passwordPlaceholder}
+                      className="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
                     <button
                       type="button"
-                      onClick={triggerBackup}
-                      disabled={loading}
-                      className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                      onClick={() => togglePasswordVisibility('current')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                     >
-                      {loading ? (
-                        <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
-                      ) : (
-                        <Upload className="h-4 w-4 mr-1" />
-                      )}
-                      Backup Now
+                      {showPasswords.current ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
-              </div>
-              
-              <div className="mt-6">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-                >
-                  {loading ? (
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Server className="h-4 w-4 mr-2" />
-                  )}
-                  Save Backup Settings
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
 
-        <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-700">
-          <div className="flex items-start">
-            <AlertTriangle className="h-5 w-5 mr-2 mt-0.5" />
-            <div>
-              <h3 className="text-sm font-medium">Note About Settings</h3>
-              <p className="text-sm mt-1">
-                Since there are no specific API endpoints for admin settings, these settings are currently stored in your browser's localStorage. 
-                In a production environment, you would want to implement server-side storage for these settings.
-              </p>
+                {/* New Password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t.newPassword}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPasswords.new ? 'text' : 'password'}
+                      name="newPassword"
+                      value={formData.newPassword}
+                      onChange={handleInputChange}
+                      placeholder={t.passwordPlaceholder}
+                      className={`w-full px-4 py-3 pr-12 rounded-lg border focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
+                        errors.newPassword 
+                          ? 'border-red-300 dark:border-red-600' 
+                          : 'border-gray-300 dark:border-gray-600'
+                      } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility('new')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      {showPasswords.new ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  {errors.newPassword && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.newPassword}</p>
+                  )}
+              </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t.confirmPassword}
+                    </label>
+                    <div className="relative">
+                    <input
+                      type={showPasswords.confirm ? 'text' : 'password'}
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      placeholder={t.passwordPlaceholder}
+                      className={`w-full px-4 py-3 pr-12 rounded-lg border focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
+                        errors.confirmPassword 
+                          ? 'border-red-300 dark:border-red-600' 
+                          : 'border-gray-300 dark:border-gray-600'
+                      } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility('confirm')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      {showPasswords.confirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.confirmPassword}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+              
+            {/* Save Button */}
+            <div className="flex justify-end">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium rounded-lg transition-colors"
+              >
+                {saving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    {t.saving}
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    {t.saveChanges}
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

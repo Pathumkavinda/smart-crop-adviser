@@ -45,20 +45,36 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     try {
       const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'dark') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
         setTheme(themes.dark);
+      } else {
+        setTheme(themes.light);
       }
     } catch (error) {
       console.error('Error accessing localStorage:', error);
+      setTheme(themes.light);
     }
   }, []);
   
   // Apply theme to document
   useEffect(() => {
+    console.log('Applying theme:', theme.name); // Debug log
+    
     // Set data-theme attribute on the document element
     document.documentElement.setAttribute('data-theme', theme.name);
     document.documentElement.style.backgroundColor = theme.colors.background;
     document.documentElement.style.color = theme.colors.text;
+    
+    // Add/remove dark class for Tailwind CSS
+    if (theme.name === 'dark') {
+      document.documentElement.classList.add('dark');
+      console.log('Added dark class to document'); // Debug log
+    } else {
+      document.documentElement.classList.remove('dark');
+      console.log('Removed dark class from document'); // Debug log
+    }
     
     // Save theme preference
     try {

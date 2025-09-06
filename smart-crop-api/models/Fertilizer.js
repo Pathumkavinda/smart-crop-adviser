@@ -12,9 +12,9 @@ const Fertilizer = sequelize.define('Fertilizer', {
   fertilizer_name: { type: DataTypes.STRING(160), allowNull: false },
 
   fertilizer_type: {
-    type: DataTypes.ENUM('Basal','Top Dressing','Foliar','Organic','Inorganic','Other'),
+    type: DataTypes.ENUM('nitrogen','phosphorus','potassium','npk','organic','micronutrient','foliar','other'),
     allowNull: false,
-    defaultValue: 'Basal'
+    defaultValue: 'nitrogen'
   },
 
   application_date: { type: DataTypes.DATE, allowNull: false },

@@ -33,7 +33,10 @@ exports.createFertilizer = async (req, res, next) => {
 
     const withUser = await Fertilizer.findByPk(row.id, { include: includeUser });
     res.status(201).json(withUser);
-  } catch (err) { next(err); }
+  } catch (err) {
+    console.error("Fertilizer create error:", err); // <-- Add this line
+    next(err);
+  }
 };
 
 // LIST (with filters)

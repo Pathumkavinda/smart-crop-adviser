@@ -4,10 +4,9 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Filter, X, AlertTriangle, ChevronLeft, ChevronRight, Eye,
-  ArrowUpRight, RefreshCw
+  ArrowUpRight, RefreshCw, BarChart2, Activity, Users
 } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
-import { useTheme } from '@/context/ThemeContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -18,22 +17,17 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 export default function AdminPredictions() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { theme } = useTheme();
-  const isDark = theme?.name === 'dark';
+  const [isDark, setIsDark] = useState(false);
 
-  // ---- THEME TOKENS (from global theme only) ----
-  const themeClasses = useMemo(() => ({
-    background: isDark ? 'bg-[#0b1220]' : 'bg-gray-50',
-    text: isDark ? 'text-gray-100' : 'text-gray-900',
-    card: isDark ? 'bg-slate-900/60 border-slate-700' : 'bg-white border-gray-200',
-    cardDarker: isDark ? 'bg-slate-900/80 border-slate-700' : 'bg-gray-50 border-gray-200',
-    input: isDark ? 'bg-slate-900 text-gray-100 border-slate-600 placeholder-slate-400' : 'bg-white text-gray-900 border-gray-300 placeholder-gray-400',
-    button: isDark ? 'bg-slate-900 border-slate-600 text-gray-200 hover:bg-slate-800' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50',
-    tableHeader: isDark ? 'bg-slate-800/80' : 'bg-gray-50',
-    tableRow: isDark ? 'hover:bg-slate-800/60 divide-slate-700' : 'hover:bg-gray-50 divide-gray-200',
-    textSecondary: isDark ? 'text-slate-400' : 'text-gray-600',
-    textAccent: isDark ? 'text-indigo-400' : 'text-indigo-600'
-  }), [isDark]);
+  // Detect dark theme
+  useEffect(() => {
+    const el = document.documentElement;
+    const check = () => setIsDark(el.classList.contains('dark'));
+    check();
+    const obs = new MutationObserver(check);
+    obs.observe(el, { attributes: true, attributeFilter: ['class'] });
+    return () => obs.disconnect();
+  }, []);
 
   // ---- DATA STATE ----
   const [predictions, setPredictions] = useState([]);
@@ -295,28 +289,29 @@ export default function AdminPredictions() {
 
     return (
       <AdminLayout>
-        <div className={`min-h-screen ${themeClasses.background} ${themeClasses.text} px-4 md:px-6 lg:px-8 py-6`}>
-          <button
-            onClick={backToList}
-            className={`mb-6 inline-flex items-center ${themeClasses.textAccent} hover:text-indigo-300`}
-          >
-            <ChevronLeft className="h-5 w-5 mr-1" />
-            Back to Predictions List
-          </button>
+        <div className="min-h-screen transition-colors duration-300 bg-gradient-to-br from-white via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-900">
+          <main className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 md:py-8">
+            <button
+              onClick={backToList}
+              className="mb-6 inline-flex items-center text-indigo-600 hover:text-indigo-300 dark:text-indigo-400 dark:hover:text-indigo-300"
+            >
+              <ChevronLeft className="h-5 w-5 mr-1" />
+              Back to Predictions List
+            </button>
 
-          <div className={`${themeClasses.card} rounded-2xl border shadow-2xl overflow-hidden`}>
-            <div className={`px-6 py-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
-              <h2 className="text-xl font-semibold">Prediction #{selectedPrediction?.id}</h2>
-              <p className={`text-sm ${themeClasses.textSecondary} mt-1`}>
-                Created on {formatDate(selectedPrediction?.created_at)}
-              </p>
-            </div>
+            <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-slate-700/20 shadow-2xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Prediction #{selectedPrediction?.id}</h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Created on {formatDate(selectedPrediction?.created_at)}
+                </p>
+              </div>
 
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* User Information */}
-                <div className={`${themeClasses.cardDarker} p-4 rounded-xl border`}>
-                  <h3 className="text-lg font-medium mb-3">User Information</h3>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* User Information */}
+                  <div className="bg-gray-50/70 dark:bg-slate-900/60 backdrop-blur-sm p-4 rounded-xl border border-gray-200/50 dark:border-slate-700/50">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">User Information</h3>
                   {u ? (
                     <div>
                       <div className="flex items-center mb-3">
@@ -324,15 +319,15 @@ export default function AdminPredictions() {
                           {(u?.username?.charAt(0) || '?').toUpperCase()}
                         </div>
                         <div className="ml-3">
-                          <p className="text-sm font-medium">{u?.username}</p>
-                          <p className={`text-xs ${themeClasses.textSecondary}`}>{u?.email}</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">{u?.username}</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">{u?.email}</p>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3 text-sm">
-                        <InfoKV label="User ID" value={u?.id ?? selectedPrediction?.user_id ?? '—'} themeClasses={themeClasses} />
+                        <InfoKV label="User ID" value={u?.id ?? selectedPrediction?.user_id ?? '—'} />
                         <div>
-                          <p className={themeClasses.textSecondary}>User Level:</p>
+                          <p className="text-gray-600 dark:text-gray-400">User Level:</p>
                           <span className={`mt-1 inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${levelPill(userLevel)}`}>
                             {u?.userlevel || selectedPrediction?.userlevel || '—'}
                           </span>
@@ -341,7 +336,7 @@ export default function AdminPredictions() {
                     </div>
                   ) : (
                     <div>
-                      <p className={themeClasses.textSecondary}>User ID: {selectedPrediction?.user_id ?? 'Unknown'}</p>
+                      <p className="text-gray-600 dark:text-gray-400">User ID: {selectedPrediction?.user_id ?? 'Unknown'}</p>
                       {!!selectedPrediction?.user_id && (
                         <button
                           onClick={async () => {
@@ -349,110 +344,111 @@ export default function AdminPredictions() {
                             const fetched = await safeFetchUserById(selectedPrediction.user_id, authHeaders);
                             if (fetched) setDetailUser(fetched);
                           }}
-                          className={`mt-2 ${themeClasses.textAccent} text-sm inline-flex items-center hover:underline`}
+                          className="mt-2 text-indigo-600 hover:text-indigo-300 dark:text-indigo-400 dark:hover:text-indigo-300 text-sm inline-flex items-center hover:underline"
                         >
                           Load User <ArrowUpRight className="ml-1 h-4 w-4" />
                         </button>
                       )}
                     </div>
                   )}
-                </div>
-
-                {/* Prediction Information (includes location) */}
-                <div className={`${themeClasses.cardDarker} p-4 rounded-xl border`}>
-                  <h3 className="text-lg font-medium mb-3">Prediction Information</h3>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <InfoKV label="Crop Name" value={selectedPrediction?.crop_name || selectedPrediction?.crop || 'Not specified'} strong themeClasses={themeClasses} />
-                    <InfoKV label="Prediction ID" value={`#${selectedPrediction?.id}`} themeClasses={themeClasses} />
-                    <InfoKV label="District" value={selectedPrediction?.district || 'Not specified'} themeClasses={themeClasses} />
-                    <InfoKV label="Soil Type" value={selectedPrediction?.soil_type || 'Not specified'} themeClasses={themeClasses} />
-                    <InfoKV label="Agro-Ecological Zone" value={selectedPrediction?.agro_ecological_zone || 'Not specified'} themeClasses={themeClasses} />
-                    <InfoKV label="Cultivate Season" value={selectedPrediction?.cultivate_season || 'Not specified'} themeClasses={themeClasses} />
-                    <InfoKV label="Created" value={formatDate(selectedPrediction?.created_at)} themeClasses={themeClasses} />
-                    <InfoKV label="Updated" value={formatDate(selectedPrediction?.updated_at)} themeClasses={themeClasses} />
                   </div>
-                </div>
-              </div>
 
-              {/* Soil Parameters */}
-              <div className="mt-6">
-                <h3 className="text-lg font-medium mb-3">Soil Parameters</h3>
-                <div className={`${themeClasses.cardDarker} p-4 rounded-xl border`}>
-                  {(() => { const s = extractSoil(selectedPrediction); return (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {['n','p','k','ph'].map((key) => (
-                        <Metric key={key} label={labelFor(key)} value={fmtSoilVal(s[key])} themeClasses={themeClasses} />
-                      ))}
+                  {/* Prediction Information (includes location) */}
+                  <div className="bg-gray-50/70 dark:bg-slate-900/60 backdrop-blur-sm p-4 rounded-xl border border-gray-200/50 dark:border-slate-700/50">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Prediction Information</h3>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <InfoKV label="Crop Name" value={selectedPrediction?.crop_name || selectedPrediction?.crop || 'Not specified'} strong />
+                      <InfoKV label="Prediction ID" value={`#${selectedPrediction?.id}`} />
+                      <InfoKV label="District" value={selectedPrediction?.district || 'Not specified'} />
+                      <InfoKV label="Soil Type" value={selectedPrediction?.soil_type || 'Not specified'} />
+                      <InfoKV label="Agro-Ecological Zone" value={selectedPrediction?.agro_ecological_zone || 'Not specified'} />
+                      <InfoKV label="Cultivate Season" value={selectedPrediction?.cultivate_season || 'Not specified'} />
+                      <InfoKV label="Created" value={formatDate(selectedPrediction?.created_at)} />
+                      <InfoKV label="Updated" value={formatDate(selectedPrediction?.updated_at)} />
                     </div>
-                  ); })()}
-
-                  {(() => { const s = extractSoil(selectedPrediction); return (
-                    (s.temperature !== null || s.humidity !== null || s.rainfall !== null) ? (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-                        {s.temperature !== null && <Metric label="Temperature" value={fmtSoilVal(s.temperature)} themeClasses={themeClasses} />}
-                        {s.humidity !== null && <Metric label="Humidity" value={fmtSoilVal(s.humidity)} themeClasses={themeClasses} />}
-                        {s.rainfall !== null && <Metric label="Rainfall" value={fmtSoilVal(s.rainfall)} themeClasses={themeClasses} />}
-                      </div>
-                    ) : null
-                  ); })()}
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex gap-3">
-                  <button
-                    onClick={async () => {
-                      const next = !userPanelOpen;
-                      setUserPanelOpen(next);
-                      if (next && selectedPrediction?.user_id) {
-                        const fetched = await safeFetchUserById(selectedPrediction.user_id, authHeaders);
-                        if (fetched) setDetailUser(fetched);
-                      }
-                    }}
-                    className={`px-4 py-2 border rounded-lg text-sm font-medium ${themeClasses.button}`}
-                  >
-                    {userPanelOpen ? 'Hide User' : 'View User'}
-                  </button>
-                  {!!selectedPrediction?.user_id && (
-                    <button
-                      onClick={() => router.push(`/admin/users?id=${selectedPrediction?.user_id}`)}
-                      className={`px-4 py-2 border rounded-lg text-sm font-medium ${themeClasses.button}`}
-                    >
-                      Open User Page
-                    </button>
-                  )}
-                </div>
-
-                <button
-                  onClick={backToList}
-                  className="px-4 py-2 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg"
-                >
-                  Back to List
-                </button>
-              </div>
-
-              {/* Inline User Info Panel */}
-              {userPanelOpen && (
-                <div className={`mt-6 ${themeClasses.card} rounded-2xl border shadow-xl overflow-hidden`}>
-                  <div className={`px-6 py-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
-                    <h3 className="text-lg font-semibold">User Details</h3>
                   </div>
-                  <div className="p-6">
-                    {detailUserLoading ? (
-                      <p className={`text-sm ${themeClasses.textSecondary}`}>Loading user...</p>
-                    ) : detailUserError ? (
-                      <p className="text-sm text-red-400">{detailUserError}</p>
-                    ) : detailUser ? (
-                      <UserDetailsCard user={detailUser} themeClasses={themeClasses} />
-                    ) : (
-                      <p className={`text-sm ${themeClasses.textSecondary}`}>No user information available.</p>
+              </div>
+
+                {/* Soil Parameters */}
+                <div className="mt-6">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Soil Parameters</h3>
+                  <div className="bg-gray-50/70 dark:bg-slate-900/60 backdrop-blur-sm p-4 rounded-xl border border-gray-200/50 dark:border-slate-700/50">
+                    {(() => { const s = extractSoil(selectedPrediction); return (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {['n','p','k','ph'].map((key) => (
+                          <Metric key={key} label={labelFor(key)} value={fmtSoilVal(s[key])} />
+                        ))}
+                      </div>
+                    ); })()}
+
+                    {(() => { const s = extractSoil(selectedPrediction); return (
+                      (s.temperature !== null || s.humidity !== null || s.rainfall !== null) ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                          {s.temperature !== null && <Metric label="Temperature" value={fmtSoilVal(s.temperature)} />}
+                          {s.humidity !== null && <Metric label="Humidity" value={fmtSoilVal(s.humidity)} />}
+                          {s.rainfall !== null && <Metric label="Rainfall" value={fmtSoilVal(s.rainfall)} />}
+                        </div>
+                      ) : null
+                    ); })()}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex gap-3">
+                    <button
+                      onClick={async () => {
+                        const next = !userPanelOpen;
+                        setUserPanelOpen(next);
+                        if (next && selectedPrediction?.user_id) {
+                          const fetched = await safeFetchUserById(selectedPrediction.user_id, authHeaders);
+                          if (fetched) setDetailUser(fetched);
+                        }
+                      }}
+                      className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm font-medium bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-800"
+                    >
+                      {userPanelOpen ? 'Hide User' : 'View User'}
+                    </button>
+                    {!!selectedPrediction?.user_id && (
+                      <button
+                        onClick={() => router.push(`/admin/users?id=${selectedPrediction?.user_id}`)}
+                        className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm font-medium bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-800"
+                      >
+                        Open User Page
+                      </button>
                     )}
                   </div>
+
+                  <button
+                    onClick={backToList}
+                    className="px-4 py-2 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg"
+                  >
+                    Back to List
+                  </button>
                 </div>
-              )}
+
+                {/* Inline User Info Panel */}
+                {userPanelOpen && (
+                  <div className="mt-6 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-slate-700/20 shadow-xl overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">User Details</h3>
+                    </div>
+                    <div className="p-6">
+                      {detailUserLoading ? (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Loading user...</p>
+                      ) : detailUserError ? (
+                        <p className="text-sm text-red-400">{detailUserError}</p>
+                      ) : detailUser ? (
+                        <UserDetailsCard user={detailUser} />
+                      ) : (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">No user information available.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          </main>
         </div>
       </AdminLayout>
     );
@@ -461,252 +457,267 @@ export default function AdminPredictions() {
   /* =============================== RENDER: LIST ============================== */
   return (
     <AdminLayout>
-      <div className={`min-h-screen ${themeClasses.background} ${themeClasses.text} px-4 md:px-6 lg:px-8 py-6`}>
-        {/* Header (no page-level theme toggle) */}
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h1 className="text-2xl font-bold">Prediction History</h1>
-            <p className={themeClasses.textSecondary}>View and filter all crop prediction records</p>
-          </div>
-        </div>
-
-        {/* Filter Bar (USERNAME + DATE RANGE ONLY) */}
-        <div className={`${themeClasses.card} rounded-2xl border shadow-2xl mb-6 overflow-hidden`}>
-          <form onSubmit={applyFilters} className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <TextInput
-                id="username" name="username" label="Username"
-                placeholder="Filter by username"
-                value={filters.username} onChange={handleFilterChange}
-                themeClasses={themeClasses}
-              />
-              <DateInput id="date_from" name="date_from" label="Date From" value={filters.date_from} onChange={handleFilterChange} themeClasses={themeClasses} />
-              <DateInput id="date_to" name="date_to" label="Date To" value={filters.date_to} onChange={handleFilterChange} themeClasses={themeClasses} />
+      <div className="min-h-screen transition-colors duration-300 bg-gradient-to-br from-white via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-900">
+        <main className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 md:py-8">
+          {/* Header */}
+          <div className="mb-6 md:mb-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div>
+                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 dark:from-emerald-400 dark:via-green-300 dark:to-teal-300">
+                  Prediction History
+                </h1>
+                <p className="text-base md:text-lg text-slate-900 dark:text-slate-300 mt-2 font-medium">
+                  View and filter all crop prediction records
+                </p>
+              </div>
+              <div className="flex items-center">
+                <div className="bg-white dark:bg-slate-800 rounded-xl px-4 py-2 border border-slate-200 dark:border-slate-700 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm font-medium text-slate-800 dark:text-slate-200">Live Data</span>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
 
-            <div className="mt-4 flex flex-col sm:flex-row sm:justify-end gap-2">
+          {/* Filter Bar */}
+          <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-slate-700/20 shadow-2xl mb-6 overflow-hidden">
+            <form onSubmit={applyFilters} className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <TextInput
+                  id="username" name="username" label="Username"
+                  placeholder="Filter by username"
+                  value={filters.username} onChange={handleFilterChange}
+                />
+                <DateInput id="date_from" name="date_from" label="Date From" value={filters.date_from} onChange={handleFilterChange} />
+                <DateInput id="date_to" name="date_to" label="Date To" value={filters.date_to} onChange={handleFilterChange} />
+              </div>
+
+              <div className="mt-4 flex flex-col sm:flex-row sm:justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-800"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Reset
+                </button>
+
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg"
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  Apply Filters
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* List */}
+          {loading ? (
+            <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-slate-700/20 shadow-2xl p-8 text-center">
+              <div className="h-10 w-10 border-4 border-t-indigo-600 border-r-transparent border-b-indigo-600 border-l-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">Loading predictions...</p>
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/30 rounded-2xl shadow-2xl p-6 text-red-700 dark:text-red-200">
+              <h3 className="font-semibold flex items-center mb-2">
+                <AlertTriangle className="h-5 w-5 mr-2" />
+                Error Loading Predictions
+              </h3>
+              <p className="mb-2">{error}</p>
               <button
-                type="button"
+                onClick={() => {
+                  const controller = new AbortController();
+                  fetchPredictions(controller.signal);
+                }}
+                className="mt-2 px-4 py-2 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 inline-flex items-center shadow-lg"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Try Again
+              </button>
+            </div>
+          ) : predictions.length === 0 ? (
+            <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-slate-700/20 shadow-2xl p-8 text-center">
+              <p className="text-gray-600 dark:text-gray-400 mb-4">No predictions found matching your criteria.</p>
+              <button
                 onClick={resetFilters}
-                className={`inline-flex items-center justify-center px-4 py-2 rounded-lg border ${themeClasses.button}`}
+                className="px-4 py-2 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg"
               >
-                <X className="h-4 w-4 mr-2" />
-                Reset
-              </button>
-
-              <button
-                type="submit"
-                className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg"
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Apply Filters
+                Reset Filters
               </button>
             </div>
-          </form>
-        </div>
-
-        {/* List */}
-        {loading ? (
-          <div className={`${themeClasses.card} rounded-2xl border shadow-2xl p-8 text-center`}>
-            <div className="h-10 w-10 border-4 border-t-indigo-600 border-r-transparent border-b-indigo-600 border-l-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className={themeClasses.textSecondary}>Loading predictions...</p>
-          </div>
-        ) : error ? (
-          <div className={`${isDark ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'} rounded-2xl border shadow-2xl p-6 ${isDark ? 'text-red-200' : 'text-red-700'}`}>
-            <h3 className="font-semibold flex items-center mb-2">
-              <AlertTriangle className="h-5 w-5 mr-2" />
-              Error Loading Predictions
-            </h3>
-            <p className="mb-2">{error}</p>
-            <button
-              onClick={() => {
-                const controller = new AbortController();
-                fetchPredictions(controller.signal);
-              }}
-              className="mt-2 px-4 py-2 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 inline-flex items-center shadow-lg"
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Try Again
-            </button>
-          </div>
-        ) : predictions.length === 0 ? (
-          <div className={`${themeClasses.card} rounded-2xl border shadow-2xl p-8 text-center`}>
-            <p className={`${themeClasses.textSecondary} mb-4`}>No predictions found matching your criteria.</p>
-            <button
-              onClick={resetFilters}
-              className="px-4 py-2 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg"
-            >
-              Reset Filters
-            </button>
-          </div>
-        ) : (
-          <div className={`${themeClasses.card} rounded-2xl border shadow-2xl overflow-hidden`}>
-            <div className="overflow-x-auto">
-              <table className={`min-w-full divide-y ${isDark ? 'divide-slate-700' : 'divide-gray-200'}`}>
-                <thead className={`${themeClasses.tableHeader} sticky top-0 z-10`}>
-                  <tr>
-                    <Th themeClasses={themeClasses}>ID</Th>
-                    <Th themeClasses={themeClasses}>Crop</Th>
-                    <Th themeClasses={themeClasses}>User</Th>
-                    <Th themeClasses={themeClasses}>Location</Th>
-                    <Th themeClasses={themeClasses}>Soil Parameters</Th>
-                    <Th themeClasses={themeClasses}>Date</Th>
-                    <ThRight themeClasses={themeClasses}>Actions</ThRight>
-                  </tr>
-                </thead>
-                <tbody className={`bg-transparent divide-y ${themeClasses.tableRow}`}>
-                  {predictions.map((prediction) => (
-                    <tr key={prediction?.id} className={`${themeClasses.tableRow} transition-colors`}>
-                      <Td themeClasses={themeClasses}>
-                        <span className={`text-sm ${themeClasses.textSecondary}`}>#{prediction?.id}</span>
-                      </Td>
-
-                      <Td themeClasses={themeClasses}>
-                        <div className="flex items-center">
-                          <div className="h-8 w-8 rounded-full bg-green-900/40 flex items-center justify-center">
-                            <span className="text-xs text-green-200">
-                              {(prediction?.crop_name?.[0] || prediction?.crop?.[0] || '?').toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="ml-3">
-                            <div className="text-sm font-medium">
-                              {prediction?.crop_name || prediction?.crop || 'Unknown'}
-                            </div>
-                          </div>
-                        </div>
-                      </Td>
-
-                      <Td themeClasses={themeClasses}>
-                        {prediction?.user ? (
-                          <div>
-                            <div className="text-sm font-medium">
-                              {prediction?.user?.username}
-                            </div>
-                            <div className={`text-xs ${themeClasses.textSecondary}`}>{prediction?.user?.email}</div>
-                          </div>
-                        ) : (
-                          <span className={`text-sm ${themeClasses.textSecondary}`}>
-                            {prediction?.username ? prediction.username : `User #${prediction?.user_id}`}
-                          </span>
-                        )}
-                      </Td>
-
-                      <Td themeClasses={themeClasses}>
-                        <div className="text-sm">
-                          <div className="font-medium">{prediction?.district || 'Not specified'}</div>
-                          <div className={`text-xs ${themeClasses.textSecondary}`}>
-                            {prediction?.agro_ecological_zone || 'Zone not specified'}
-                          </div>
-                          <div className={`text-xs ${themeClasses.textSecondary}`}>
-                            {prediction?.soil_type || 'Soil type not specified'}
-                          </div>
-                        </div>
-                      </Td>
-
-                      <Td themeClasses={themeClasses}>
-                        <div className={`text-sm ${themeClasses.text}`}>
-                          {(() => { const s = extractSoil(prediction); return (
-                            <>
-                              <Chip label={`N: ${fmtSoilVal(s.n)}`} color="blue" />
-                              <Chip label={`P: ${fmtSoilVal(s.p)}`} color="green" />
-                              <Chip label={`K: ${fmtSoilVal(s.k)}`} color="yellow" />
-                              <Chip label={`pH: ${fmtSoilVal(s.ph)}`} color="purple" />
-                            </>
-                          ); })()}
-                        </div>
-                      </Td>
-
-                      <Td themeClasses={themeClasses}>
-                        <span className={`text-sm ${themeClasses.textSecondary}`}>{formatDate(prediction?.created_at)}</span>
-                      </Td>
-
-                      <TdRight themeClasses={themeClasses}>
-                        <button
-                          onClick={() => viewPredictionDetails(prediction)}
-                          className={`${themeClasses.textAccent} hover:text-indigo-300 inline-flex items-center justify-end`}
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </button>
-                      </TdRight>
+          ) : (
+            <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-slate-700/20 shadow-2xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+                  <thead className="bg-gray-50/90 dark:bg-slate-700/70 backdrop-blur-sm sticky top-0 z-10">
+                    <tr>
+                      <Th>ID</Th>
+                      <Th>Crop</Th>
+                      <Th>User</Th>
+                      <Th>Location</Th>
+                      <Th>Soil Parameters</Th>
+                      <Th>Date</Th>
+                      <ThRight>Actions</ThRight>
                     </tr>
-                  ))}
+                  </thead>
+                  <tbody className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm divide-y divide-gray-200 dark:divide-slate-700">
+                    {predictions.map((prediction) => (
+                      <tr key={prediction?.id} className="hover:bg-green-50/70 dark:hover:bg-slate-700/70 transition-colors">
+                        <Td>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">#{prediction?.id}</span>
+                        </Td>
+
+                        <Td>
+                          <div className="flex items-center">
+                            <div className="h-8 w-8 rounded-full bg-green-900/40 flex items-center justify-center">
+                              <span className="text-xs text-green-200">
+                                {(prediction?.crop_name?.[0] || prediction?.crop?.[0] || '?').toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="ml-3">
+                              <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                {prediction?.crop_name || prediction?.crop || 'Unknown'}
+                              </div>
+                            </div>
+                          </div>
+                        </Td>
+
+                        <Td>
+                          {prediction?.user ? (
+                            <div>
+                              <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                {prediction?.user?.username}
+                              </div>
+                              <div className="text-xs text-gray-600 dark:text-gray-400">{prediction?.user?.email}</div>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                              {prediction?.username ? prediction.username : `User #${prediction?.user_id}`}
+                            </span>
+                          )}
+                        </Td>
+
+                        <Td>
+                          <div className="text-sm">
+                            <div className="font-medium text-gray-900 dark:text-white">{prediction?.district || 'Not specified'}</div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">
+                              {prediction?.agro_ecological_zone || 'Zone not specified'}
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">
+                              {prediction?.soil_type || 'Soil type not specified'}
+                            </div>
+                          </div>
+                        </Td>
+
+                        <Td>
+                          <div className="text-sm">
+                            {(() => { const s = extractSoil(prediction); return (
+                              <>
+                                <Chip label={`N: ${fmtSoilVal(s.n)}`} color="blue" />
+                                <Chip label={`P: ${fmtSoilVal(s.p)}`} color="green" />
+                                <Chip label={`K: ${fmtSoilVal(s.k)}`} color="yellow" />
+                                <Chip label={`pH: ${fmtSoilVal(s.ph)}`} color="purple" />
+                              </>
+                            ); })()}
+                          </div>
+                        </Td>
+
+                        <Td>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">{formatDate(prediction?.created_at)}</span>
+                        </Td>
+
+                        <TdRight>
+                          <button
+                            onClick={() => viewPredictionDetails(prediction)}
+                            className="text-indigo-600 hover:text-indigo-300 dark:text-indigo-400 dark:hover:text-indigo-300 inline-flex items-center justify-end"
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </button>
+                        </TdRight>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className={`${isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-gray-50 border-gray-200'} px-4 py-3 flex items-center justify-between border-t`}>
-                <div className="hidden sm:block">
-                  <p className={`text-sm ${themeClasses.text}`}>
-                    Showing <span className="font-medium">{startIdx}</span> to{' '}
-                    <span className="font-medium">{endIdx}</span> of{' '}
-                    <span className="font-medium">{total || predictions.length}</span> results
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="hidden md:block">
-                    <select
-                      value={limit}
-                      onChange={(e) => { setPage(1); setLimit(Number(e.target.value)); }}
-                      className={`border rounded-md text-sm p-1 ${themeClasses.input}`}
-                    >
-                      {[10, 20, 30, 50, 100].map(n => (
-                        <option key={n} value={n}>{n} per page</option>
-                      ))}
-                    </select>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="bg-gray-50/90 dark:bg-slate-700/70 backdrop-blur-sm px-4 py-3 flex items-center justify-between border-t border-gray-200/50 dark:border-gray-700/50">
+                  <div className="hidden sm:block">
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      Showing <span className="font-medium">{startIdx}</span> to{' '}
+                      <span className="font-medium">{endIdx}</span> of{' '}
+                      <span className="font-medium">{total || predictions.length}</span> results
+                    </p>
                   </div>
-
-                  <PageBtn disabled={page === 1} onClick={() => setPage((p) => Math.max(1, p - 1))} position="left" themeClasses={themeClasses}>
-                    <span className="sr-only">Previous</span>
-                    <ChevronLeft className="h-5 w-5" />
-                  </PageBtn>
-
-                  {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
-                    const pageNum = index + 1;
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setPage(pageNum)}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          page === pageNum
-                            ? 'z-10 bg-indigo-900/40 border-indigo-500 text-indigo-200'
-                            : `${themeClasses.button}`
-                        }`}
+                  <div className="flex items-center gap-2">
+                    <div className="hidden md:block">
+                      <select
+                        value={limit}
+                        onChange={(e) => { setPage(1); setLimit(Number(e.target.value)); }}
+                        className="border border-gray-300 dark:border-slate-600 rounded-md text-sm p-1 bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100"
                       >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
+                        {[10, 20, 30, 50, 100].map(n => (
+                          <option key={n} value={n}>{n} per page</option>
+                        ))}
+                      </select>
+                    </div>
 
-                  {totalPages > 5 && (
-                    <>
-                      <span className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${themeClasses.button}`}>
-                        ...
-                      </span>
-                      <button
-                        onClick={() => setPage(totalPages)}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          page === totalPages
-                            ? 'z-10 bg-indigo-900/40 border-indigo-500 text-indigo-200'
-                            : `${themeClasses.button}`
-                        }`}
-                      >
-                        {totalPages}
-                      </button>
-                    </>
-                  )}
+                    <PageBtn disabled={page === 1} onClick={() => setPage((p) => Math.max(1, p - 1))} position="left">
+                      <span className="sr-only">Previous</span>
+                      <ChevronLeft className="h-5 w-5" />
+                    </PageBtn>
 
-                  <PageBtn disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))} position="right" themeClasses={themeClasses}>
-                    <span className="sr-only">Next</span>
-                    <ChevronRight className="h-5 w-5" />
-                  </PageBtn>
+                    {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
+                      const pageNum = index + 1;
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setPage(pageNum)}
+                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                            page === pageNum
+                              ? 'z-10 bg-indigo-900/40 border-indigo-500 text-indigo-200'
+                              : 'bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+
+                    {totalPages > 5 && (
+                      <>
+                        <span className="relative inline-flex items-center px-4 py-2 border text-sm font-medium bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-200">
+                          ...
+                        </span>
+                        <button
+                          onClick={() => setPage(totalPages)}
+                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                            page === totalPages
+                              ? 'z-10 bg-indigo-900/40 border-indigo-500 text-indigo-200'
+                              : 'bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                    )}
+
+                    <PageBtn disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))} position="right">
+                      <span className="sr-only">Next</span>
+                      <ChevronRight className="h-5 w-5" />
+                    </PageBtn>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+        </main>
       </div>
     </AdminLayout>
   );
@@ -802,28 +813,28 @@ function fmtSoilVal(v) {
 
 /* ------------------------------- Small UI Bits ------------------------------ */
 
-function Th({ children, themeClasses }) {
+function Th({ children }) {
   return (
-    <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${themeClasses.textSecondary} uppercase tracking-wider`}>
+    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
       {children}
     </th>
   );
 }
 
-function ThRight({ children, themeClasses }) {
+function ThRight({ children }) {
   return (
-    <th scope="col" className={`px-6 py-3 text-right text-xs font-medium ${themeClasses.textSecondary} uppercase tracking-wider`}>
+    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
       {children}
     </th>
   );
 }
 
-function Td({ children, themeClasses }) {
-  return <td className={`px-6 py-4 whitespace-nowrap text-left text-sm ${themeClasses.text}`}>{children}</td>;
+function Td({ children }) {
+  return <td className="px-6 py-4 whitespace-nowrap text-left text-sm text-gray-900 dark:text-white">{children}</td>;
 }
 
-function TdRight({ children, themeClasses }) {
-  return <td className={`px-6 py-4 whitespace-nowrap text-right text-sm ${themeClasses.text}`}>{children}</td>;
+function TdRight({ children }) {
+  return <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900 dark:text-white">{children}</td>;
 }
 
 function Chip({ label, color }) {
@@ -840,10 +851,10 @@ function Chip({ label, color }) {
   );
 }
 
-function TextInput({ id, name, label, value, onChange, placeholder, themeClasses }) {
+function TextInput({ id, name, label, value, onChange, placeholder }) {
   return (
     <div>
-      <label htmlFor={id} className={`block text-sm font-medium ${themeClasses.text} mb-1`}>
+      <label htmlFor={id} className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
         {label}
       </label>
       <input
@@ -851,7 +862,7 @@ function TextInput({ id, name, label, value, onChange, placeholder, themeClasses
         id={id}
         name={name}
         placeholder={placeholder}
-        className={`border rounded-lg w-full px-3 py-2 ${themeClasses.input} focus:ring-indigo-500 focus:border-indigo-500`}
+        className="border border-gray-300 dark:border-slate-600 rounded-lg w-full px-3 py-2 bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-slate-400 focus:ring-indigo-500 focus:border-indigo-500"
         value={value}
         onChange={onChange}
       />
@@ -859,17 +870,17 @@ function TextInput({ id, name, label, value, onChange, placeholder, themeClasses
   );
 }
 
-function DateInput({ id, name, label, value, onChange, themeClasses }) {
+function DateInput({ id, name, label, value, onChange }) {
   return (
     <div>
-      <label htmlFor={id} className={`block text-sm font-medium ${themeClasses.text} mb-1`}>
+      <label htmlFor={id} className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
         {label}
       </label>
       <input
         type="date"
         id={id}
         name={name}
-        className={`border rounded-lg w-full px-3 py-2 ${themeClasses.input} focus:ring-indigo-500 focus:border-indigo-500`}
+        className="border border-gray-300 dark:border-slate-600 rounded-lg w-full px-3 py-2 bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500"
         value={value}
         onChange={onChange}
       />
@@ -877,7 +888,7 @@ function DateInput({ id, name, label, value, onChange, themeClasses }) {
   );
 }
 
-function PageBtn({ children, disabled, onClick, position, themeClasses }) {
+function PageBtn({ children, disabled, onClick, position }) {
   return (
     <button
       onClick={onClick}
@@ -885,7 +896,9 @@ function PageBtn({ children, disabled, onClick, position, themeClasses }) {
       className={`relative inline-flex items-center px-2 py-2 ${
         position === 'left' ? 'rounded-l-md' : position === 'right' ? 'rounded-r-md' : ''
       } border text-sm font-medium ${
-        disabled ? `${themeClasses.textSecondary} cursor-not-allowed` : `${themeClasses.button}`
+        disabled 
+          ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed border-gray-300 dark:border-slate-600' 
+          : 'bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-800'
       }`}
     >
       {children}
@@ -895,22 +908,22 @@ function PageBtn({ children, disabled, onClick, position, themeClasses }) {
 
 /* ------------------------------- Tiny bits -------------------------------- */
 
-function InfoKV({ label, value, strong = false, themeClasses }) {
+function InfoKV({ label, value, strong = false }) {
   return (
     <div>
-      <p className={themeClasses.textSecondary}>{label}:</p>
-      <p className={`mt-1 ${strong ? 'font-semibold text-green-300' : `font-medium ${themeClasses.text}`}`}>
+      <p className="text-gray-600 dark:text-gray-400">{label}:</p>
+      <p className={`mt-1 ${strong ? 'font-semibold text-green-300' : 'font-medium text-gray-900 dark:text-white'}`}>
         {value ?? '—'}
       </p>
     </div>
   );
 }
 
-function Metric({ label, value, themeClasses }) {
+function Metric({ label, value }) {
   return (
-    <div className={`${themeClasses.cardDarker} p-3 rounded-lg shadow-sm border`}>
-      <p className={`text-xs ${themeClasses.textSecondary}`}>{label}</p>
-      <p className={`text-lg font-semibold ${themeClasses.text}`}>{value}</p>
+    <div className="bg-gray-50/70 dark:bg-slate-900/60 backdrop-blur-sm p-3 rounded-lg shadow-sm border border-gray-200/50 dark:border-slate-700/50">
+      <p className="text-xs text-gray-600 dark:text-gray-400">{label}</p>
+      <p className="text-lg font-semibold text-gray-900 dark:text-white">{value}</p>
     </div>
   );
 }
@@ -926,22 +939,22 @@ function levelPill(level) {
   return map[level] || 'bg-slate-700 text-gray-100';
 }
 
-function UserDetailsCard({ user, themeClasses }) {
+function UserDetailsCard({ user }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <InfoKV label="Username" value={user?.username} strong themeClasses={themeClasses} />
+      <InfoKV label="Username" value={user?.username} strong />
       <div>
-        <p className={themeClasses.textSecondary}>User Level:</p>
+        <p className="text-gray-600 dark:text-gray-400">User Level:</p>
         <span className={`mt-1 inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${levelPill((user?.userlevel || '').toLowerCase())}`}>
           {user?.userlevel || '—'}
         </span>
       </div>
-      <InfoKV label="Email" value={user?.email} themeClasses={themeClasses} />
-      <InfoKV label="Address" value={user?.address || '—'} themeClasses={themeClasses} />
-      <InfoKV label="Land Size (ha)" value={user?.landsize ?? '—'} themeClasses={themeClasses} />
-      <InfoKV label="Created" value={formatDate(user?.created_at || user?.createdAt)} themeClasses={themeClasses} />
-      <InfoKV label="Updated" value={formatDate(user?.updated_at || user?.updatedAt)} themeClasses={themeClasses} />
-      <InfoKV label="ID" value={`#${user?.id}`} themeClasses={themeClasses} />
+      <InfoKV label="Email" value={user?.email} />
+      <InfoKV label="Address" value={user?.address || '—'} />
+      <InfoKV label="Land Size (ha)" value={user?.landsize ?? '—'} />
+      <InfoKV label="Created" value={formatDate(user?.created_at || user?.createdAt)} />
+      <InfoKV label="Updated" value={formatDate(user?.updated_at || user?.updatedAt)} />
+      <InfoKV label="ID" value={`#${user?.id}`} />
     </div>
   );
 }

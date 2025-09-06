@@ -36,7 +36,7 @@ const DatePicker = ({ value, onChange, label, isDark, error }) => (
 
 // ---------- component ----------
 export default function Fertilizer({
-  apiBase = "",
+  apiBase = "http://localhost:3001",
   userId = null,
   fertilizers = [], // parent state (optional)
   setFertilizers = () => {},
