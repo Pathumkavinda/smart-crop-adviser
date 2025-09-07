@@ -34,13 +34,156 @@ const daysUntil = (dateLike) => {
   return Math.max(0, Math.floor((t - now) / (1000 * 60 * 60 * 24)));
 };
 
+// Translations
+const translations = {
+  en: {
+    errors: {
+      fetchFailed: 'Failed to load fertilizer applications'
+    },
+    fertilizer: {
+      title: 'Fertilizer Timer',
+      startNextDue: 'Start Next Due',
+      showAll: 'Show All',
+      showWeek: 'Show Week',
+      countdown: 'Countdown',
+      selectPrompt: 'Select a crop below to start (uses next_application_date).',
+      upcomingApplications: 'Upcoming Applications',
+      loading: 'Loading…',
+      noEvents: 'No upcoming fertilizer events.',
+      today: 'Today',
+      days: 'days',
+      day: 'day',
+      applied: 'Applied',
+      next: 'Next'
+    },
+    appointment: {
+      title: 'Appointment Reminder',
+      startNextApproved: 'Start Next Approved',
+      countdown: 'Countdown',
+      noApproved: 'No approved appointments yet. Once an adviser confirms, it will appear here automatically.',
+      approvedAppointments: 'Approved Appointments',
+      noAppointments: 'No approved appointments.',
+      with: 'With',
+      when: 'When',
+      today: 'Today',
+      days: 'days',
+      day: 'day',
+      appointment: 'Appointment'
+    },
+    deleteConfirm: 'Delete this fertilizer record?',
+    notifications: {
+      fertilizer: {
+        title: 'Fertilizer:',
+        message: 'Apply {fertilizer} at {location} in {days} {dayText} (due {date}).'
+      },
+      appointment: {
+        title: 'Appointment {with}',
+        message: 'Scheduled {when}{location}. {days} {dayText} to go.'
+      }
+    }
+  },
+  si: {
+    errors: {
+      fetchFailed: 'පොහොර යෙදීම් පූරණය කිරීමට අසමත් විය'
+    },
+    fertilizer: {
+      title: 'පොහොර කාල ගණකය',
+      startNextDue: 'ඊළඟ නියමිත ආරම්භ කරන්න',
+      showAll: 'සියල්ල පෙන්වන්න',
+      showWeek: 'සතිය පෙන්වන්න',
+      countdown: 'පිළිස්තර ගණනය',
+      selectPrompt: 'ආරම්භ කිරීමට පහත බෝගයක් තෝරන්න (next_application_date භාවිතා කරයි).',
+      upcomingApplications: 'ඉදිරි යෙදුම්',
+      loading: 'පූරණය වෙමින්…',
+      noEvents: 'ඉදිරි පොහොර සිදුවීම් නැත.',
+      today: 'අද',
+      days: 'දින',
+      day: 'දිනය',
+      applied: 'යොදා ඇත',
+      next: 'ඊළඟ'
+    },
+    appointment: {
+      title: 'හමුවීමේ සිහිකැඳවීම',
+      startNextApproved: 'ඊළඟ අනුමත ආරම්භ කරන්න',
+      countdown: 'පිළිස්තර ගණනය',
+      noApproved: 'තවම අනුමත හමුවීම් නැත. උපදේශකයෙකු තහවුරු කළ පසු, එය මෙහි ස්වයංක්‍රීයව දිස් වේ.',
+      approvedAppointments: 'අනුමත හමුවීම්',
+      noAppointments: 'අනුමත හමුවීම් නැත.',
+      with: 'සමඟ',
+      when: 'කවදා',
+      today: 'අද',
+      days: 'දින',
+      day: 'දිනය',
+      appointment: 'හමුවීම'
+    },
+    deleteConfirm: 'මෙම පොහොර වාර්තාව මකන්නද?',
+    notifications: {
+      fertilizer: {
+        title: 'පොහොර:',
+        message: '{location} හි {fertilizer} යොදන්න දින {days} {dayText} තුළ (නියමිත {date}).'
+      },
+      appointment: {
+        title: 'හමුවීම {with}',
+        message: 'සැලසුම් කර ඇත {when}{location}. දින {days} {dayText} ඉතිරිය.'
+      }
+    }
+  },
+  ta: {
+    errors: {
+      fetchFailed: 'உர பயன்பாடுகளை ஏற்ற முடியவில்லை'
+    },
+    fertilizer: {
+      title: 'உர டைமர்',
+      startNextDue: 'அடுத்த காலக்கெடுவைத் தொடங்கு',
+      showAll: 'அனைத்தும் காட்டு',
+      showWeek: 'வாரத்தைக் காட்டு',
+      countdown: 'கவுண்ட்டவுன்',
+      selectPrompt: 'தொடங்க கீழே ஒரு பயிரைத் தேர்ந்தெடுக்கவும் (next_application_date பயன்படுத்துகிறது).',
+      upcomingApplications: 'வரவிருக்கும் பயன்பாடுகள்',
+      loading: 'ஏற்றுகிறது…',
+      noEvents: 'வரவிருக்கும் உர நிகழ்வுகள் இல்லை.',
+      today: 'இன்று',
+      days: 'நாட்கள்',
+      day: 'நாள்',
+      applied: 'பயன்படுத்தப்பட்டது',
+      next: 'அடுத்து'
+    },
+    appointment: {
+      title: 'சந்திப்பு நினைவூட்டல்',
+      startNextApproved: 'அடுத்த அங்கீகரிக்கப்பட்டதைத் தொடங்கு',
+      countdown: 'கவுண்ட்டவுன்',
+      noApproved: 'இதுவரை அங்கீகரிக்கப்பட்ட சந்திப்புகள் இல்லை. ஆலோசகர் உறுதிப்படுத்தியதும், அது தானாகவே இங்கு தோன்றும்.',
+      approvedAppointments: 'அங்கீகரிக்கப்பட்ட சந்திப்புகள்',
+      noAppointments: 'அங்கீகரிக்கப்பட்ட சந்திப்புகள் இல்லை.',
+      with: 'உடன்',
+      when: 'எப்போது',
+      today: 'இன்று',
+      days: 'நாட்கள்',
+      day: 'நாள்',
+      appointment: 'சந்திப்பு'
+    },
+    deleteConfirm: 'இந்த உர பதிவை நீக்கவா?',
+    notifications: {
+      fertilizer: {
+        title: 'உரம்:',
+        message: '{fertilizer} {location} இல் {days} {dayText} இல் பயன்படுத்தவும் (காலக்கெடு {date}).'
+      },
+      appointment: {
+        title: 'சந்திப்பு {with}',
+        message: 'திட்டமிடப்பட்டுள்ளது {when}{location}. {days} {dayText} செல்ல.'
+      }
+    }
+  }
+};
+
 /* -------------------------------------------------------------------------- */
 
 export default function TimerPage({
   apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
-  userId,
+  userId = null,
   isDark = false,
   theme = { colors: { primary: '#16A34A' } },
+  language = 'en', // Add language prop
 }) {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
@@ -66,6 +209,15 @@ export default function TimerPage({
   const apptTickRef = useRef(null);
   const hourlyRef = useRef(null);
   const mountedRef = useRef(true);
+  
+  // Get translations based on selected language
+  const trans = translations[language] || translations.en;
+  
+  // Text styling for different languages
+  const getTextStyle = (s = {}) => ({ 
+    ...s, 
+    lineHeight: language === 'si' ? 1.7 : language === 'ta' ? 1.8 : 1.5 
+  });
 
   /* ------------------------------ Permission ------------------------------- */
   useEffect(() => {
@@ -111,11 +263,11 @@ export default function TimerPage({
       }
     } catch (e) {
       console.error('fetchFertilizers:', e);
-      if (mountedRef.current) setErr('Failed to load fertilizer applications');
+      if (mountedRef.current) setErr(trans.errors.fetchFailed);
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, [apiBase, userId]);
+  }, [apiBase, userId, trans.errors.fetchFailed]);
 
   const fetchAppointments = useCallback(async () => {
     if (!apiBase || !userId) return;
@@ -230,12 +382,26 @@ export default function TimerPage({
     }
 
     evs.forEach((e) => {
-      const title = `Fertilizer: ${e.crop}`;
-      const message = `Apply ${e.fertilizer} at ${e.location || 'field'} in ${e.days} day${e.days !== 1 ? 's' : ''} (due ${fmtDate(e.date)}).`;
-      const meta = { type: 'fertilizer_reminder', event_id: e.id, due_date: e.date.toISOString(), location: e.location, days_left: e.days };
+      const dayText = e.days !== 1 ? trans.fertilizer.days : trans.fertilizer.day;
+      const title = `${trans.notifications.fertilizer.title} ${e.crop}`;
+      const message = trans.notifications.fertilizer.message
+        .replace('{fertilizer}', e.fertilizer)
+        .replace('{location}', e.location || 'field')
+        .replace('{days}', e.days)
+        .replace('{dayText}', dayText)
+        .replace('{date}', fmtDate(e.date));
+        
+      const meta = { 
+        type: 'fertilizer_reminder', 
+        event_id: e.id, 
+        due_date: e.date.toISOString(), 
+        location: e.location, 
+        days_left: e.days 
+      };
+      
       notifyIfDue(`fert:${e.id}`, title, message, meta, e.days);
     });
-  }, [fertilizers]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fertilizers, notifyIfDue, trans]); // Include trans in dependencies
 
   // Appointment events (approved only)
   useEffect(() => {
@@ -296,12 +462,29 @@ export default function TimerPage({
     }
 
     evs.forEach((e) => {
-      const title = `Appointment${e.adviser ? ` with ${e.adviser}` : ''}`;
-      const message = `Scheduled ${fmtDT(e.when)}${e.location ? ` @ ${e.location}` : ''}. ${e.days} day${e.days !== 1 ? 's' : ''} to go.`;
-      const meta = { type: 'appointment_reminder', event_id: e.id, due_date: e.when.toISOString(), location: e.location, with: e.adviser, days_left: e.days };
+      const dayText = e.days !== 1 ? trans.appointment.days : trans.appointment.day;
+      const withText = e.adviser ? ` ${trans.appointment.with} ${e.adviser}` : '';
+      const locationText = e.location ? ` @ ${e.location}` : '';
+      
+      const title = trans.notifications.appointment.title.replace('{with}', withText);
+      const message = trans.notifications.appointment.message
+        .replace('{when}', fmtDT(e.when))
+        .replace('{location}', locationText)
+        .replace('{days}', e.days)
+        .replace('{dayText}', dayText);
+      
+      const meta = { 
+        type: 'appointment_reminder', 
+        event_id: e.id, 
+        due_date: e.when.toISOString(), 
+        location: e.location, 
+        with: e.adviser, 
+        days_left: e.days 
+      };
+      
       notifyIfDue(`appt:${e.id}`, title, message, meta, e.days);
     });
-  }, [appointments]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [appointments, notifyIfDue, trans]); // Include trans in dependencies
 
   /* --------------------------------- Tickers ------------------------------- */
   useEffect(() => {
@@ -329,20 +512,52 @@ export default function TimerPage({
     if (hourlyRef.current) clearInterval(hourlyRef.current);
     hourlyRef.current = setInterval(() => {
       events.forEach((e) => {
-        const title = `Fertilizer: ${e.crop}`;
-        const message = `Apply ${e.fertilizer} at ${e.location || 'field'} in ${e.days} day${e.days !== 1 ? 's' : ''} (due ${fmtDate(e.date)}).`;
-        const meta = { type: 'fertilizer_reminder', event_id: e.id, due_date: e.date.toISOString(), location: e.location, days_left: e.days };
+        const dayText = e.days !== 1 ? trans.fertilizer.days : trans.fertilizer.day;
+        const title = `${trans.notifications.fertilizer.title} ${e.crop}`;
+        const message = trans.notifications.fertilizer.message
+          .replace('{fertilizer}', e.fertilizer)
+          .replace('{location}', e.location || 'field')
+          .replace('{days}', e.days)
+          .replace('{dayText}', dayText)
+          .replace('{date}', fmtDate(e.date));
+          
+        const meta = { 
+          type: 'fertilizer_reminder', 
+          event_id: e.id, 
+          due_date: e.date.toISOString(), 
+          location: e.location, 
+          days_left: e.days 
+        };
+        
         notifyIfDue(`fert:${e.id}`, title, message, meta, e.days);
       });
+      
       apptEvents.forEach((e) => {
-        const title = `Appointment${e.adviser ? ` with ${e.adviser}` : ''}`;
-        const message = `Scheduled ${fmtDT(e.when)}${e.location ? ` @ ${e.location}` : ''}. ${e.days} day${e.days !== 1 ? 's' : ''} to go.`;
-        const meta = { type: 'appointment_reminder', event_id: e.id, due_date: e.when.toISOString(), location: e.location, with: e.adviser, days_left: e.days };
+        const dayText = e.days !== 1 ? trans.appointment.days : trans.appointment.day;
+        const withText = e.adviser ? ` ${trans.appointment.with} ${e.adviser}` : '';
+        const locationText = e.location ? ` @ ${e.location}` : '';
+        
+        const title = trans.notifications.appointment.title.replace('{with}', withText);
+        const message = trans.notifications.appointment.message
+          .replace('{when}', fmtDT(e.when))
+          .replace('{location}', locationText)
+          .replace('{days}', e.days)
+          .replace('{dayText}', dayText);
+        
+        const meta = { 
+          type: 'appointment_reminder', 
+          event_id: e.id, 
+          due_date: e.when.toISOString(), 
+          location: e.location, 
+          with: e.adviser, 
+          days_left: e.days 
+        };
+        
         notifyIfDue(`appt:${e.id}`, title, message, meta, e.days);
       });
     }, 60 * 60 * 1000);
     return () => { if (hourlyRef.current) clearInterval(hourlyRef.current); };
-  }, [events, apptEvents, notifyIfDue]);
+  }, [events, apptEvents, notifyIfDue, trans]);
 
   /* -------------------------------- Actions -------------------------------- */
   const startNextDue = () => {
@@ -386,16 +601,19 @@ export default function TimerPage({
             border: `1px solid ${isDark ? 'rgba(239,68,68,0.3)' : 'rgba(239,68,68,0.2)'}`,
           }}
         >
-          <div className="flex items-start gap-2"><AlertTriangle className="h-5 w-5" /><p>{err}</p></div>
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-5 w-5" />
+            <p style={getTextStyle()}>{err}</p>
+          </div>
         </div>
       )}
 
       {/* ============================== Fertilizer ============================== */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: isDark ? '#eee' : '#222' }}>
+          <h2 className="text-lg font-semibold flex items-center gap-2" style={{ ...getTextStyle(), color: isDark ? '#eee' : '#222' }}>
             <Leaf className="h-5 w-5" style={{ color: theme.colors.primary }} />
-            Fertilizer Timer
+            {trans.fertilizer.title}
           </h2>
           <div className="flex items-center gap-3">
             <button
@@ -404,14 +622,14 @@ export default function TimerPage({
               style={{ borderColor: theme.colors.primary, color: theme.colors.primary }}
               disabled={!events.length}
             >
-              Start Next Due
+              <span style={getTextStyle()}>{trans.fertilizer.startNextDue}</span>
             </button>
             <button
               onClick={() => setShowAll((s) => !s)}
               className="text-sm px-3 py-1.5 rounded border"
               style={{ borderColor: isDark ? '#888' : '#ccc', color: isDark ? '#ddd' : '#333' }}
             >
-              {showAll ? 'Show Week' : 'Show All'}
+              <span style={getTextStyle()}>{showAll ? trans.fertilizer.showWeek : trans.fertilizer.showAll}</span>
             </button>
           </div>
         </div>
@@ -424,7 +642,7 @@ export default function TimerPage({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Bell className="h-5 w-5" style={{ color: theme.colors.primary }} />
-              <h3 className="text-base font-medium" style={{ color: isDark ? '#eee' : '#333' }}>Countdown</h3>
+              <h3 className="text-base font-medium" style={{ ...getTextStyle(), color: isDark ? '#eee' : '#333' }}>{trans.fertilizer.countdown}</h3>
             </div>
             <div className="flex items-center gap-2">
               {running ? (
@@ -438,12 +656,12 @@ export default function TimerPage({
 
           {selected ? (
             <>
-              <div className="mb-2 text-sm" style={{ color: isDark ? '#bbb' : '#555' }}>
+              <div className="mb-2 text-sm" style={{ ...getTextStyle(), color: isDark ? '#bbb' : '#555' }}>
                 <span className="font-medium" style={{ color: isDark ? '#eee' : '#333' }}>
                   {selected.crop}
                 </span>{' • '}{selected.fertilizer}{' • '}
-                Next: {fmtDate(selected.date)}
-                {selected.prevDate ? ` • Applied: ${fmtDate(selected.prevDate)}` : ''}
+                {trans.fertilizer.next}: {fmtDate(selected.date)}
+                {selected.prevDate ? ` • ${trans.fertilizer.applied}: ${fmtDate(selected.prevDate)}` : ''}
                 {selected.location ? (
                   <> • <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{selected.location}</span></>
                 ) : null}
@@ -453,7 +671,7 @@ export default function TimerPage({
               </div>
             </>
           ) : (
-            <p className="text-sm" style={{ color: isDark ? '#aaa' : '#666' }}>Select a crop below to start (uses <b>next_application_date</b>).</p>
+            <p className="text-sm" style={{ ...getTextStyle(), color: isDark ? '#aaa' : '#666' }}>{trans.fertilizer.selectPrompt}</p>
           )}
         </div>
 
@@ -461,19 +679,20 @@ export default function TimerPage({
         <div className="p-4 rounded-lg" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}` }}>
           <div className="flex items-center gap-2 mb-3">
             <CalendarDays className="h-5 w-5" style={{ color: theme.colors.primary }} />
-            <h3 className="text-base font-medium" style={{ color: isDark ? '#eee' : '#333' }}>Upcoming Applications</h3>
+            <h3 className="text-base font-medium" style={{ ...getTextStyle(), color: isDark ? '#eee' : '#333' }}>{trans.fertilizer.upcomingApplications}</h3>
           </div>
 
           {loading ? (
-            <div className="py-6 text-center text-sm" style={{ color: isDark ? '#bbb' : '#555' }}>Loading…</div>
+            <div className="py-6 text-center text-sm" style={{ ...getTextStyle(), color: isDark ? '#bbb' : '#555' }}>{trans.fertilizer.loading}</div>
           ) : events.length === 0 ? (
-            <div className="py-6 text-center text-sm" style={{ color: isDark ? '#bbb' : '#555' }}>No upcoming fertilizer events.</div>
+            <div className="py-6 text-center text-sm" style={{ ...getTextStyle(), color: isDark ? '#bbb' : '#555' }}>{trans.fertilizer.noEvents}</div>
           ) : (
             <div className="space-y-2">
               {events
                 .filter((e) => showAll || e.days <= 7)
                 .map((e) => {
                   const active = selected?.id === e.id;
+                  const dayText = e.days !== 1 ? trans.fertilizer.days : trans.fertilizer.day;
                   return (
                     <button
                       key={e.id}
@@ -487,12 +706,12 @@ export default function TimerPage({
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <div className="text-sm font-medium truncate">
+                          <div className="text-sm font-medium truncate" style={getTextStyle()}>
                             {e.crop} • {e.fertilizer}
                           </div>
-                          <div className="text-xs mt-0.5 space-x-2" style={{ color: isDark ? '#bbb' : '#555' }}>
-                            <span>Next: {fmtDate(e.date)}</span>
-                            {e.prevDate ? <span>Applied: {fmtDate(e.prevDate)}</span> : null}
+                          <div className="text-xs mt-0.5 space-x-2" style={{ ...getTextStyle(), color: isDark ? '#bbb' : '#555' }}>
+                            <span>{trans.fertilizer.next}: {fmtDate(e.date)}</span>
+                            {e.prevDate ? <span>{trans.fertilizer.applied}: {fmtDate(e.prevDate)}</span> : null}
                             {e.location ? (
                               <span className="inline-flex items-center gap-1">
                                 <MapPin className="h-3.5 w-3.5" />
@@ -502,7 +721,7 @@ export default function TimerPage({
                           </div>
                         </div>
                         <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)', color: theme.colors.primary }}>
-                          {e.days === 0 ? 'Today' : `${e.days} day${e.days !== 1 ? 's' : ''}`}
+                          {e.days === 0 ? trans.fertilizer.today : `${e.days} ${dayText}`}
                         </span>
                       </div>
                     </button>
@@ -516,9 +735,9 @@ export default function TimerPage({
       {/* ============================== Appointments ============================== */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: isDark ? '#eee' : '#222' }}>
+          <h2 className="text-lg font-semibold flex items-center gap-2" style={{ ...getTextStyle(), color: isDark ? '#eee' : '#222' }}>
             <CalendarClock className="h-5 w-5" style={{ color: theme.colors.primary }} />
-            Appointment Reminder
+            {trans.appointment.title}
           </h2>
           <button
             onClick={startNextAppt}
@@ -526,7 +745,7 @@ export default function TimerPage({
             style={{ borderColor: theme.colors.primary, color: theme.colors.primary }}
             disabled={!apptEvents.length}
           >
-            Start Next Approved
+            <span style={getTextStyle()}>{trans.appointment.startNextApproved}</span>
           </button>
         </div>
 
@@ -535,7 +754,7 @@ export default function TimerPage({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <UserCheck className="h-5 w-5" style={{ color: theme.colors.primary }} />
-              <h3 className="text-base font-medium" style={{ color: isDark ? '#eee' : '#333' }}>Countdown</h3>
+              <h3 className="text-base font-medium" style={{ ...getTextStyle(), color: isDark ? '#eee' : '#333' }}>{trans.appointment.countdown}</h3>
             </div>
             <div className="flex items-center gap-2">
               {apptRunning ? (
@@ -549,18 +768,18 @@ export default function TimerPage({
 
           {selectedAppt ? (
             <>
-              <div className="mb-2 text-sm" style={{ color: isDark ? '#bbb' : '#555' }}>
-                When: <b>{fmtDT(selectedAppt.when)}</b>
+              <div className="mb-2 text-sm" style={{ ...getTextStyle(), color: isDark ? '#bbb' : '#555' }}>
+                {trans.appointment.when}: <b>{fmtDT(selectedAppt.when)}</b>
                 {selectedAppt.location ? <> • <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{selectedAppt.location}</span></> : null}
-                {selectedAppt.adviser ? <> • with <b>{selectedAppt.adviser}</b></> : null}
+                {selectedAppt.adviser ? <> • {trans.appointment.with} <b>{selectedAppt.adviser}</b></> : null}
               </div>
               <div className="py-5 px-6 rounded-lg text-center font-mono text-2xl" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.05)', color: isDark ? '#fff' : '#111' }}>
                 {fmtDHMS(apptRemainSec)}
               </div>
             </>
           ) : (
-            <p className="text-sm" style={{ color: isDark ? '#aaa' : '#666' }}>
-              No approved appointments yet. Once an adviser confirms, it will appear here automatically.
+            <p className="text-sm" style={{ ...getTextStyle(), color: isDark ? '#aaa' : '#666' }}>
+              {trans.appointment.noApproved}
             </p>
           )}
         </div>
@@ -569,15 +788,16 @@ export default function TimerPage({
         <div className="p-4 rounded-lg" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}` }}>
           <div className="flex items-center gap-2 mb-3">
             <CalendarDays className="h-5 w-5" style={{ color: theme.colors.primary }} />
-            <h3 className="text-base font-medium" style={{ color: isDark ? '#eee' : '#333' }}>Approved Appointments</h3>
+            <h3 className="text-base font-medium" style={{ ...getTextStyle(), color: isDark ? '#eee' : '#333' }}>{trans.appointment.approvedAppointments}</h3>
           </div>
 
           {apptEvents.length === 0 ? (
-            <div className="py-6 text-center text-sm" style={{ color: isDark ? '#bbb' : '#555' }}>No approved appointments.</div>
+            <div className="py-6 text-center text-sm" style={{ ...getTextStyle(), color: isDark ? '#bbb' : '#555' }}>{trans.appointment.noAppointments}</div>
           ) : (
             <div className="space-y-2">
               {apptEvents.map((e) => {
                 const active = selectedAppt?.id === e.id;
+                const dayText = e.days !== 1 ? trans.appointment.days : trans.appointment.day;
                 return (
                   <button
                     key={e.id}
@@ -591,16 +811,16 @@ export default function TimerPage({
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="text-sm font-medium truncate">
-                          {e.adviser ? `With ${e.adviser}` : 'Appointment'}
+                        <div className="text-sm font-medium truncate" style={getTextStyle()}>
+                          {e.adviser ? `${trans.appointment.with} ${e.adviser}` : trans.appointment.appointment}
                         </div>
-                        <div className="text-xs mt-0.5 space-x-2" style={{ color: isDark ? '#bbb' : '#555' }}>
-                          <span>When: {fmtDT(e.when)}</span>
+                        <div className="text-xs mt-0.5 space-x-2" style={{ ...getTextStyle(), color: isDark ? '#bbb' : '#555' }}>
+                          <span>{trans.appointment.when}: {fmtDT(e.when)}</span>
                           {e.location ? (<span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{e.location}</span>) : null}
                         </div>
                       </div>
                       <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)', color: theme.colors.primary }}>
-                        {e.days === 0 ? 'Today' : `${e.days} day${e.days !== 1 ? 's' : ''}`}
+                        {e.days === 0 ? trans.appointment.today : `${e.days} ${dayText}`}
                       </span>
                     </div>
                   </button>
