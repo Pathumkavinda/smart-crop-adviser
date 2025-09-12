@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import {
   UserPlus, CalendarPlus, Send, Loader2, CheckCircle2, AlertCircle,
   CalendarClock, MapPin, MessageSquare, User, Trash2, RefreshCw
@@ -127,16 +128,190 @@ function pickUserLevel(u) {
   );
 }
 
+// Translations
+const translations = {
+  en: {
+    header: {
+      title: 'Contact Adviser & Appointments',
+      refresh: 'Refresh',
+      loginRequired: 'Please log in to contact an adviser.'
+    },
+    form: {
+      adviserSelect: {
+        label: 'Choose an Advisor (Agents only)',
+        placeholder: 'Choose an advisor…',
+        option: '{name} — {state} — {gmail}'
+      },
+      subject: {
+        label: 'Subject',
+        placeholder: 'e.g., Soil test review'
+      },
+      appointmentStart: {
+        label: 'Appointment Start (future only)'
+      },
+      duration: {
+        label: 'Duration (minutes)'
+      },
+      location: {
+        label: 'Location (optional)',
+        placeholder: 'Farm, office, video link…'
+      },
+      message: {
+        label: 'Message',
+        placeholder: 'Share context, questions, or preparation notes…'
+      },
+      submit: 'Make Appointment',
+      note: 'Appointments must be scheduled for future dates/times only.'
+    },
+    appointments: {
+      title: 'Your Appointments',
+      loading: 'Loading…',
+      empty: 'No appointments yet.',
+      cancel: 'Cancel',
+      adviser: 'Adviser',
+      adviser_id: 'Adviser #{id}'
+    },
+    messages: {
+      success: 'Appointment request sent.',
+      cancelSuccess: 'Appointment cancelled.',
+      loginError: 'Please log in.',
+      adviserError: 'Please choose an advisor.',
+      dateError: 'Please select a future date & time (days ahead).',
+      submitError: 'Failed to send request. Please try again.',
+      cancelError: 'Unable to cancel appointment.',
+      loadError: 'Failed to load adviser data.'
+    }
+  },
+  si: {
+    header: {
+      title: 'උපදේශක සම්බන්ධ කරගැනීම සහ හමුවීම්',
+      refresh: 'යළි පූරණය කරන්න',
+      loginRequired: 'උපදේශකයෙකු සම්බන්ධ කර ගැනීමට කරුණාකර පුරනය වන්න.'
+    },
+    form: {
+      adviserSelect: {
+        label: 'උපදේශකයෙකු තෝරන්න (නියෝජිතයින් පමණි)',
+        placeholder: 'උපදේශකයෙකු තෝරන්න…',
+        option: '{name} — {state} — {gmail}'
+      },
+      subject: {
+        label: 'මාතෘකාව',
+        placeholder: 'උදා., පස පරීක්ෂාව සමාලෝචනය'
+      },
+      appointmentStart: {
+        label: 'හමුවීම ආරම්භය (අනාගතය පමණි)'
+      },
+      duration: {
+        label: 'කාල සීමාව (මිනිත්තු)'
+      },
+      location: {
+        label: 'ස්ථානය (විකල්ප)',
+        placeholder: 'ගොවිපොළ, කාර්යාලය, වීඩියෝ සබැඳිය…'
+      },
+      message: {
+        label: 'පණිවිඩය',
+        placeholder: 'සන්දර්භය, ප්‍රශ්න, හෝ සූදානම් සටහන් බෙදාගන්න…'
+      },
+      submit: 'හමුවීමක් ලබාගන්න',
+      note: 'හමුවීම් අනාගත දින/වේලාවන් සඳහා පමණක් සැලසුම් කළ යුතුය.'
+    },
+    appointments: {
+      title: 'ඔබගේ හමුවීම්',
+      loading: 'පූරණය වෙමින්…',
+      empty: 'තවම හමුවීම් නැත.',
+      cancel: 'අවලංගු කරන්න',
+      adviser: 'උපදේශක',
+      adviser_id: 'උපදේශක #{id}'
+    },
+    messages: {
+      success: 'හමුවීම් ඉල්ලීම යවා ඇත.',
+      cancelSuccess: 'හමුවීම අවලංගු කරන ලදී.',
+      loginError: 'කරුණාකර පුරනය වන්න.',
+      adviserError: 'කරුණාකර උපදේශකයෙකු තෝරන්න.',
+      dateError: 'කරුණාකර අනාගත දිනයක් සහ වේලාවක් තෝරන්න (දින කිහිපයක් ඉදිරියෙන්).',
+      submitError: 'ඉල්ලීම යැවීමට අසමත් විය. කරුණාකර නැවත උත්සාහ කරන්න.',
+      cancelError: 'හමුවීම අවලංගු කිරීමට නොහැකි විය.',
+      loadError: 'උපදේශක දත්ත පූරණය කිරීමට අසමත් විය.'
+    }
+  },
+  ta: {
+    header: {
+      title: 'ஆலோசகரை தொடர்புகொள்ளவும் & சந்திப்புகள்',
+      refresh: 'புதுப்பிக்க',
+      loginRequired: 'ஆலோசகரை தொடர்புகொள்ள தயவுசெய்து உள்நுழையவும்.'
+    },
+    form: {
+      adviserSelect: {
+        label: 'ஆலோசகரைத் தேர்ந்தெடுக்கவும் (முகவர்கள் மட்டும்)',
+        placeholder: 'ஆலோசகரைத் தேர்ந்தெடுக்கவும்…',
+        option: '{name} — {state} — {gmail}'
+      },
+      subject: {
+        label: 'தலைப்பு',
+        placeholder: 'எ.கா., மண் பரிசோதனை மதிப்பாய்வு'
+      },
+      appointmentStart: {
+        label: 'சந்திப்பு தொடக்கம் (எதிர்காலம் மட்டும்)'
+      },
+      duration: {
+        label: 'கால அளவு (நிமிடங்கள்)'
+      },
+      location: {
+        label: 'இடம் (விருப்பத்தேர்வு)',
+        placeholder: 'பண்ணை, அலுவலகம், வீடியோ இணைப்பு…'
+      },
+      message: {
+        label: 'செய்தி',
+        placeholder: 'சூழல், கேள்விகள், அல்லது தயாரிப்பு குறிப்புகளைப் பகிரவும்…'
+      },
+      submit: 'சந்திப்பு ஏற்படுத்த',
+      note: 'சந்திப்புகள் எதிர்கால தேதிகள்/நேரங்களுக்கு மட்டுமே திட்டமிடப்பட வேண்டும்.'
+    },
+    appointments: {
+      title: 'உங்கள் சந்திப்புகள்',
+      loading: 'ஏற்றுகிறது…',
+      empty: 'இதுவரை சந்திப்புகள் இல்லை.',
+      cancel: 'ரத்துசெய்',
+      adviser: 'ஆலோசகர்',
+      adviser_id: 'ஆலோசகர் #{id}'
+    },
+    messages: {
+      success: 'சந்திப்பு கோரிக்கை அனுப்பப்பட்டது.',
+      cancelSuccess: 'சந்திப்பு ரத்து செய்யப்பட்டது.',
+      loginError: 'தயவுசெய்து உள்நுழையவும்.',
+      adviserError: 'தயவுசெய்து ஒரு ஆலோசகரைத் தேர்ந்தெடுக்கவும்.',
+      dateError: 'தயவுசெய்து எதிர்கால தேதி & நேரத்தைத் தேர்ந்தெடுக்கவும் (நாட்கள் முன்னதாக).',
+      submitError: 'கோரிக்கையை அனுப்ப முடியவில்லை. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.',
+      cancelError: 'சந்திப்பை ரத்து செய்ய முடியவில்லை.',
+      loadError: 'ஆலோசகர் தரவை ஏற்ற முடியவில்லை.'
+    }
+  }
+};
+
 /* ----------------------------------------------------------------------------
    Component
 ---------------------------------------------------------------------------- */
 export default function RequestAdviser({
   apiBase = API_BASE,
   defaultDurationMin = 30,
+  language // Add language prop
 }) {
   const { theme } = useTheme();
   const { user } = useAuth();
   const isDark = theme.name === 'dark';
+  
+  // Get language from context if available, or use prop, or default to English
+  const { language: contextLanguage } = useLanguage();
+  const currentLanguage = language || contextLanguage || 'en';
+  
+  // Get translations for the current language
+  const trans = translations[currentLanguage] || translations.en;
+  
+  // Text styling for different languages
+  const getTextStyle = (s = {}) => ({ 
+    ...s, 
+    lineHeight: currentLanguage === 'si' ? 1.7 : currentLanguage === 'ta' ? 1.8 : 1.5 
+  });
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -274,11 +449,11 @@ export default function RequestAdviser({
       await Promise.all([loadAdvisers(), loadAppointments()]);
     } catch (e) {
       console.error(e);
-      setError('Failed to load adviser data.');
+      setError(trans.messages.loadError);
     } finally {
       setLoading(false);
     }
-  }, [user?.id, loadAdvisers, loadAppointments]);
+  }, [user?.id, loadAdvisers, loadAppointments, trans.messages.loadError]);
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
@@ -291,13 +466,13 @@ export default function RequestAdviser({
     setOk('');
     setError('');
 
-    if (!user?.id) { setError('Please log in.'); return; }
-    if (!adviserId) { setError('Please choose an advisor.'); return; }
-    if (!startsAt) { setError('Please pick a date & time.'); return; }
+    if (!user?.id) { setError(trans.messages.loginError); return; }
+    if (!adviserId) { setError(trans.messages.adviserError); return; }
+    if (!startsAt) { setError(trans.messages.dateError); return; }
 
     const start = new Date(startsAt);
     if (Number.isNaN(start.getTime()) || start.getTime() <= Date.now()) {
-      setError('Please select a future date & time (days ahead).');
+      setError(trans.messages.dateError);
       return;
     }
 
@@ -353,7 +528,7 @@ export default function RequestAdviser({
         headers
       );
 
-      setOk('Appointment request sent.');
+      setOk(trans.messages.success);
       setSubject('');
       setMessage('');
       setStartsAt('');
@@ -362,7 +537,7 @@ export default function RequestAdviser({
       await loadAppointments();
     } catch (e) {
       console.error(e);
-      setError('Failed to send request. Please try again.');
+      setError(trans.messages.submitError);
     } finally {
       setSubmitting(false);
     }
@@ -382,10 +557,10 @@ export default function RequestAdviser({
       `${apiBase}/appointments/${apptId}`,
     ], headers);
     if (ok) {
-      setOk('Appointment cancelled.');
+      setOk(trans.messages.cancelSuccess);
       setAppointments(prev => prev.filter(a => a.id !== apptId));
     } else {
-      setError('Unable to cancel appointment.');
+      setError(trans.messages.cancelError);
     }
   }
 
@@ -397,8 +572,8 @@ export default function RequestAdviser({
 
   if (!user?.id) {
     return (
-      <div className="p-6 text-sm rounded-md" style={border}>
-        Please log in to contact an adviser.
+      <div className="p-6 text-sm rounded-md" style={{...border, ...getTextStyle()}}>
+        {trans.header.loginRequired}
       </div>
     );
   }
@@ -409,8 +584,8 @@ export default function RequestAdviser({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <UserPlus className="h-5 w-5" style={{ color: theme.colors.primary }} />
-          <h2 className="text-lg font-semibold" style={{ color: theme.colors.text }}>
-            Contact Adviser & Appointments
+          <h2 className="text-lg font-semibold" style={{ ...getTextStyle(), color: theme.colors.text }}>
+            {trans.header.title}
           </h2>
           {loading && <Loader2 className="h-4 w-4 animate-spin" style={{ color: theme.colors.primary }} />}
         </div>
@@ -420,7 +595,7 @@ export default function RequestAdviser({
           style={{ background: 'transparent', border: `1px solid ${theme.colors.border}`, color: theme.colors.text }}
         >
           <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh
+          <span style={getTextStyle()}>{trans.header.refresh}</span>
         </button>
       </div>
 
@@ -435,15 +610,15 @@ export default function RequestAdviser({
           }}
         >
           {error ? <AlertCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-          <span>{error || ok}</span>
+          <span style={getTextStyle()}>{error || ok}</span>
         </div>
       )}
 
       {/* Request form */}
       <form onSubmit={handleSubmit} className="space-y-4 rounded-lg p-4" style={border}>
         {/* Adviser select */}
-        <label className="block text-sm font-medium" style={{ color: theme.colors.text }}>
-          Choose an Advisor (Agents only)
+        <label className="block text-sm font-medium" style={{ ...getTextStyle(), color: theme.colors.text }}>
+          {trans.form.adviserSelect.label}
         </label>
         <select
           value={adviserId}
@@ -452,10 +627,13 @@ export default function RequestAdviser({
           className="w-full px-3 py-2 rounded"
           style={{ background: 'transparent', border: `1px solid ${theme.colors.border}`, color: theme.colors.text }}
         >
-          <option value="" disabled>Choose an advisor…</option>
+          <option value="" disabled>{trans.form.adviserSelect.placeholder}</option>
           {advisers.map(a => (
             <option key={a.id} value={a.id} style={{ color: 'initial' }}>
-              {a.name} — {a.state || 'N/A'} — {a.gmail || 'no Gmail'}
+              {trans.form.adviserSelect.option
+                .replace('{name}', a.name)
+                .replace('{state}', a.state || 'N/A')
+                .replace('{gmail}', a.gmail || 'no Gmail')}
             </option>
           ))}
         </select>
@@ -463,19 +641,21 @@ export default function RequestAdviser({
         {/* Subject + date/time (future only) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: theme.colors.text }}>Subject</label>
+            <label className="block text-sm font-medium mb-1" style={{ ...getTextStyle(), color: theme.colors.text }}>
+              {trans.form.subject.label}
+            </label>
             <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="e.g., Soil test review"
+              placeholder={trans.form.subject.placeholder}
               className="w-full px-3 py-2 rounded"
               style={{ background: 'transparent', border: `1px solid ${theme.colors.border}`, color: theme.colors.text }}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: theme.colors.text }}>
-              Appointment Start (future only)
+            <label className="block text-sm font-medium mb-1" style={{ ...getTextStyle(), color: theme.colors.text }}>
+              {trans.form.appointmentStart.label}
             </label>
             <input
               type="datetime-local"
@@ -491,7 +671,9 @@ export default function RequestAdviser({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: theme.colors.text }}>Duration (minutes)</label>
+            <label className="block text-sm font-medium mb-1" style={{ ...getTextStyle(), color: theme.colors.text }}>
+              {trans.form.duration.label}
+            </label>
             <input
               type="number"
               min={5}
@@ -503,12 +685,14 @@ export default function RequestAdviser({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: theme.colors.text }}>Location (optional)</label>
+            <label className="block text-sm font-medium mb-1" style={{ ...getTextStyle(), color: theme.colors.text }}>
+              {trans.form.location.label}
+            </label>
             <input
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="Farm, office, video link…"
+              placeholder={trans.form.location.placeholder}
               className="w-full px-3 py-2 rounded"
               style={{ background: 'transparent', border: `1px solid ${theme.colors.border}`, color: theme.colors.text }}
             />
@@ -516,12 +700,14 @@ export default function RequestAdviser({
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1" style={{ color: theme.colors.text }}>Message</label>
+          <label className="block text-sm font-medium mb-1" style={{ ...getTextStyle(), color: theme.colors.text }}>
+            {trans.form.message.label}
+          </label>
           <textarea
             rows={5}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Share context, questions, or preparation notes…"
+            placeholder={trans.form.message.placeholder}
             className="w-full px-3 py-2 rounded resize-y"
             style={{ background: 'transparent', border: `1px solid ${theme.colors.border}`, color: theme.colors.text }}
           />
@@ -535,10 +721,10 @@ export default function RequestAdviser({
             style={{ background: theme.colors.primary }}
           >
             {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            Make Appointment
+            <span style={getTextStyle()}>{trans.form.submit}</span>
           </button>
-          <span className="text-xs" style={muted}>
-            Appointments must be scheduled for future dates/times only.
+          <span className="text-xs" style={{...muted, ...getTextStyle()}}>
+            {trans.form.note}
           </span>
         </div>
       </form>
@@ -547,15 +733,17 @@ export default function RequestAdviser({
       <div className="rounded-lg overflow-hidden" style={border}>
         <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: `1px solid ${theme.colors.border}` }}>
           <CalendarClock className="h-5 w-5" style={{ color: theme.colors.primary }} />
-          <h3 className="font-medium" style={{ color: theme.colors.text }}>Your Appointments</h3>
+          <h3 className="font-medium" style={{ ...getTextStyle(), color: theme.colors.text }}>
+            {trans.appointments.title}
+          </h3>
         </div>
 
         {loading ? (
-          <div className="p-6 text-sm flex items-center gap-2" style={muted}>
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+          <div className="p-6 text-sm flex items-center gap-2" style={{...muted, ...getTextStyle()}}>
+            <Loader2 className="h-4 w-4 animate-spin" /> {trans.appointments.loading}
           </div>
         ) : appointments.length === 0 ? (
-          <div className="p-6 text-sm" style={muted}>No appointments yet.</div>
+          <div className="p-6 text-sm" style={{...muted, ...getTextStyle()}}>{trans.appointments.empty}</div>
         ) : (
           <ul className="divide-y" style={{ borderColor: theme.colors.border }}>
             {appointments
@@ -564,10 +752,10 @@ export default function RequestAdviser({
                 <li key={a.id} className="p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-1">
-                      <div className="text-sm font-medium" style={{ color: theme.colors.text }}>
+                      <div className="text-sm font-medium" style={{ ...getTextStyle(), color: theme.colors.text }}>
                         {a.title}
                       </div>
-                      <div className="text-xs flex items-center gap-4" style={muted}>
+                      <div className="text-xs flex items-center gap-4" style={{...muted, ...getTextStyle()}}>
                         <span className="inline-flex items-center gap-1">
                           <CalendarPlus className="h-3.5 w-3.5" /> {formatDT(a.starts_at)}{a.ends_at ? ` – ${formatDT(a.ends_at)}` : ''}
                         </span>
@@ -578,23 +766,30 @@ export default function RequestAdviser({
                         )}
                         {(a.adviser_name || a.adviser_id) && (
                           <span className="inline-flex items-center gap-1">
-                            <User className="h-3.5 w-3.5" /> {a.adviser_name ? `Adviser ${a.adviser_name}` : `Adviser #${a.adviser_id}`}
+                            <User className="h-3.5 w-3.5" /> {a.adviser_name ? 
+                              `${trans.appointments.adviser} ${a.adviser_name}` : 
+                              trans.appointments.adviser_id.replace('{id}', a.adviser_id)}
                           </span>
                         )}
                         <span className="inline-flex items-center gap-1">
                           <MessageSquare className="h-3.5 w-3.5" /> {a.status || 'scheduled'}
                         </span>
                       </div>
-                      {a.notes && <div className="text-xs" style={{ color: theme.colors.text }}>{a.notes}</div>}
+                      {a.notes && (
+                        <div className="text-xs" style={{ ...getTextStyle(), color: theme.colors.text }}>
+                          {a.notes}
+                        </div>
+                      )}
                     </div>
                     <div className="shrink-0 flex items-center gap-2">
                       <button
                         onClick={() => cancelAppointment(a.id)}
                         className="inline-flex items-center gap-1 px-3 py-1.5 rounded text-sm hover:opacity-80"
                         style={{ border: `1px solid ${theme.colors.border}`, color: isDark ? '#f87171' : '#b91c1c' }}
-                        title="Cancel appointment"
+                        title={trans.appointments.cancel}
                       >
-                        <Trash2 className="h-4 w-4" /> Cancel
+                        <Trash2 className="h-4 w-4" /> 
+                        <span style={getTextStyle()}>{trans.appointments.cancel}</span>
                       </button>
                     </div>
                   </div>

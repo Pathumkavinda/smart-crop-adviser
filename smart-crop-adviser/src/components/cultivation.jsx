@@ -591,20 +591,20 @@ export default function CultivationDates({
                   {trans.status}
                 </label>
                 <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none"
-                  style={{
-                    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'white',
-                    borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-                    color: isDark ? '#eee' : '#333',
-                  }}
-                >
-                  <option value="planning">{trans.statusOptions.planning}</option>
-                  <option value="active">{trans.statusOptions.active}</option>
-                  <option value="completed">{trans.statusOptions.completed}</option>
-                </select>
+  name="status"
+  value={formData.status}
+  onChange={handleChange}
+  className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none"
+  style={{
+    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'white',
+    borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+    color: isDark ? '#6c6969ff' : '#151515ff', 
+  }}
+>
+  <option value="planning">{trans.statusOptions.planning}</option>
+  <option value="active">{trans.statusOptions.active}</option>
+  <option value="completed">{trans.statusOptions.completed}</option>
+</select>
               </div>
 
               {/* Planning Date */}

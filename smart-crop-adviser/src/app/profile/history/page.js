@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext'; // Import language context
 import { useRouter } from 'next/navigation';
 import ThemeWrapper from '@/components/ThemeWrapper';
 
@@ -31,6 +32,228 @@ export default function HistoryPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { theme } = useTheme();
+  const { language } = useLanguage(); // Get current language
+
+  // Translations for HistoryPage component
+  const translations = {
+    en: {
+      pageTitle: 'Activity History',
+      loginRequired: 'You need to be logged in to view your history.',
+      goToLogin: 'Go to Login',
+      backToDashboard: 'Back to Dashboard',
+      searchPlaceholder: 'Search history...',
+      filterLabel: 'All Types',
+      filterOptions: {
+        all: 'All Types',
+        prediction: 'Predictions',
+        document: 'Documents',
+        login: 'Logins',
+        profile_update: 'Profile Updates',
+        message: 'Messages'
+      },
+      tableHeaders: {
+        type: 'Type',
+        title: 'Title',
+        date: 'Date',
+        status: 'Status',
+        actions: 'Actions'
+      },
+      pagination: {
+        showing: 'Showing',
+        to: 'to',
+        of: 'of',
+        results: 'results'
+      },
+      noHistory: {
+        title: 'No history found',
+        message: 'Your activity history will appear here',
+        filterMessage: 'Try adjusting your search or filter',
+        clearFilters: 'Clear filters'
+      },
+      viewDetails: 'View Details',
+      details: {
+        title: 'Details',
+        description: 'Description',
+        noDescription: 'No description available.',
+        type: 'Type',
+        date: 'Date',
+        additionalInfo: 'Additional Information',
+        noAdditionalInfo: 'No additional information available for this activity type.',
+        prediction: {
+          crop: 'Crop',
+          district: 'District / AEZ / Season',
+          soil: 'Soil',
+          nutrients: 'N • P • K',
+          suitabilityScore: 'Suitability Score'
+        },
+        document: {
+          type: 'Document Type',
+          fileSize: 'File Size',
+          viewDocument: 'View Document'
+        },
+        login: {
+          ip: 'IP Address',
+          browser: 'Browser',
+          location: 'Location'
+        }
+      },
+      notSpecified: 'Not specified',
+      status: {
+        completed: 'Completed',
+        pending: 'Pending',
+        failed: 'Failed'
+      }
+    },
+    si: {
+      pageTitle: 'ක්‍රියාකාරකම් ඉතිහාසය',
+      loginRequired: 'ඔබගේ ඉතිහාසය බැලීමට පිවිසීමක් අවශ්‍ය වේ.',
+      goToLogin: 'පිවිසුමට යන්න',
+      backToDashboard: 'උපකරණ පුවරුවට ආපසු',
+      searchPlaceholder: 'ඉතිහාසය සොයන්න...',
+      filterLabel: 'සියලු වර්ග',
+      filterOptions: {
+        all: 'සියලු වර්ග',
+        prediction: 'අනාවැකි',
+        document: 'ලේඛන',
+        login: 'පිවිසුම්',
+        profile_update: 'පැතිකඩ යාවත්කාලීන',
+        message: 'පණිවිඩ'
+      },
+      tableHeaders: {
+        type: 'වර්ගය',
+        title: 'මාතෘකාව',
+        date: 'දිනය',
+        status: 'තත්ත්වය',
+        actions: 'ක්‍රියා'
+      },
+      pagination: {
+        showing: 'පෙන්වන්නේ',
+        to: 'සිට',
+        of: 'න්',
+        results: 'ප්‍රතිඵල'
+      },
+      noHistory: {
+        title: 'ඉතිහාසයක් හමු නොවීය',
+        message: 'ඔබගේ ක්‍රියාකාරකම් ඉතිහාසය මෙහි පෙන්වනු ඇත',
+        filterMessage: 'ඔබගේ සෙවීම හෝ පෙරහන සකස් කිරීමට උත්සාහ කරන්න',
+        clearFilters: 'පෙරහන් ඉවත් කරන්න'
+      },
+      viewDetails: 'විස්තර බලන්න',
+      details: {
+        title: 'විස්තර',
+        description: 'විස්තරය',
+        noDescription: 'විස්තරයක් නොමැත.',
+        type: 'වර්ගය',
+        date: 'දිනය',
+        additionalInfo: 'අමතර තොරතුරු',
+        noAdditionalInfo: 'මෙම ක්‍රියාකාරකම් වර්ගය සඳහා අමතර තොරතුරු නොමැත.',
+        prediction: {
+          crop: 'බෝගය',
+          district: 'දිස්ත්‍රික්කය / කෘෂි කලාපය / කන්නය',
+          soil: 'පස',
+          nutrients: 'N • P • K',
+          suitabilityScore: 'සුදුසු ලකුණු'
+        },
+        document: {
+          type: 'ලේඛන වර්ගය',
+          fileSize: 'ගොනු ප්‍රමාණය',
+          viewDocument: 'ලේඛනය බලන්න'
+        },
+        login: {
+          ip: 'IP ලිපිනය',
+          browser: 'බ්‍රවුසරය',
+          location: 'ස්ථානය'
+        }
+      },
+      notSpecified: 'සඳහන් කර නොමැත',
+      status: {
+        completed: 'සම්පූර්ණයි',
+        pending: 'බලාපොරොත්තුවෙන්',
+        failed: 'අසාර්ථකයි'
+      }
+    },
+    ta: {
+      pageTitle: 'செயல்பாட்டு வரலாறு',
+      loginRequired: 'உங்கள் வரலாற்றைப் பார்க்க நீங்கள் உள்நுழைய வேண்டும்.',
+      goToLogin: 'உள்நுழைவுக்குச் செல்க',
+      backToDashboard: 'டாஷ்போர்டுக்குத் திரும்பு',
+      searchPlaceholder: 'வரலாற்றைத் தேடுங்கள்...',
+      filterLabel: 'அனைத்து வகைகள்',
+      filterOptions: {
+        all: 'அனைத்து வகைகள்',
+        prediction: 'முன்னறிவிப்புகள்',
+        document: 'ஆவணங்கள்',
+        login: 'உள்நுழைவுகள்',
+        profile_update: 'சுயவிவர புதுப்பிப்புகள்',
+        message: 'செய்திகள்'
+      },
+      tableHeaders: {
+        type: 'வகை',
+        title: 'தலைப்பு',
+        date: 'தேதி',
+        status: 'நிலை',
+        actions: 'செயல்கள்'
+      },
+      pagination: {
+        showing: 'காட்டுகிறது',
+        to: 'முதல்',
+        of: 'இல்',
+        results: 'முடிவுகள்'
+      },
+      noHistory: {
+        title: 'வரலாறு எதுவும் கிடைக்கவில்லை',
+        message: 'உங்கள் செயல்பாட்டு வரலாறு இங்கே தோன்றும்',
+        filterMessage: 'உங்கள் தேடலை அல்லது வடிகட்டியை சரிசெய்ய முயற்சிக்கவும்',
+        clearFilters: 'வடிப்பான்களை அழிக்கவும்'
+      },
+      viewDetails: 'விவரங்களைக் காண',
+      details: {
+        title: 'விவரங்கள்',
+        description: 'விளக்கம்',
+        noDescription: 'விளக்கம் எதுவும் இல்லை.',
+        type: 'வகை',
+        date: 'தேதி',
+        additionalInfo: 'கூடுதல் தகவல்',
+        noAdditionalInfo: 'இந்த செயல்பாட்டு வகைக்கு கூடுதல் தகவல் எதுவும் இல்லை.',
+        prediction: {
+          crop: 'பயிர்',
+          district: 'மாவட்டம் / வேளாண் மண்டலம் / பருவம்',
+          soil: 'மண்',
+          nutrients: 'N • P • K',
+          suitabilityScore: 'பொருத்த மதிப்பெண்'
+        },
+        document: {
+          type: 'ஆவண வகை',
+          fileSize: 'கோப்பு அளவு',
+          viewDocument: 'ஆவணத்தைக் காண'
+        },
+        login: {
+          ip: 'IP முகவரி',
+          browser: 'உலாவி',
+          location: 'இடம்'
+        }
+      },
+      notSpecified: 'குறிப்பிடப்படவில்லை',
+      status: {
+        completed: 'முடிந்தது',
+        pending: 'நிலுவையில் உள்ளது',
+        failed: 'தோல்வியடைந்தது'
+      }
+    }
+  };
+
+  // Get translations for current language or fallback to English
+  const t = translations[language] || translations.en;
+
+  // Font size adjustments for non-English languages
+  const getLocalizedFontSize = (defaultSize) => {
+    if (language === 'ta') {
+      return '0.7rem'; // Smaller size for Tamil
+    } else if (language === 'si') {
+      return '0.8rem'; // Slightly larger for Sinhala
+    }
+    return defaultSize; // Default for English
+  };
 
   const isDark = useMemo(() => theme?.name === 'dark', [theme]);
   const [history, setHistory] = useState([]);
@@ -295,8 +518,14 @@ export default function HistoryPage() {
                 />
               </div>
               <div className="ml-3">
-                <p className="text-sm" style={{ color: isDark ? '#FACC15' : '#854D0E' }}>
-                  You need to be logged in to view your history.
+                <p 
+                  className="text-sm" 
+                  style={{ 
+                    color: isDark ? '#FACC15' : '#854D0E',
+                    fontSize: getLocalizedFontSize('0.875rem')
+                  }}
+                >
+                  {t.loginRequired}
                 </p>
               </div>
             </div>
@@ -305,9 +534,12 @@ export default function HistoryPage() {
           <button
             onClick={() => router.push('/login')}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white hover:opacity-90"
-            style={{ backgroundColor: theme.colors.primary }}
+            style={{ 
+              backgroundColor: theme.colors.primary,
+              fontSize: getLocalizedFontSize('0.875rem')
+            }}
           >
-            Go to Login
+            {t.goToLogin}
           </button>
         </div>
       </ThemeWrapper>
@@ -329,8 +561,14 @@ export default function HistoryPage() {
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <h1 className="text-2xl font-bold" style={{ color: theme.colors.text }}>
-              Activity History
+            <h1 
+              className="text-2xl font-bold" 
+              style={{ 
+                color: theme.colors.text,
+                fontSize: getLocalizedFontSize('1.5rem')
+              }}
+            >
+              {t.pageTitle}
             </h1>
           </div>
         </div>
@@ -350,12 +588,21 @@ export default function HistoryPage() {
                 style={{ color: isDark ? '#F87171' : '#DC2626' }}
               />
               <div className="ml-3">
-                <p className="text-sm" style={{ color: isDark ? '#F87171' : '#B91C1C' }}>
+                <p 
+                  className="text-sm" 
+                  style={{ 
+                    color: isDark ? '#F87171' : '#B91C1C',
+                    fontSize: getLocalizedFontSize('0.875rem')
+                  }}
+                >
                   {error}
                 </p>
                 <button
                   className="mt-2 text-xs underline"
-                  style={{ color: isDark ? '#F87171' : '#DC2626' }}
+                  style={{ 
+                    color: isDark ? '#F87171' : '#DC2626',
+                    fontSize: getLocalizedFontSize('0.75rem')
+                  }}
                   onClick={fetchHistoryData}
                 >
                   Try again
@@ -376,7 +623,7 @@ export default function HistoryPage() {
                 />
                 <input
                   type="text"
-                  placeholder="Search history..."
+                  placeholder={t.searchPlaceholder}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 block w-full rounded-md shadow-sm sm:text-sm"
@@ -385,7 +632,8 @@ export default function HistoryPage() {
                     borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
                     color: theme.colors.text,
                     borderWidth: 1,
-                    padding: '0.5rem 0.75rem'
+                    padding: '0.5rem 0.75rem',
+                    fontSize: getLocalizedFontSize('0.875rem')
                   }}
                 />
               </div>
@@ -404,15 +652,16 @@ export default function HistoryPage() {
                     borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
                     color: theme.colors.text,
                     borderWidth: 1,
-                    padding: '0.5rem 0.75rem'
+                    padding: '0.5rem 0.75rem',
+                    fontSize: getLocalizedFontSize('0.875rem')
                   }}
                 >
-                  <option value="all">All Types</option>
-                  <option value="prediction">Predictions</option>
-                  <option value="document">Documents</option>
-                  <option value="login">Logins</option>
-                  <option value="profile_update">Profile Updates</option>
-                  <option value="message">Messages</option>
+                  <option value="all">{t.filterOptions.all}</option>
+                  <option value="prediction">{t.filterOptions.prediction}</option>
+                  <option value="document">{t.filterOptions.document}</option>
+                  <option value="login">{t.filterOptions.login}</option>
+                  <option value="profile_update">{t.filterOptions.profile_update}</option>
+                  <option value="message">{t.filterOptions.message}</option>
                 </select>
               </div>
             </div>
@@ -441,13 +690,20 @@ export default function HistoryPage() {
                     >
                       <thead>
                         <tr>
-                          {['Type', 'Title', 'Date', 'Status', 'Actions'].map((h, i) => (
+                          {[
+                            t.tableHeaders.type, 
+                            t.tableHeaders.title, 
+                            t.tableHeaders.date, 
+                            t.tableHeaders.status, 
+                            t.tableHeaders.actions
+                          ].map((h, i) => (
                             <th
                               key={i}
                               scope="col"
                               className={`px-6 py-3 ${i === 4 ? 'text-right' : 'text-left'} text-xs font-medium uppercase tracking-wider`}
                               style={{
-                                color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                                color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                                fontSize: getLocalizedFontSize('0.75rem')
                               }}
                             >
                               {h}
@@ -480,11 +736,24 @@ export default function HistoryPage() {
                                   >
                                     {getTypeIcon(item.type)}
                                   </div>
-                                  <span className="capitalize">{item.type?.replace('_', ' ')}</span>
+                                  <span 
+                                    className="capitalize"
+                                    style={{ fontSize: getLocalizedFontSize('0.875rem') }}
+                                  >
+                                    {t.filterOptions[item.type] || item.type?.replace('_', ' ')}
+                                  </span>
                                 </div>
                               </td>
-                              <td className="px-6 py-4 text-sm">{item.title}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              <td 
+                                className="px-6 py-4 text-sm"
+                                style={{ fontSize: getLocalizedFontSize('0.875rem') }}
+                              >
+                                {item.title}
+                              </td>
+                              <td 
+                                className="px-6 py-4 whitespace-nowrap text-sm"
+                                style={{ fontSize: getLocalizedFontSize('0.875rem') }}
+                              >
                                 {formatDate(item.created_at)}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -492,10 +761,11 @@ export default function HistoryPage() {
                                   className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
                                   style={{
                                     backgroundColor: statusColor.bg,
-                                    color: statusColor.text
+                                    color: statusColor.text,
+                                    fontSize: getLocalizedFontSize('0.75rem')
                                   }}
                                 >
-                                  {item.status?.charAt(0).toUpperCase() + item.status?.slice(1)}
+                                  {t.status[item.status] || item.status?.charAt(0).toUpperCase() + item.status?.slice(1)}
                                 </span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -505,9 +775,12 @@ export default function HistoryPage() {
                                     setShowDetails(true);
                                   }}
                                   className="hover:opacity-90"
-                                  style={{ color: theme.colors.primary }}
+                                  style={{ 
+                                    color: theme.colors.primary,
+                                    fontSize: getLocalizedFontSize('0.875rem')
+                                  }}
                                 >
-                                  View Details
+                                  {t.viewDetails}
                                 </button>
                               </td>
                             </tr>
@@ -525,16 +798,22 @@ export default function HistoryPage() {
                     >
                       <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                         <div>
-                          <p className="text-sm" style={{ color: theme.colors.text }}>
-                            Showing{' '}
+                          <p 
+                            className="text-sm" 
+                            style={{ 
+                              color: theme.colors.text,
+                              fontSize: getLocalizedFontSize('0.875rem')
+                            }}
+                          >
+                            {t.pagination.showing}{' '}
                             <span className="font-medium">
                               {(currentPage - 1) * itemsPerPage + 1}
                             </span>{' '}
-                            to{' '}
+                            {t.pagination.to}{' '}
                             <span className="font-medium">
                               {Math.min(currentPage * itemsPerPage, filteredHistory.length)}
                             </span>{' '}
-                            of <span className="font-medium">{filteredHistory.length}</span> results
+                            {t.pagination.of} <span className="font-medium">{filteredHistory.length}</span> {t.pagination.results}
                           </p>
                         </div>
                         <div>
@@ -572,7 +851,8 @@ export default function HistoryPage() {
                                   borderColor: isDark
                                     ? 'rgba(255,255,255,0.2)'
                                     : 'rgba(0,0,0,0.2)',
-                                  color: currentPage === idx + 1 ? '#fff' : theme.colors.text
+                                  color: currentPage === idx + 1 ? '#fff' : theme.colors.text,
+                                  fontSize: getLocalizedFontSize('0.875rem')
                                 }}
                               >
                                 {idx + 1}
@@ -608,18 +888,25 @@ export default function HistoryPage() {
                     className="mx-auto h-10 w-10 mb-4"
                     style={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}
                   />
-                  <p className="text-lg font-medium mb-2" style={{ color: theme.colors.text }}>
-                    No history found
+                  <p 
+                    className="text-lg font-medium mb-2" 
+                    style={{ 
+                      color: theme.colors.text,
+                      fontSize: getLocalizedFontSize('1.125rem')
+                    }}
+                  >
+                    {t.noHistory.title}
                   </p>
                   <p
                     className="text-sm mb-4"
                     style={{
-                      color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                      color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                      fontSize: getLocalizedFontSize('0.875rem')
                     }}
                   >
                     {searchTerm || filterType !== 'all'
-                      ? 'Try adjusting your search or filter'
-                      : 'Your activity history will appear here'}
+                      ? t.noHistory.filterMessage
+                      : t.noHistory.message}
                   </p>
 
                   {(searchTerm || filterType !== 'all') && (
@@ -632,11 +919,12 @@ export default function HistoryPage() {
                       style={{
                         backgroundColor: 'transparent',
                         borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-                        color: theme.colors.text
+                        color: theme.colors.text,
+                        fontSize: getLocalizedFontSize('0.875rem')
                       }}
                     >
                       <RefreshCw className="mr-2 h-4 w-4" />
-                      Clear filters
+                      {t.noHistory.clearFilters}
                     </button>
                   )}
                 </div>
@@ -669,7 +957,13 @@ export default function HistoryPage() {
                   >
                     <ArrowLeft className="h-5 w-5" />
                   </button>
-                  <h3 className="text-lg leading-6 font-medium" style={{ color: theme.colors.text }}>
+                  <h3 
+                    className="text-lg leading-6 font-medium" 
+                    style={{ 
+                      color: theme.colors.text,
+                      fontSize: getLocalizedFontSize('1.125rem')
+                    }}
+                  >
                     {selectedItem.title}
                   </h3>
                 </div>
@@ -679,10 +973,11 @@ export default function HistoryPage() {
                     className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
                     style={{
                       backgroundColor: getStatusColor(selectedItem.status).bg,
-                      color: getStatusColor(selectedItem.status).text
+                      color: getStatusColor(selectedItem.status).text,
+                      fontSize: getLocalizedFontSize('0.75rem')
                     }}
                   >
-                    {selectedItem.status?.charAt(0).toUpperCase() + selectedItem.status?.slice(1)}
+                    {t.status[selectedItem.status] || selectedItem.status?.charAt(0).toUpperCase() + selectedItem.status?.slice(1)}
                   </span>
                 </div>
               </div>
@@ -694,10 +989,11 @@ export default function HistoryPage() {
                       <h4
                         className="text-xs font-medium uppercase tracking-wider mb-2"
                         style={{
-                          color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                          color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                          fontSize: getLocalizedFontSize('0.75rem')
                         }}
                       >
-                        Details
+                        {t.details.title}
                       </h4>
                       <div className="space-y-3">
                         <div className="flex items-start">
@@ -706,13 +1002,20 @@ export default function HistoryPage() {
                             <p
                               className="text-xs font-medium"
                               style={{
-                                color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                                color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                                fontSize: getLocalizedFontSize('0.75rem')
                               }}
                             >
-                              Type
+                              {t.details.type}
                             </p>
-                            <p className="text-sm capitalize" style={{ color: theme.colors.text }}>
-                              {selectedItem.type?.replace('_', ' ')}
+                            <p 
+                              className="text-sm capitalize" 
+                              style={{ 
+                                color: theme.colors.text,
+                                fontSize: getLocalizedFontSize('0.875rem')
+                              }}
+                            >
+                              {t.filterOptions[selectedItem.type] || selectedItem.type?.replace('_', ' ')}
                             </p>
                           </div>
                         </div>
@@ -725,12 +1028,19 @@ export default function HistoryPage() {
                             <p
                               className="text-xs font-medium"
                               style={{
-                                color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                                color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                                fontSize: getLocalizedFontSize('0.75rem')
                               }}
                             >
-                              Date
+                              {t.details.date}
                             </p>
-                            <p className="text-sm" style={{ color: theme.colors.text }}>
+                            <p 
+                              className="text-sm" 
+                              style={{ 
+                                color: theme.colors.text,
+                                fontSize: getLocalizedFontSize('0.875rem')
+                              }}
+                            >
                               {formatDate(selectedItem.created_at)}
                             </p>
                           </div>
@@ -742,13 +1052,20 @@ export default function HistoryPage() {
                       <h4
                         className="text-xs font-medium uppercase tracking-wider mb-2"
                         style={{
-                          color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                          color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                          fontSize: getLocalizedFontSize('0.75rem')
                         }}
                       >
-                        Description
+                        {t.details.description}
                       </h4>
-                      <p className="text-sm" style={{ color: theme.colors.text }}>
-                        {selectedItem.description || 'No description available.'}
+                      <p 
+                        className="text-sm" 
+                        style={{ 
+                          color: theme.colors.text,
+                          fontSize: getLocalizedFontSize('0.875rem')
+                        }}
+                      >
+                        {selectedItem.description || t.details.noDescription}
                       </p>
                     </div>
                   </div>
@@ -762,10 +1079,11 @@ export default function HistoryPage() {
                     <h4
                       className="text-xs font-medium uppercase tracking-wider mb-4"
                       style={{
-                        color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                        color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                        fontSize: getLocalizedFontSize('0.75rem')
                       }}
                     >
-                      Additional Information
+                      {t.details.additionalInfo}
                     </h4>
 
                     {selectedItem.type === 'prediction' && (
@@ -774,13 +1092,20 @@ export default function HistoryPage() {
                           <p
                             className="text-xs font-medium mb-1"
                             style={{
-                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                              fontSize: getLocalizedFontSize('0.75rem')
                             }}
                           >
-                            Crop
+                            {t.details.prediction.crop}
                           </p>
-                          <p className="text-sm" style={{ color: theme.colors.text }}>
-                            {selectedItem.crop_name || 'Not specified'}
+                          <p 
+                            className="text-sm" 
+                            style={{ 
+                              color: theme.colors.text,
+                              fontSize: getLocalizedFontSize('0.875rem')
+                            }}
+                          >
+                            {selectedItem.crop_name || t.notSpecified}
                           </p>
                         </div>
 
@@ -788,12 +1113,19 @@ export default function HistoryPage() {
                           <p
                             className="text-xs font-medium mb-1"
                             style={{
-                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                              fontSize: getLocalizedFontSize('0.75rem')
                             }}
                           >
-                            District / AEZ / Season
+                            {t.details.prediction.district}
                           </p>
-                          <p className="text-sm" style={{ color: theme.colors.text }}>
+                          <p 
+                            className="text-sm" 
+                            style={{ 
+                              color: theme.colors.text,
+                              fontSize: getLocalizedFontSize('0.875rem')
+                            }}
+                          >
                             {[selectedItem.district, selectedItem.agro_ecological_zone, selectedItem.cultivate_season]
                               .filter(Boolean)
                               .join(' • ') || '—'}
@@ -804,12 +1136,19 @@ export default function HistoryPage() {
                           <p
                             className="text-xs font-medium mb-1"
                             style={{
-                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                              fontSize: getLocalizedFontSize('0.75rem')
                             }}
                           >
-                            Soil
+                            {t.details.prediction.soil}
                           </p>
-                          <p className="text-sm" style={{ color: theme.colors.text }}>
+                          <p 
+                            className="text-sm" 
+                            style={{ 
+                              color: theme.colors.text,
+                              fontSize: getLocalizedFontSize('0.875rem')
+                            }}
+                          >
                             {selectedItem.soil_type
                               ? `${selectedItem.soil_type} (pH ${selectedItem.soil_ph_level ?? '—'})`
                               : '—'}
@@ -820,12 +1159,19 @@ export default function HistoryPage() {
                           <p
                             className="text-xs font-medium mb-1"
                             style={{
-                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                              fontSize: getLocalizedFontSize('0.75rem')
                             }}
                           >
-                            N • P • K
+                            {t.details.prediction.nutrients}
                           </p>
-                          <p className="text-sm" style={{ color: theme.colors.text }}>
+                          <p 
+                            className="text-sm" 
+                            style={{ 
+                              color: theme.colors.text,
+                              fontSize: getLocalizedFontSize('0.875rem')
+                            }}
+                          >
                             {[
                               selectedItem.nitrogen != null ? `N ${selectedItem.nitrogen}` : null,
                               selectedItem.phosphate != null ? `P ${selectedItem.phosphate}` : null,
@@ -840,10 +1186,11 @@ export default function HistoryPage() {
                           <p
                             className="text-xs font-medium mb-1"
                             style={{
-                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                              fontSize: getLocalizedFontSize('0.75rem')
                             }}
                           >
-                            Suitability Score
+                            {t.details.prediction.suitabilityScore}
                           </p>
                           <div
                             className="w-full h-2 rounded-full overflow-hidden"
@@ -866,7 +1213,8 @@ export default function HistoryPage() {
                           <p
                             className="mt-1 text-right text-xs"
                             style={{
-                              color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'
+                              color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+                              fontSize: getLocalizedFontSize('0.75rem')
                             }}
                           >
                             {Math.round((selectedItem.suitability_score ?? 0.6) * 100)}%
@@ -881,12 +1229,19 @@ export default function HistoryPage() {
                           <p
                             className="text-xs font-medium mb-1"
                             style={{
-                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                              fontSize: getLocalizedFontSize('0.75rem')
                             }}
                           >
-                            Document Type
+                            {t.details.document.type}
                           </p>
-                          <p className="text-sm" style={{ color: theme.colors.text }}>
+                          <p 
+                            className="text-sm" 
+                            style={{ 
+                              color: theme.colors.text,
+                              fontSize: getLocalizedFontSize('0.875rem')
+                            }}
+                          >
                             {selectedItem.document_type || 'PDF'}
                           </p>
                         </div>
@@ -894,12 +1249,19 @@ export default function HistoryPage() {
                           <p
                             className="text-xs font-medium mb-1"
                             style={{
-                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                              fontSize: getLocalizedFontSize('0.75rem')
                             }}
                           >
-                            File Size
+                            {t.details.document.fileSize}
                           </p>
-                          <p className="text-sm" style={{ color: theme.colors.text }}>
+                          <p 
+                            className="text-sm" 
+                            style={{ 
+                              color: theme.colors.text,
+                              fontSize: getLocalizedFontSize('0.875rem')
+                            }}
+                          >
                             {selectedItem.file_size || '—'}
                           </p>
                         </div>
@@ -911,10 +1273,13 @@ export default function HistoryPage() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white"
-                              style={{ backgroundColor: theme.colors.primary }}
+                              style={{ 
+                                backgroundColor: theme.colors.primary,
+                                fontSize: getLocalizedFontSize('0.875rem')
+                              }}
                             >
                               <FileText className="mr-2 h-4 w-4" />
-                              View Document
+                              {t.details.document.viewDocument}
                             </a>
                           </div>
                         ) : null}
@@ -927,12 +1292,19 @@ export default function HistoryPage() {
                           <p
                             className="text-xs font-medium mb-1"
                             style={{
-                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                              fontSize: getLocalizedFontSize('0.75rem')
                             }}
                           >
-                            IP Address
+                            {t.details.login.ip}
                           </p>
-                          <p className="text-sm" style={{ color: theme.colors.text }}>
+                          <p 
+                            className="text-sm" 
+                            style={{ 
+                              color: theme.colors.text,
+                              fontSize: getLocalizedFontSize('0.875rem')
+                            }}
+                          >
                             {selectedItem.ip_address || '—'}
                           </p>
                         </div>
@@ -940,12 +1312,19 @@ export default function HistoryPage() {
                           <p
                             className="text-xs font-medium mb-1"
                             style={{
-                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                              fontSize: getLocalizedFontSize('0.75rem')
                             }}
                           >
-                            Browser
+                            {t.details.login.browser}
                           </p>
-                          <p className="text-sm" style={{ color: theme.colors.text }}>
+                          <p 
+                            className="text-sm" 
+                            style={{ 
+                              color: theme.colors.text,
+                              fontSize: getLocalizedFontSize('0.875rem')
+                            }}
+                          >
                             {selectedItem.browser || '—'}
                           </p>
                         </div>
@@ -953,12 +1332,19 @@ export default function HistoryPage() {
                           <p
                             className="text-xs font-medium mb-1"
                             style={{
-                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                              fontSize: getLocalizedFontSize('0.75rem')
                             }}
                           >
-                            Location
+                            {t.details.login.location}
                           </p>
-                          <p className="text-sm" style={{ color: theme.colors.text }}>
+                          <p 
+                            className="text-sm" 
+                            style={{ 
+                              color: theme.colors.text,
+                              fontSize: getLocalizedFontSize('0.875rem')
+                            }}
+                          >
                             {selectedItem.location || '—'}
                           </p>
                         </div>
@@ -972,10 +1358,11 @@ export default function HistoryPage() {
                         <p
                           className="text-sm"
                           style={{
-                            color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                            color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                            fontSize: getLocalizedFontSize('0.875rem')
                           }}
                         >
-                          No additional information available for this activity type.
+                          {t.details.noAdditionalInfo}
                         </p>
                       </div>
                     )}

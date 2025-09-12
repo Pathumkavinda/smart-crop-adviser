@@ -201,10 +201,9 @@ const FertilizerReportSection = ({
   
   const generatePDF = async () => {
     setGenerating(true);
-    
     try {
-      // Generate PDF with the selected language
-      const pdf = generateFertilizerPDF(
+      // Await the async generator and use returned helpers
+      const { save, doc, filename } = await generateFertilizerPDF(
         predictions.mlResult.predicted_crop,
         soilData,
         predictions,
@@ -212,9 +211,8 @@ const FertilizerReportSection = ({
         selectedLanguage,
         customNotes
       );
-      
-      // Save the PDF
-      pdf.save();
+      // Save via helper (or use: doc.save(filename))
+      save();
     } catch (error) {
       console.error('Error generating PDF:', error);
     } finally {

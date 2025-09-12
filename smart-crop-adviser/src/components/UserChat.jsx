@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import { Paperclip, Send, MessageSquare, Search, X, Users, AlertTriangle, Download } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext'; // Import language context
+import { Paperclip, Send, MessageSquare, Search, X, Users, AlertTriangle, Download, ChevronUp } from 'lucide-react';
 
 // ---------- ENV ----------
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -62,6 +63,153 @@ function triggerDownloadText(content, filename) {
 export default function UserChat({ onUnreadChange }) {
   const { user } = useAuth();
   const { theme } = useTheme();
+  const { language, translations } = useLanguage(); // Get language and translations
+
+  // Translations for UserChat component
+  const chatTranslations = {
+    en: {
+      tabs: {
+        conversations: 'Conversations',
+        agents: 'Agents',
+      },
+      search: {
+        searchConversations: 'Search conversations...',
+        searchAgents: 'Search agents...',
+      },
+      chat: {
+        selectConversation: 'Select a conversation',
+        pickAgent: 'Pick an agent to start chat',
+        noConversations: 'No conversations',
+        noAgents: 'No agents available',
+        noMessages: 'No messages yet',
+        typeMessage: 'Type your message…',
+        send: 'Send',
+        sending: 'Sending…',
+        attached: 'Attached:',
+        remove: 'remove',
+        chat: 'Chat',
+      },
+      status: {
+        read: 'Read',
+        delivered: 'Delivered',
+        sent: 'Sent',
+      },
+      export: {
+        exportAsTxt: 'TXT',
+        exportAsJson: 'JSON',
+      },
+      errors: {
+        notLoggedIn: 'You are not logged in.',
+        selectRecipient: 'Select a valid recipient to send a message.',
+        cannotSendToSelf: 'You cannot send messages to yourself.',
+        invalidRecipient: 'Invalid recipient ID for this conversation.',
+        invalidAgent: 'Invalid agent ID.',
+        fileTooLarge: 'File size must be less than 10MB',
+        downloadFailed: 'Download failed',
+        sendFailed: 'Failed to send message.',
+      },
+      scrollToTop: 'Scroll to top',
+    },
+    si: {
+      tabs: {
+        conversations: 'සංවාද',
+        agents: 'නියෝජිතයන්',
+      },
+      search: {
+        searchConversations: 'සංවාද සොයන්න...',
+        searchAgents: 'නියෝජිතයන් සොයන්න...',
+      },
+      chat: {
+        selectConversation: 'සංවාදයක් තෝරන්න',
+        pickAgent: 'කතාබහ ආරම්භ කිරීමට නියෝජිතයෙකු තෝරන්න',
+        noConversations: 'සංවාද නැත',
+        noAgents: 'නියෝජිතයන් නොමැත',
+        noMessages: 'තවම පණිවිඩ නැත',
+        typeMessage: 'ඔබේ පණිවිඩය ටයිප් කරන්න…',
+        send: 'යවන්න',
+        sending: 'යවමින්…',
+        attached: 'අමුණා ඇත:',
+        remove: 'ඉවත් කරන්න',
+        chat: 'කතාබහ',
+      },
+      status: {
+        read: 'කියවා ඇත',
+        delivered: 'ලැබී ඇත',
+        sent: 'යවා ඇත',
+      },
+      export: {
+        exportAsTxt: 'TXT',
+        exportAsJson: 'JSON',
+      },
+      errors: {
+        notLoggedIn: 'ඔබ පුරනය වී නැත.',
+        selectRecipient: 'පණිවිඩයක් යැවීමට වලංගු ලබන්නෙකු තෝරන්න.',
+        cannotSendToSelf: 'ඔබට ඔබටම පණිවිඩ යැවිය නොහැක.',
+        invalidRecipient: 'මෙම සංවාදය සඳහා වලංගු නොවන ලබන්නා ID එකක්.',
+        invalidAgent: 'වලංගු නොවන නියෝජිත ID එකක්.',
+        fileTooLarge: 'ගොනු ප්‍රමාණය 10MB ට වඩා අඩු විය යුතුය',
+        downloadFailed: 'බාගත කිරීම අසාර්ථක විය',
+        sendFailed: 'පණිවිඩය යැවීම අසාර්ථක විය.',
+      },
+      scrollToTop: 'ඉහළට ස්ක්‍රෝල් කරන්න',
+    },
+    ta: {
+      tabs: {
+        conversations: 'உரையாடல்கள்',
+        agents: 'முகவர்கள்',
+      },
+      search: {
+        searchConversations: 'உரையாடல்களைத் தேடுங்கள்...',
+        searchAgents: 'முகவர்களைத் தேடுங்கள்...',
+      },
+      chat: {
+        selectConversation: 'உரையாடலைத் தேர்ந்தெடுக்கவும்',
+        pickAgent: 'அரட்டையைத் தொடங்க ஒரு முகவரைத் தேர்ந்தெடுக்கவும்',
+        noConversations: 'உரையாடல்கள் இல்லை',
+        noAgents: 'முகவர்கள் இல்லை',
+        noMessages: 'இன்னும் செய்திகள் இல்லை',
+        typeMessage: 'உங்கள் செய்தியை தட்டச்சு செய்யவும்…',
+        send: 'அனுப்பு',
+        sending: 'அனுப்புகிறது…',
+        attached: 'இணைக்கப்பட்டது:',
+        remove: 'அகற்று',
+        chat: 'அரட்டை',
+      },
+      status: {
+        read: 'படித்தது',
+        delivered: 'வழங்கப்பட்டது',
+        sent: 'அனுப்பப்பட்டது',
+      },
+      export: {
+        exportAsTxt: 'TXT',
+        exportAsJson: 'JSON',
+      },
+      errors: {
+        notLoggedIn: 'நீங்கள் உள்நுழையவில்லை.',
+        selectRecipient: 'செய்தி அனுப்ப சரியான பெறுநரைத் தேர்ந்தெடுக்கவும்.',
+        cannotSendToSelf: 'உங்களுக்கு நீங்களே செய்திகளை அனுப்ப முடியாது.',
+        invalidRecipient: 'இந்த உரையாடலுக்கு தவறான பெறுநர் ஐடி.',
+        invalidAgent: 'தவறான முகவர் ஐடி.',
+        fileTooLarge: 'கோப்பு அளவு 10MB க்கும் குறைவாக இருக்க வேண்டும்',
+        downloadFailed: 'பதிவிறக்கம் தோல்வியடைந்தது',
+        sendFailed: 'செய்தி அனுப்புவது தோல்வியடைந்தது.',
+      },
+      scrollToTop: 'மேலே ஸ்க்ரோல் செய்யவும்',
+    }
+  };
+
+  // Get translations for current language or fallback to English
+  const t = chatTranslations[language] || chatTranslations.en;
+
+  // Font size adjustments for non-English languages
+  const getLocalizedFontSize = (defaultSize) => {
+    if (language === 'ta') {
+      return '0.7rem'; // Smaller size for Tamil
+    } else if (language === 'si') {
+      return '0.8rem'; // Slightly larger for Sinhala
+    }
+    return defaultSize; // Default for English
+  };
 
   const colors = useMemo(() => {
     const c = theme?.colors || {};
@@ -88,7 +236,11 @@ export default function UserChat({ onUnreadChange }) {
   const [search, setSearch] = useState('');
   const [agentSearch, setAgentSearch] = useState('');
   const [uiError, setUiError] = useState('');
-
+  
+  // New scroll state
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  
+  const messagesContainerRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   // user profile cache: { [id]: { id, username, email, country } }
@@ -104,7 +256,33 @@ export default function UserChat({ onUnreadChange }) {
     () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }),
     []
   );
+  
   useEffect(scrollToBottom, [messages, scrollToBottom]);
+  
+  // Detect scroll position for showing scroll-to-top button
+  useEffect(() => {
+    const messagesContainer = messagesContainerRef.current;
+    if (!messagesContainer) return;
+    
+    const handleScroll = () => {
+      if (messagesContainer.scrollTop < -100) { // Scrolled up enough to show button
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+    
+    messagesContainer.addEventListener('scroll', handleScroll);
+    return () => messagesContainer.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+  // Scroll to top function for the new button
+  const scrollToTop = () => {
+    messagesContainerRef.current?.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
   // -------- helpers: fetch one user & cache it --------
   const fetchUserProfile = useCallback(async (id) => {
@@ -288,7 +466,7 @@ export default function UserChat({ onUnreadChange }) {
   const onSelectConversation = async (c) => {
     const idNum = toInt(c?.id);
     if (!idNum) {
-      setUiError('Invalid recipient ID for this conversation.');
+      setUiError(t.errors.invalidRecipient);
       return;
     }
     // ensure profile available for header
@@ -307,7 +485,7 @@ export default function UserChat({ onUnreadChange }) {
   const startChatWithAgent = (agent) => {
     const idNum = toInt(agent?.id);
     if (!idNum) {
-      setUiError('Invalid agent ID.');
+      setUiError(t.errors.invalidAgent);
       return;
     }
     const convo = {
@@ -327,7 +505,7 @@ export default function UserChat({ onUnreadChange }) {
     const f = e.target.files?.[0];
     if (!f) return;
     if (f.size > 10 * 1024 * 1024) {
-      setUiError('File size must be less than 10MB');
+      setUiError(t.errors.fileTooLarge);
       return;
     }
     setFileUpload(f);
@@ -338,9 +516,9 @@ export default function UserChat({ onUnreadChange }) {
     const receiverId = toInt(selectedConversation?.id);
 
     // ---- STRICT RECEIVER VALIDATION ----
-    if (!myId) { setUiError('You are not logged in.'); return; }
-    if (!receiverId) { setUiError('Select a valid recipient to send a message.'); return; }
-    if (receiverId === myId) { setUiError('You cannot send messages to yourself.'); return; }
+    if (!myId) { setUiError(t.errors.notLoggedIn); return; }
+    if (!receiverId) { setUiError(t.errors.selectRecipient); return; }
+    if (receiverId === myId) { setUiError(t.errors.cannotSendToSelf); return; }
     if (!messageInput.trim() && !fileUpload) return;
 
     setUiError('');
@@ -394,11 +572,11 @@ export default function UserChat({ onUnreadChange }) {
       }
     } catch (e) {
       console.error('send error', e);
-      setUiError(e?.message || 'Failed to send message.');
+      setUiError(e?.message || t.errors.sendFailed);
     } finally {
       setSending(false);
     }
-  }, [fileUpload, messageInput, selectedConversation?.id, user?.id, tokenHeader, fetchInbox]);
+  }, [fileUpload, messageInput, selectedConversation?.id, user?.id, tokenHeader, fetchInbox, t]);
 
   // exports
   const exportTxt = () => {
@@ -463,9 +641,10 @@ export default function UserChat({ onUnreadChange }) {
               background: tab === 'convos' ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') : 'transparent',
               color: colors.text,
               border: `1px solid ${colors.border}`,
+              fontSize: getLocalizedFontSize('1rem')
             }}
           >
-            Conversations
+            {t.tabs.conversations}
           </button>
           <button
             className={`px-3 py-1 rounded ${tab === 'agents' ? 'font-medium' : ''}`}
@@ -474,9 +653,10 @@ export default function UserChat({ onUnreadChange }) {
               background: tab === 'agents' ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') : 'transparent',
               color: colors.text,
               border: `1px solid ${colors.border}`,
+              fontSize: getLocalizedFontSize('1rem')
             }}
           >
-            Agents
+            {t.tabs.agents}
           </button>
         </div>
 
@@ -485,10 +665,13 @@ export default function UserChat({ onUnreadChange }) {
           <Search className="h-4 w-4" />
           <input
             className="w-full bg-transparent outline-none text-sm"
-            placeholder={tab === 'agents' ? 'Search agents...' : 'Search conversations...'}
+            placeholder={tab === 'agents' ? t.search.searchAgents : t.search.searchConversations}
             value={tab === 'agents' ? agentSearch : search}
             onChange={(e) => (tab === 'agents' ? setAgentSearch(e.target.value) : setSearch(e.target.value))}
-            style={{ color: colors.text }}
+            style={{ 
+              color: colors.text,
+              fontSize: getLocalizedFontSize('0.875rem')
+            }}
           />
           {(tab === 'agents' ? agentSearch : search) && (
             <button onClick={() => (tab === 'agents' ? setAgentSearch('') : setSearch(''))}>
@@ -498,7 +681,11 @@ export default function UserChat({ onUnreadChange }) {
         </div>
 
         {/* Lists */}
-        <div className="space-y-2 max-h-[60vh] overflow-auto">
+        <div className="space-y-2 max-h-[60vh] overflow-auto custom-scrollbar"
+          style={{
+            scrollbarWidth: 'thin', // For Firefox
+            scrollbarColor: `${isDark ? 'rgba(255,255,255,0.3) rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.3) rgba(255,255,255,0.1)'}`, // For Firefox
+          }}>
           {tab === 'convos' &&
             (filteredConvos.length ? (
               filteredConvos.map((c) => (
@@ -517,13 +704,13 @@ export default function UserChat({ onUnreadChange }) {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="font-medium truncate">
+                      <div className="font-medium truncate" style={{ fontSize: getLocalizedFontSize('1rem') }}>
                         {c.name}
                       </div>
-                      <div className="text-xs opacity-70 truncate">
+                      <div className="text-xs opacity-70 truncate" style={{ fontSize: getLocalizedFontSize('0.75rem') }}>
                         {(c.country ? `${c.country} • ` : '')}{c.email || '—'}
                       </div>
-                      <div className="text-[11px] opacity-60 truncate">
+                      <div className="text-[11px] opacity-60 truncate" style={{ fontSize: getLocalizedFontSize('0.688rem') }}>
                         {c.lastMessage || '—'}
                       </div>
                     </div>
@@ -536,8 +723,11 @@ export default function UserChat({ onUnreadChange }) {
                 </button>
               ))
             ) : (
-              <div className="text-sm opacity-70" style={{ color: colors.text }}>
-                No conversations
+              <div className="text-sm opacity-70" style={{ 
+                color: colors.text,
+                fontSize: getLocalizedFontSize('0.875rem')
+              }}>
+                {t.chat.noConversations}
               </div>
             ))}
 
@@ -552,22 +742,33 @@ export default function UserChat({ onUnreadChange }) {
                   <div className="flex items-center gap-2 min-w-0">
                     <Users className="h-4 w-4" />
                     <div className="min-w-0">
-                      <div className="font-medium truncate">{a.name}</div>
-                      <div className="text-xs opacity-70 truncate">{a.email}</div>
+                      <div className="font-medium truncate" style={{ fontSize: getLocalizedFontSize('1rem') }}>
+                        {a.name}
+                      </div>
+                      <div className="text-xs opacity-70 truncate" style={{ fontSize: getLocalizedFontSize('0.75rem') }}>
+                        {a.email}
+                      </div>
                     </div>
                   </div>
                   <button
                     className="text-sm px-2 py-1 rounded-md"
                     onClick={() => startChatWithAgent(a)}
-                    style={{ backgroundColor: colors.primary, color: 'white' }}
+                    style={{ 
+                      backgroundColor: colors.primary,
+                      color: 'white',
+                      fontSize: getLocalizedFontSize('0.875rem')
+                    }}
                   >
-                    Chat
+                    {t.chat.chat}
                   </button>
                 </div>
               ))
             ) : (
-              <div className="text-sm opacity-70" style={{ color: colors.text }}>
-                No agents available
+              <div className="text-sm opacity-70" style={{ 
+                color: colors.text,
+                fontSize: getLocalizedFontSize('0.875rem')
+              }}>
+                {t.chat.noAgents}
               </div>
             ))}
         </div>
@@ -584,11 +785,11 @@ export default function UserChat({ onUnreadChange }) {
             <div className="min-w-0 flex items-center gap-2">
               <MessageSquare className="h-4 w-4 shrink-0" />
               <div className="min-w-0">
-                <div className="font-medium truncate">
-                  {selectedConversation ? (displayName(selectedConversation.id)) : (tab === 'agents' ? 'Pick an agent to start chat' : 'Select a conversation')}
+                <div className="font-medium truncate" style={{ fontSize: getLocalizedFontSize('1rem') }}>
+                  {selectedConversation ? (displayName(selectedConversation.id)) : (tab === 'agents' ? t.chat.pickAgent : t.chat.selectConversation)}
                 </div>
                 {selectedConversation && (
-                  <div className="text-xs opacity-70 truncate">
+                  <div className="text-xs opacity-70 truncate" style={{ fontSize: getLocalizedFontSize('0.75rem') }}>
                     {(selectedConversation.country ? `${selectedConversation.country} • ` : '')}
                     {selectedConversation.email || ''}
                   </div>
@@ -602,18 +803,26 @@ export default function UserChat({ onUnreadChange }) {
                 <button
                   className="text-xs px-2 py-1 rounded-md inline-flex items-center gap-1"
                   onClick={exportTxt}
-                  style={{ border: `1px solid ${colors.border}`, color: colors.text }}
+                  style={{ 
+                    border: `1px solid ${colors.border}`,
+                    color: colors.text,
+                    fontSize: getLocalizedFontSize('0.75rem')
+                  }}
                   title="Export thread as TXT"
                 >
-                  <Download className="h-3 w-3" /> TXT
+                  <Download className="h-3 w-3" /> {t.export.exportAsTxt}
                 </button>
                 <button
                   className="text-xs px-2 py-1 rounded-md inline-flex items-center gap-1"
                   onClick={exportJson}
-                  style={{ border: `1px solid ${colors.border}`, color: colors.text }}
+                  style={{ 
+                    border: `1px solid ${colors.border}`,
+                    color: colors.text,
+                    fontSize: getLocalizedFontSize('0.75rem')
+                  }}
                   title="Export thread as JSON"
                 >
-                  <Download className="h-3 w-3" /> JSON
+                  <Download className="h-3 w-3" /> {t.export.exportAsJson}
                 </button>
               </div>
             )}
@@ -622,14 +831,20 @@ export default function UserChat({ onUnreadChange }) {
 
         {/* Error banner */}
         {uiError && (
-          <div className="px-4 py-2 text-sm flex items-center gap-2" style={{ color: '#b91c1c' }}>
+          <div className="px-4 py-2 text-sm flex items-center gap-2" style={{ 
+            color: '#b91c1c',
+            fontSize: getLocalizedFontSize('0.875rem')
+          }}>
             <AlertTriangle className="h-4 w-4" />
             <span>{uiError}</span>
           </div>
         )}
 
         {/* Messages */}
-        <div className="flex-1 p-4 overflow-auto space-y-3">
+        <div 
+          ref={messagesContainerRef} 
+          className="flex-1 p-4 overflow-auto space-y-3 relative"
+        >
           {selectedConversation ? (
             messages.length > 0 ? (
               messages.map((m) => {
@@ -648,7 +863,11 @@ export default function UserChat({ onUnreadChange }) {
                         color: mine ? 'white' : colors.text,
                       }}
                     >
-                      {m.text && <div className="whitespace-pre-wrap text-sm">{m.text}</div>}
+                      {m.text && (
+                        <div className="whitespace-pre-wrap text-sm" style={{ fontSize: getLocalizedFontSize('0.875rem') }}>
+                          {m.text}
+                        </div>
+                      )}
 
                       {/* Attachments with download chip */}
                       {Array.isArray(m.files) &&
@@ -662,7 +881,11 @@ export default function UserChat({ onUnreadChange }) {
                                 target="_blank"
                                 rel="noreferrer"
                                 className="underline truncate"
-                                style={{ color: mine ? 'white' : colors.text, maxWidth: '200px' }}
+                                style={{ 
+                                  color: mine ? 'white' : colors.text,
+                                  maxWidth: '200px',
+                                  fontSize: getLocalizedFontSize('0.75rem')
+                                }}
                                 title={displayName}
                               >
                                 {displayName}
@@ -672,12 +895,13 @@ export default function UserChat({ onUnreadChange }) {
                                 style={{
                                   border: `1px solid ${mine ? 'rgba(255,255,255,0.5)' : colors.border}`,
                                   color: mine ? 'white' : colors.text,
+                                  fontSize: getLocalizedFontSize('0.75rem')
                                 }}
                                 onClick={async () => {
                                   try {
                                     await downloadFile(href, displayName);
                                   } catch (err) {
-                                    setUiError(err?.message || 'Download failed');
+                                    setUiError(err?.message || t.errors.downloadFailed);
                                   }
                                 }}
                                 title="Download"
@@ -689,24 +913,55 @@ export default function UserChat({ onUnreadChange }) {
                           );
                         })}
 
-                      <div className="text-[10px] opacity-60 mt-1">
-                        {m.read_at ? 'Read' : m.delivered_at ? 'Delivered' : 'Sent'}
+                      <div 
+                        className="text-[10px] opacity-60 mt-1"
+                        style={{ fontSize: getLocalizedFontSize('0.625rem') }}
+                      >
+                        {m.read_at ? t.status.read : m.delivered_at ? t.status.delivered : t.status.sent}
                       </div>
                     </div>
                   </div>
                 );
               })
             ) : (
-              <div className="text-sm opacity-70" style={{ color: colors.text }}>
-                No messages yet
+              <div 
+                className="text-sm opacity-70"
+                style={{ 
+                  color: colors.text,
+                  fontSize: getLocalizedFontSize('0.875rem')
+                }}
+              >
+                {t.chat.noMessages}
               </div>
             )
           ) : (
-            <div className="text-sm opacity-70" style={{ color: colors.text }}>
-              {tab === 'agents' ? 'Pick an agent to start chat' : 'Pick a conversation to start chatting'}
+            <div 
+              className="text-sm opacity-70"
+              style={{ 
+                color: colors.text,
+                fontSize: getLocalizedFontSize('0.875rem')
+              }}
+            >
+              {tab === 'agents' ? t.chat.pickAgent : t.chat.selectConversation}
             </div>
           )}
           <div ref={messagesEndRef} />
+          
+          {/* Scroll to top button */}
+          {showScrollTop && (
+            <button
+              onClick={scrollToTop}
+              className="fixed bottom-4 right-4 p-2 rounded-full shadow-md transition-opacity duration-300 z-10"
+              style={{
+                backgroundColor: colors.primary,
+                color: 'white',
+                opacity: 0.8,
+              }}
+              title={t.scrollToTop}
+            >
+              <ChevronUp className="h-5 w-5" />
+            </button>
+          )}
         </div>
 
         {/* Composer */}
@@ -723,10 +978,13 @@ export default function UserChat({ onUnreadChange }) {
 
             <input
               className="flex-1 bg-transparent outline-none text-sm"
-              placeholder="Type your message…"
+              placeholder={t.chat.typeMessage}
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
-              style={{ color: colors.text }}
+              style={{ 
+                color: colors.text,
+                fontSize: getLocalizedFontSize('0.875rem')
+              }}
               disabled={!selectedConversation}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -740,18 +998,27 @@ export default function UserChat({ onUnreadChange }) {
               onClick={sendMessage}
               disabled={sending || !selectedConversation}
               className="inline-flex items-center h-10 px-3 rounded-md text-white disabled:opacity-60"
-              style={{ backgroundColor: colors.primary }}
+              style={{ 
+                backgroundColor: colors.primary,
+                fontSize: getLocalizedFontSize('0.875rem')
+              }}
             >
               <Send className="h-4 w-4 mr-1" />
-              {sending ? 'Sending…' : 'Send'}
+              {sending ? t.chat.sending : t.chat.send}
             </button>
           </div>
 
           {fileUpload && (
-            <div className="mt-2 text-xs opacity-80 flex items-center gap-2" style={{ color: colors.text }}>
-              <span>Attached: {fileUpload.name}</span>
+            <div 
+              className="mt-2 text-xs opacity-80 flex items-center gap-2"
+              style={{ 
+                color: isDark ? 'rgba(255,255,255,0.7)' : colors.text,
+                fontSize: getLocalizedFontSize('0.75rem')
+              }}
+            >
+              <span>{t.chat.attached} {fileUpload.name}</span>
               <button className="underline" onClick={() => setFileUpload(null)}>
-                remove
+                {t.chat.remove}
               </button>
             </div>
           )}

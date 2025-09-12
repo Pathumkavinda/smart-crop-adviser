@@ -545,37 +545,39 @@ export default function Home() {
                 {trans.hero.subtitle}
               </p>
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                {user ? (
-  <Link
-    href={user.userlevel === 'admin' ? '/Admin' : 
-          user.userlevel === 'agent' ? '/dashboard' : 
-          user.userlevel === 'researcher' ? '/research/dashboard' :
-          '/profile/Dashboard'}
-    className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-700 bg-white hover:bg-green-50 transition-all duration-300"
-    style={getTextStyle()}
-  >
-    {trans.hero.dashboard}
-    <ArrowRight className="ml-2 h-5 w-5" />
-  </Link>
-) : (
-  <>
+               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+  {user ? (
     <Link
-      href="/adviser"
+      href={user.userlevel === 'admin' ? '/admin/dashboard' : 
+            user.userlevel === 'agent' ? '/dashboard' : 
+            user.userlevel === 'researcher' ? '/research/dashboard' :
+            '/profile/Dashboard'}
       className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-700 bg-white hover:bg-green-50 transition-all duration-300"
       style={getTextStyle()}
     >
-      {trans.hero.getStarted}
+      {trans.hero.dashboard}
       <ArrowRight className="ml-2 h-5 w-5" />
     </Link>
-    <Link
-      href="/info"
-      className="inline-flex items-center justify-center px-5 py-3 border border-white text-base font-medium rounded-md text-white hover:bg-green-800 hover:bg-opacity-30 transition-all duration-300"
-      style={getTextStyle()}
-    >
-      {trans.hero.learnMore}
-    </Link>
-  </>
-)}
+  ) : (
+    <>
+      <Link
+        href="/login"
+        className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-700 bg-white hover:bg-green-50 transition-all duration-300"
+        style={getTextStyle()}
+      >
+        {trans.hero.getStarted}
+        <ArrowRight className="ml-2 h-5 w-5" />
+      </Link>
+      <Link
+        href="/info"
+        className="inline-flex items-center justify-center px-5 py-3 border border-white text-base font-medium rounded-md text-white hover:bg-green-800 hover:bg-opacity-30 transition-all duration-300"
+        style={getTextStyle()}
+      >
+        {trans.hero.learnMore}
+      </Link>
+    </>
+  )}
+</div>
               </div>
             </div>
             <div className="mt-10 md:mt-0 md:w-1/2 flex justify-center">
@@ -985,37 +987,39 @@ export default function Home() {
             </h2>
           </div>
           <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
-            {user ? (
-  <Link
-    href={user.userlevel === 'admin' ? '/Admin' : 
-          user.userlevel === 'agent' ? '/dashboard' : 
-          user.userlevel === 'researcher' ? '/research/dashboard' :
-          '/profile/Dashboard'}
-    className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-700 bg-white hover:bg-green-50 transition-all duration-300"
-    style={getTextStyle()}
-  >
-    {trans.hero.dashboard}
-    <ArrowRight className="ml-2 h-5 w-5" />
-  </Link>
-) : (
-  <>
+         <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
+  {user ? (
     <Link
-      href="/adviser"
+      href={user.userlevel === 'admin' ? '/admin/dashboard' : 
+            user.userlevel === 'agent' ? '/dashboard' : 
+            user.userlevel === 'researcher' ? '/research/dashboard' :
+            '/profile/Dashboard'}
       className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-700 bg-white hover:bg-green-50 transition-all duration-300"
       style={getTextStyle()}
     >
-      {trans.hero.getStarted}
+      {trans.hero.dashboard}
       <ArrowRight className="ml-2 h-5 w-5" />
     </Link>
-    <Link
-      href="/info"
-      className="inline-flex items-center justify-center px-5 py-3 border border-white text-base font-medium rounded-md text-white hover:bg-green-800 hover:bg-opacity-30 transition-all duration-300"
-      style={getTextStyle()}
-    >
-      {trans.hero.learnMore}
-    </Link>
-  </>
-)}
+  ) : (
+    <>
+      <Link
+        href="/login"
+        className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-700 bg-white hover:bg-green-50 transition-all duration-300"
+        style={getTextStyle()}
+      >
+        {trans.cta.buttonStart}
+        <ArrowRight className="ml-2 h-5 w-5" />
+      </Link>
+      <Link
+        href="/login"
+        className="ml-3 inline-flex items-center justify-center px-5 py-3 border border-white text-base font-medium rounded-md text-white hover:bg-green-800 hover:bg-opacity-30 transition-all duration-300"
+        style={getTextStyle()}
+      >
+        {trans.cta.buttonLogin}
+      </Link>
+    </>
+  )}
+</div>
           </div>
         </div>
       </div>

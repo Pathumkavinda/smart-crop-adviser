@@ -553,6 +553,13 @@ export default function Fertilizer({
     if (isEditingId) updateFertilizer(); else addFertilizer();
   };
 
+  // Helper function to get dropdown styles - black text on white background
+  const getDropdownStyles = (hasError = false) => ({
+    backgroundColor: "white", // Always white background for better readability
+    borderColor: hasError ? "#f87171" : isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)",
+    color: "#333", // Always dark text for readability on white background
+  });
+
   // ---------- UI ----------
   if (loading && !isAddingNew && !isEditingId && fertilizers.length === 0) {
     return (
@@ -606,14 +613,32 @@ export default function Fertilizer({
                   {trans.labels.crop} {validationErrors.crop && <span className="text-red-500">*</span>}
                 </label>
                 {cultivations.length > 0 ? (
-                  <select name="crop" value={formData.crop.startsWith("id:") ? formData.crop : formData.crop} onChange={handleChange} className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "white", borderColor: validationErrors.crop ? "#f87171" : isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", color: isDark ? "#eee" : "#333" }}>
+                  <select 
+                    name="crop" 
+                    value={formData.crop.startsWith("id:") ? formData.crop : formData.crop} 
+                    onChange={handleChange} 
+                    className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none" 
+                    style={getDropdownStyles(validationErrors.crop)}
+                  >
                     <option value="">{trans.labels.selectCrop}</option>
                     {cultivations.map((c) => (
                       <option key={c.id} value={`id:${c.id}`}>{c.crop} {c.location ? `(${c.location})` : ""}</option>
                     ))}
                   </select>
                 ) : (
-                  <input type="text" name="crop" value={formData.crop} onChange={handleChange} className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "white", borderColor: validationErrors.crop ? "#f87171" : isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", color: isDark ? "#eee" : "#333" }} placeholder={trans.labels.cropPlaceholder} />
+                  <input 
+                    type="text" 
+                    name="crop" 
+                    value={formData.crop} 
+                    onChange={handleChange} 
+                    className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none" 
+                    style={{ 
+                      backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "white", 
+                      borderColor: validationErrors.crop ? "#f87171" : isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", 
+                      color: isDark ? "#eee" : "#333" 
+                    }} 
+                    placeholder={trans.labels.cropPlaceholder} 
+                  />
                 )}
                 {validationErrors.crop && <p className="mt-1 text-xs text-red-500" style={getTextStyle()}>{validationErrors.crop}</p>}
               </div>
@@ -623,7 +648,19 @@ export default function Fertilizer({
                 <label className="block text-sm font-medium mb-1" style={{ ...getTextStyle(), color: isDark ? "#ddd" : "#333" }}>
                   {trans.labels.fertilizerName} {validationErrors.fertilizer_name && <span className="text-red-500">*</span>}
                 </label>
-                <input type="text" name="fertilizer_name" value={formData.fertilizer_name} onChange={handleChange} className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "white", borderColor: validationErrors.fertilizer_name ? "#f87171" : isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", color: isDark ? "#eee" : "#333" }} placeholder={trans.labels.fertilizerNamePlaceholder} />
+                <input 
+                  type="text" 
+                  name="fertilizer_name" 
+                  value={formData.fertilizer_name} 
+                  onChange={handleChange} 
+                  className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none" 
+                  style={{ 
+                    backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "white", 
+                    borderColor: validationErrors.fertilizer_name ? "#f87171" : isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", 
+                    color: isDark ? "#eee" : "#333" 
+                  }} 
+                  placeholder={trans.labels.fertilizerNamePlaceholder} 
+                />
                 {validationErrors.fertilizer_name && <p className="mt-1 text-xs text-red-500" style={getTextStyle()}>{validationErrors.fertilizer_name}</p>}
               </div>
 
@@ -632,7 +669,13 @@ export default function Fertilizer({
                 <label className="block text-sm font-medium mb-1" style={{ ...getTextStyle(), color: isDark ? "#ddd" : "#333" }}>
                   {trans.labels.fertilizerType} {validationErrors.fertilizer_type && <span className="text-red-500">*</span>}
                 </label>
-                <select name="fertilizer_type" value={formData.fertilizer_type} onChange={handleChange} className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "white", borderColor: validationErrors.fertilizer_type ? "#f87171" : isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", color: isDark ? "#eee" : "#333" }}>
+                <select 
+                  name="fertilizer_type" 
+                  value={formData.fertilizer_type} 
+                  onChange={handleChange} 
+                  className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none" 
+                  style={getDropdownStyles(validationErrors.fertilizer_type)}
+                >
                   <option value="">{trans.labels.selectType}</option>
                   <option value="nitrogen">{trans.types.nitrogen}</option>
                   <option value="phosphorus">{trans.types.phosphorus}</option>
@@ -643,6 +686,7 @@ export default function Fertilizer({
                   <option value="foliar">{trans.types.foliar}</option>
                   <option value="other">{trans.types.other}</option>
                 </select>
+                {validationErrors.fertilizer_type && <p className="mt-1 text-xs text-red-500" style={getTextStyle()}>{validationErrors.fertilizer_type}</p>}
               </div>
 
               {/* Dates */}
@@ -652,13 +696,33 @@ export default function Fertilizer({
               {/* Quantity */}
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1" style={{ ...getTextStyle(), color: isDark ? "#ddd" : "#333" }}>{trans.labels.quantity}</label>
-                <input type="number" step="0.01" min="0" name="quantity" value={formData.quantity} onChange={handleChange} className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "white", borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", color: isDark ? "#eee" : "#333" }} placeholder={trans.labels.quantityPlaceholder} />
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  min="0" 
+                  name="quantity" 
+                  value={formData.quantity} 
+                  onChange={handleChange} 
+                  className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none" 
+                  style={{ 
+                    backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "white", 
+                    borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", 
+                    color: isDark ? "#eee" : "#333" 
+                  }} 
+                  placeholder={trans.labels.quantityPlaceholder} 
+                />
               </div>
 
               {/* Method */}
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1" style={{ ...getTextStyle(), color: isDark ? "#ddd" : "#333" }}>{trans.labels.applicationMethod}</label>
-                <select name="application_method" value={formData.application_method} onChange={handleChange} className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "white", borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", color: isDark ? "#eee" : "#333" }}>
+                <select 
+                  name="application_method" 
+                  value={formData.application_method} 
+                  onChange={handleChange} 
+                  className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none" 
+                  style={getDropdownStyles()}
+                >
                   <option value="">{trans.labels.selectMethod}</option>
                   <option value="broadcast">{trans.methods.broadcast}</option>
                   <option value="banded">{trans.methods.banded}</option>
@@ -674,27 +738,82 @@ export default function Fertilizer({
               {/* Location & land size */}
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1" style={{ ...getTextStyle(), color: isDark ? "#ddd" : "#333" }}>{trans.labels.location}</label>
-                <input type="text" name="location" value={formData.location} onChange={handleChange} className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "white", borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", color: isDark ? "#eee" : "#333" }} placeholder={trans.labels.locationPlaceholder} />
+                <input 
+                  type="text" 
+                  name="location" 
+                  value={formData.location} 
+                  onChange={handleChange} 
+                  className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none" 
+                  style={{ 
+                    backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "white", 
+                    borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", 
+                    color: isDark ? "#eee" : "#333" 
+                  }} 
+                  placeholder={trans.labels.locationPlaceholder} 
+                />
               </div>
 
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1" style={{ ...getTextStyle(), color: isDark ? "#ddd" : "#333" }}>{trans.labels.landSize}</label>
-                <input type="text" name="land_size" value={formData.land_size} onChange={handleChange} className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "white", borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", color: isDark ? "#eee" : "#333" }} placeholder={trans.labels.landSizePlaceholder} />
+                <input 
+                  type="text" 
+                  name="land_size" 
+                  value={formData.land_size} 
+                  onChange={handleChange} 
+                  className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none" 
+                  style={{ 
+                    backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "white", 
+                    borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", 
+                    color: isDark ? "#eee" : "#333" 
+                  }} 
+                  placeholder={trans.labels.landSizePlaceholder} 
+                />
               </div>
             </div>
 
             {/* Note */}
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1" style={{ ...getTextStyle(), color: isDark ? "#ddd" : "#333" }}>{trans.labels.notes}</label>
-              <textarea name="note" value={formData.note} onChange={handleChange} rows={3} className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "white", borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", color: isDark ? "#eee" : "#333" }} placeholder={trans.labels.notesPlaceholder} />
+              <textarea 
+                name="note" 
+                value={formData.note} 
+                onChange={handleChange} 
+                rows={3} 
+                className="px-4 py-2 w-full rounded-md border focus:ring-2 focus:outline-none" 
+                style={{ 
+                  backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "white", 
+                  borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", 
+                  color: isDark ? "#eee" : "#333" 
+                }} 
+                placeholder={trans.labels.notesPlaceholder} 
+              />
             </div>
 
             <div className="flex justify-end gap-2 mt-4">
-              <button type="button" onClick={handleCancel} className="px-4 py-2 rounded-md border" style={{ backgroundColor: "transparent", borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", color: isDark ? "#ddd" : "#333" }} disabled={loading}>
+              <button 
+                type="button" 
+                onClick={handleCancel} 
+                className="px-4 py-2 rounded-md border" 
+                style={{ 
+                  backgroundColor: "transparent", 
+                  borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", 
+                  color: isDark ? "#ddd" : "#333" 
+                }} 
+                disabled={loading}
+              >
                 <span style={getTextStyle()}>{trans.cancel}</span>
               </button>
-              <button type="submit" className="flex items-center px-4 py-2 rounded-md text-white" style={{ backgroundColor: theme.colors.primary, opacity: loading ? 0.7 : 1 }} disabled={loading}>
-                {loading ? (<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />) : (<Save className="h-4 w-4 mr-2" />)}
+              <button 
+                type="submit" 
+                className="flex items-center px-4 py-2 rounded-md text-white" 
+                style={{ backgroundColor: theme.colors.primary, opacity: loading ? 0.7 : 1 }} 
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
                 <span style={getTextStyle()}>{isEditingId ? trans.update : trans.save}</span>
               </button>
             </div>
