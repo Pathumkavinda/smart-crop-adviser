@@ -21,31 +21,54 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Detect package manager
+      - name: Detect package manager & project dir
         id: detect-package-manager
         run: |
-          set -e
-          # Prefer lockfiles (yarn, pnpm, npm). Fall back to package.json.
-          if [ -f "${GITHUB_WORKSPACE}/yarn.lock" ]; then
-            echo "manager=yarn" >> $GITHUB_OUTPUT
-            echo "install_cmd=yarn install" >> $GITHUB_OUTPUT
-            echo "build_cmd=yarn next build" >> $GITHUB_OUTPUT
-          elif [ -f "${GITHUB_WORKSPACE}/pnpm-lock.yaml" ]; then
-            echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "install_cmd=pnpm install" >> $GITHUB_OUTPUT
-            echo "build_cmd=pnpm exec next build" >> $GITHUB_OUTPUT
-          elif [ -f "${GITHUB_WORKSPACE}/package-lock.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "install_cmd=npm ci" >> $GITHUB_OUTPUT
-            echo "build_cmd=npx --no-install next build" >> $GITHUB_OUTPUT
-          elif [ -f "${GITHUB_WORKSPACE}/package.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "install_cmd=npm install" >> $GITHUB_OUTPUT
-            echo "build_cmd=npx --no-install next build" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          repo_root="${GITHUB_WORKSPACE:-.}"
+          echo "Debug: GITHUB_WORKSPACE=$repo_root" >&2
+          echo "Debug: Listing top-level files:" >&2
+          ls -la "$repo_root" >&2 || true
+
+          found_yarn=$(find "$repo_root" -type f -name 'yarn.lock' -print -quit || true)
+          found_pnpm=$(find "$repo_root" -type f -name 'pnpm-lock.yaml' -print -quit || true)
+          found_pkglock=$(find "$repo_root" -type f -name 'package-lock.json' -print -quit || true)
+          found_packagejson=$(find "$repo_root" -type f -name 'package.json' -print -quit || true)
+
+          emit() {
+            manager="$1"
+            project_dir="$2"
+            install_cmd="$3"
+            build_cmd="$4"
+            echo "Debug: selected manager=$manager, project_dir=$project_dir" >&2
+            echo "manager=$manager" >> $GITHUB_OUTPUT
+            echo "project_dir=$project_dir" >> $GITHUB_OUTPUT
+            # commands include cd so later steps just run them
+            echo "install_cmd=cd \"$project_dir\" && $install_cmd" >> $GITHUB_OUTPUT
+            echo "build_cmd=cd \"$project_dir\" && $build_cmd" >> $GITHUB_OUTPUT
+          }
+
+          if [ -n "$found_yarn" ]; then
+            proj_dir=$(dirname "$found_yarn")
+            # run yarn install, build, and try export (if configured)
+            emit "yarn" "$proj_dir" "yarn install --frozen-lockfile || yarn install" "yarn build && (yarn export || true)"
+          elif [ -n "$found_pnpm" ]; then
+            proj_dir=$(dirname "$found_pnpm")
+            emit "pnpm" "$proj_dir" "pnpm install" "pnpm exec next build && (pnpm exec next export || true)"
+          elif [ -n "$found_pkglock" ]; then
+            proj_dir=$(dirname "$found_pkglock")
+            emit "npm" "$proj_dir" "npm ci" "npm run build && (npm run export || true)"
+          elif [ -n "$found_packagejson" ]; then
+            proj_dir=$(dirname "$found_packagejson")
+            emit "npm" "$proj_dir" "npm install" "npm run build && (npm run export || true)"
           else
-            echo "Unable to determine package manager" >&2
+            echo "Unable to determine package manager: no yarn.lock, pnpm-lock.yaml, package-lock.json or package.json found in workspace." >&2
+            echo "Tip: if your Next.js project sits in a subfolder (example: frontend/), either move detection into that folder or add a path like frontend/package.json" >&2
+            echo "Repo tree (first 200 lines):" >&2
+            find "$repo_root" -maxdepth 3 -type f | sed -n '1,200p' >&2 || true
             exit 1
           fi
+        shell: bash
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -56,34 +79,56 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
+          # This helps configure Next.js for static export required by Pages.
+          # Remove if you manage next.config.js yourself.
           static_site_generator: next
 
-      - name: Restore cache
+      - name: Restore .next cache
         uses: actions/cache@v4
         with:
-          path: |
-            .next/cache
+          path: .next/cache
           key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml') }}-
 
       - name: Install dependencies
         run: ${{ steps.detect-package-manager.outputs.install_cmd }}
+        # show any build logs in the step output
+        timeout-minutes: 10
 
-      - name: Build with Next.js
-        run: ${{ steps.detect-package-manager.outputs.build_cmd }}
+      - name: Build with Next.js (and attempt export)
+        run: |
+          echo "Running build command: ${{ steps.detect-package-manager.outputs.build_cmd }}"
+          set -o pipefail
+          # run the build command emitted earlier
+          bash -c "${{ steps.detect-package-manager.outputs.build_cmd }}" | sed -u 's/^/[build] /'
+        timeout-minutes: 15
+
+      - name: Verify ./out exists (or show .next)
+        run: |
+          proj="${{ steps.detect-package-manager.outputs.project_dir }}"
+          echo "Project dir: $proj"
+          if [ -d "$proj/out" ]; then
+            echo "Static export produced at $proj/out"
+            ls -la "$proj/out"
+          else
+            echo "No ./out directory found. Showing .next contents:"
+            ls -la "$proj/.next" || true
+            echo "If your site is not a static export, configure your next.config.js or add an export script to generate ./out."
+          fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out
+          # upload ./out from project dir; upload-pages-artifact expects static files under 'path'
+          path: ${{ steps.detect-package-manager.outputs.project_dir }}/out
 
   deploy:
+    runs-on: ubuntu-latest
+    needs: build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
