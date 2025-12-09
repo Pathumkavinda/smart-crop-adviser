@@ -1,4 +1,4 @@
-name: Deploy Next.js (skip ESLint step) & Pages
+name: Deploy Next.js (CI ESLint disabled) to GitHub Pages
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node 20
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -34,6 +34,7 @@ jobs:
         run: |
           set -euo pipefail
           repo_root="${GITHUB_WORKSPACE:-.}"
+          echo "Repo root: $repo_root"
           # find package.json files excluding node_modules
           mapfile -t pkgs < <(find "$repo_root" -type d -name node_modules -prune -o -type f -name 'package.json' -print 2>/dev/null || true)
           if [ ${#pkgs[@]} -eq 0 ]; then
@@ -59,33 +60,34 @@ jobs:
           if [ -z "$rel_proj_dir" ] || [ "$rel_proj_dir" = "$repo_root" ]; then
             rel_proj_dir="."
           fi
-          echo "project_dir=$rel_proj_dir" >> $GITHUB_OUTPUT
+          echo "project_dir=$rel_proj_dir" >> "$GITHUB_OUTPUT"
 
-      - name: Disable ESLint step during build (runner-only patch to next.config.js)
+      - name: Disable ESLint during build (runner-only next.config.js)
         shell: bash
         run: |
           set -euo pipefail
           cd "${{ steps.detect.outputs.project_dir }}"
-
-          # If there's an existing next.config.js, back it up and create a new wrapper that merges and forces eslint.ignoreDuringBuilds = true
+          # backup if exists
           if [ -f next.config.js ]; then
-            echo "Backing up existing next.config.js -> next.config.js.bak"
-            cp next.config.js next.config.js.bak
-
+            cp next.config.js next.config.js.bak || true
             cat > next.config.js <<'JS'
 /**
  * Runner-only next.config.js wrapper created by CI to ignore ESLint during builds.
  * It merges the user's original config (next.config.js.bak) and forces eslint.ignoreDuringBuilds = true.
  */
-const userConfig = require('./next.config.js.bak') || {};
+const userConfig = (() => {
+  try {
+    return require('./next.config.js.bak') || {};
+  } catch (e) {
+    return {};
+  }
+})();
 const merged = Object.assign({}, userConfig, {
   eslint: Object.assign({}, (userConfig.eslint || {}), { ignoreDuringBuilds: true })
 });
 module.exports = merged;
 JS
-
           else
-            echo "No next.config.js found - creating one that disables ESLint during builds"
             cat > next.config.js <<'JS'
 /** Runner-only next.config.js to skip ESLint during builds */
 module.exports = {
@@ -95,8 +97,7 @@ module.exports = {
 };
 JS
           fi
-
-          echo "next.config.js (preview):"
+          echo "next.config.js written (runner-only)"
           sed -n '1,200p' next.config.js || true
 
       - name: Install dependencies (project)
@@ -127,18 +128,7 @@ JS
           fi
         timeout-minutes: 10
 
-      - name: Show artifacts (for troubleshooting)
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd "${{ steps.detect.outputs.project_dir }}"
-          if [ -d out ]; then
-            ls -la out || true
-          else
-            ls -la .next || true
-          fi
-
-      - name: Upload artifact for Pages (if out exists)
+      - name: Upload Pages artifact (if out exists)
         uses: actions/upload-pages-artifact@v3
         with:
           path: ${{ steps.detect.outputs.project_dir }}/out
@@ -148,7 +138,8 @@ JS
     needs: build-and-deploy
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      # page_url available after deploy step; left empty here
+      url: ''
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
