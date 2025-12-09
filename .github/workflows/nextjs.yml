@@ -27,8 +27,6 @@ jobs:
           set -euo pipefail
           repo_root="${GITHUB_WORKSPACE:-.}"
           echo "Debug: GITHUB_WORKSPACE=$repo_root" >&2
-          echo "Debug: Listing top-level files:" >&2
-          ls -la "$repo_root" >&2 || true
 
           found_yarn=$(find "$repo_root" -type f -name 'yarn.lock' -print -quit || true)
           found_pnpm=$(find "$repo_root" -type f -name 'pnpm-lock.yaml' -print -quit || true)
@@ -43,14 +41,12 @@ jobs:
             echo "Debug: selected manager=$manager, project_dir=$project_dir" >&2
             echo "manager=$manager" >> $GITHUB_OUTPUT
             echo "project_dir=$project_dir" >> $GITHUB_OUTPUT
-            # commands include cd so later steps just run them
             echo "install_cmd=cd \"$project_dir\" && $install_cmd" >> $GITHUB_OUTPUT
             echo "build_cmd=cd \"$project_dir\" && $build_cmd" >> $GITHUB_OUTPUT
           }
 
           if [ -n "$found_yarn" ]; then
             proj_dir=$(dirname "$found_yarn")
-            # run yarn install, build, and try export (if configured)
             emit "yarn" "$proj_dir" "yarn install --frozen-lockfile || yarn install" "yarn build && (yarn export || true)"
           elif [ -n "$found_pnpm" ]; then
             proj_dir=$(dirname "$found_pnpm")
@@ -63,64 +59,76 @@ jobs:
             emit "npm" "$proj_dir" "npm install" "npm run build && (npm run export || true)"
           else
             echo "Unable to determine package manager: no yarn.lock, pnpm-lock.yaml, package-lock.json or package.json found in workspace." >&2
-            echo "Tip: if your Next.js project sits in a subfolder (example: frontend/), either move detection into that folder or add a path like frontend/package.json" >&2
-            echo "Repo tree (first 200 lines):" >&2
             find "$repo_root" -maxdepth 3 -type f | sed -n '1,200p' >&2 || true
             exit 1
           fi
         shell: bash
 
-      - name: Setup Node
+      - name: Setup Node (no built-in cache)
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
+      # Cache yarn (only when detected)
+      - name: Cache Yarn cache
+        if: ${{ steps.detect-package-manager.outputs.manager == 'yarn' }}
+        uses: actions/cache@v4
         with:
-          # This helps configure Next.js for static export required by Pages.
-          # Remove if you manage next.config.js yourself.
-          static_site_generator: next
+          path: |
+            ~/.cache/yarn
+            # yarn v1 also uses ~/.config/yarn but caching ~/.cache/yarn is usually fine
+          key: ${{ runner.os }}-yarn-${{ hashFiles(format('{0}/yarn.lock', steps.detect-package-manager.outputs.project_dir)) }}
 
+      # Cache npm (~/.npm)
+      - name: Cache npm cache
+        if: ${{ steps.detect-package-manager.outputs.manager == 'npm' }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles(format('{0}/package-lock.json', steps.detect-package-manager.outputs.project_dir)) }}
+
+      # Cache pnpm store
+      - name: Cache pnpm store
+        if: ${{ steps.detect-package-manager.outputs.manager == 'pnpm' }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles(format('{0}/pnpm-lock.yaml', steps.detect-package-manager.outputs.project_dir)) }}
+
+      # Cache .next
       - name: Restore .next cache
         uses: actions/cache@v4
         with:
-          path: .next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+          path: ${{ steps.detect-package-manager.outputs.project_dir }}/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles(format('{0}/package-lock.json', steps.detect-package-manager.outputs.project_dir), format('{0}/yarn.lock', steps.detect-package-manager.outputs.project_dir), format('{0}/pnpm-lock.yaml', steps.detect-package-manager.outputs.project_dir)) }}-${{ hashFiles(format('{0}/**.[jt]s', steps.detect-package-manager.outputs.project_dir)) }}
           restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml') }}-
+            ${{ runner.os }}-nextjs-
 
       - name: Install dependencies
         run: ${{ steps.detect-package-manager.outputs.install_cmd }}
-        # show any build logs in the step output
         timeout-minutes: 10
 
       - name: Build with Next.js (and attempt export)
         run: |
           echo "Running build command: ${{ steps.detect-package-manager.outputs.build_cmd }}"
           set -o pipefail
-          # run the build command emitted earlier
           bash -c "${{ steps.detect-package-manager.outputs.build_cmd }}" | sed -u 's/^/[build] /'
         timeout-minutes: 15
 
       - name: Verify ./out exists (or show .next)
         run: |
           proj="${{ steps.detect-package-manager.outputs.project_dir }}"
-          echo "Project dir: $proj"
           if [ -d "$proj/out" ]; then
-            echo "Static export produced at $proj/out"
+            echo "Static export found at $proj/out"
             ls -la "$proj/out"
           else
-            echo "No ./out directory found. Showing .next contents:"
+            echo "No ./out found. Showing $proj/.next:"
             ls -la "$proj/.next" || true
-            echo "If your site is not a static export, configure your next.config.js or add an export script to generate ./out."
           fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # upload ./out from project dir; upload-pages-artifact expects static files under 'path'
           path: ${{ steps.detect-package-manager.outputs.project_dir }}/out
 
   deploy:
