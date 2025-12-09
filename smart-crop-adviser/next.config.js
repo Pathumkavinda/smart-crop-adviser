@@ -8,6 +8,9 @@ const nextConfig = {
   // Required for static export to GitHub Pages
   output: 'export',
   
+  // Skip trailing slashes for better GitHub Pages compatibility
+  trailingSlash: true,
+  
   // Optional: Set base path if your repo isn't at root (e.g., username.github.io/repo-name)
   // basePath: '/your-repo-name',
   
