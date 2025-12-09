@@ -1,4 +1,4 @@
-name: Fix home.module.css import (rename to global) & Deploy Next.js to GitHub Pages
+name: Fix CSS-module -> global CSS & Deploy Next.js to GitHub Pages
 
 on:
   push:
@@ -28,95 +28,124 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Prepare project (rename module css -> global css & patch layout)
+      - name: Detect Next.js project directory
+        id: detect
         shell: bash
         run: |
           set -euo pipefail
-
-          # Adjust this to your actual Next.js project folder if different
-          PROJECT_DIR="smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
-          echo "Project dir: $PROJECT_DIR"
-
-          if [ ! -d "$PROJECT_DIR" ]; then
-            echo "ERROR: project dir does not exist: $PROJECT_DIR"
-            ls -la
+          repo_root="${GITHUB_WORKSPACE:-.}"
+          echo "Repo root: $repo_root"
+          # find package.json files excluding node_modules
+          mapfile -t pkgs < <(find "$repo_root" -type d -name node_modules -prune -o -type f -name 'package.json' -print 2>/dev/null || true)
+          if [ ${#pkgs[@]} -eq 0 ]; then
+            echo "ERROR: no package.json found" >&2
             exit 1
           fi
-
-          cd "$PROJECT_DIR"
-
-          SRC_CSS="src/app/home.module.css"
-          DST_CSS="src/app/home.css"
-
-          if [ -f "$SRC_CSS" ]; then
-            echo "Renaming $SRC_CSS -> $DST_CSS (in runner only)"
-            mkdir -p "$(dirname "$DST_CSS")"
-            mv -f "$SRC_CSS" "$DST_CSS"
+          chosen=""
+          for p in "${pkgs[@]}"; do
+            if grep -q '"next"' "$p" || grep -q '"next":' "$p"; then
+              chosen="$p"
+              break
+            fi
+          done
+          if [ -z "$chosen" ]; then
+            chosen="${pkgs[0]}"
+            echo "No package.json with 'next' found; using first: $chosen" >&2
           else
-            echo "Note: $SRC_CSS not found; skipping rename"
+            echo "Selected Next.js package.json: $chosen" >&2
+          fi
+          proj_dir=$(dirname "$chosen")
+          # make proj_dir relative to repo root
+          rel_proj_dir="${proj_dir#$repo_root/}"
+          # if it's same as repo root, make it "."
+          if [ -z "$rel_proj_dir" ] || [ "$rel_proj_dir" = "$repo_root" ]; then
+            rel_proj_dir="."
+          fi
+          echo "project_dir=$rel_proj_dir" >> $GITHUB_OUTPUT
+
+      - name: Make runner-safe CSS change (rename module -> global) and patch layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          PROJECT_DIR="${{ steps.detect.outputs.project_dir }}"
+          echo "Project dir (relative): $PROJECT_DIR"
+          cd "$PROJECT_DIR"
+          # Path to problematic file
+          SRC="src/app/home.module.css"
+          DST="src/app/home.css"
+          if [ -f "$SRC" ]; then
+            echo "Renaming $SRC -> $DST (runner only)"
+            mv -f "$SRC" "$DST"
+          else
+            echo "No $SRC found; skipping rename"
           fi
 
           LAYOUT="src/app/layout.js"
           if [ -f "$LAYOUT" ]; then
-            echo "Patching layout import in $LAYOUT"
-            # Replace any import of home.module.css with global import home.css
-            # Handle different possible import syntaxes conservatively.
-            sed -i "s|import .*home.module.css.*;|import './home.css';|g" "$LAYOUT" || true
-
-            # If injector or other lines accidentally added earlier exist, remove them
-            sed -i "/InjectHomeCss/d" "$LAYOUT" || true
-
-            # Show preview
-            sed -n '1,200p' "$LAYOUT" || true
+            echo "Patching $LAYOUT imports to use './home.css' instead of module"
+            # Remove any import lines referencing home.module.css
+            sed -i "/home.module.css/d" "$LAYOUT" || true
+            # Ensure a global import for home.css exists
+            if ! grep -q "import './home.css'" "$LAYOUT"; then
+              # insert after other imports (conservative)
+              last_import_line=$(nl -ba "$LAYOUT" | grep -n "^ *import " | tail -n1 | awk -F: '{print $1}' || echo 0)
+              if [ "$last_import_line" -gt 0 ]; then
+                awk -v n="$last_import_line" 'NR==n{print; print "import \047./home.css\047;"; next} NR!=n{print}' "$LAYOUT" > "${LAYOUT}.tmp" && mv "${LAYOUT}.tmp" "$LAYOUT"
+              else
+                sed -i "1s;^;import './home.css';\n;" "$LAYOUT"
+              fi
+            fi
+            echo "Preview of patched layout (first 120 lines):"
+            sed -n '1,120p' "$LAYOUT" || true
           else
-            echo "Warning: layout file $LAYOUT not found; skipping patch"
+            echo "Layout not found at $LAYOUT; skipping patch"
           fi
 
       - name: Install dependencies (project)
         shell: bash
         run: |
-          PROJECT_DIR="smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
-          cd "$PROJECT_DIR"
+          set -euo pipefail
+          cd "${{ steps.detect.outputs.project_dir }}"
           npm ci
         timeout-minutes: 10
 
-      - name: Run Next.js build
+      - name: Build Next.js
         shell: bash
         run: |
-          PROJECT_DIR="smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
-          cd "$PROJECT_DIR"
+          set -euo pipefail
+          cd "${{ steps.detect.outputs.project_dir }}"
           npm run build
         timeout-minutes: 20
 
-      - name: Run export (if present)
+      - name: Export static site if available
         shell: bash
         run: |
-          PROJECT_DIR="smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
-          cd "$PROJECT_DIR"
+          set -euo pipefail
+          cd "${{ steps.detect.outputs.project_dir }}"
           if npm run | sed -n '1,200p' | grep -q " export"; then
             npm run export
           else
-            echo "No export script found — skipping export."
+            echo "No export script; skipping export"
           fi
         timeout-minutes: 10
 
-      - name: Verify artifacts
+      - name: Show artifacts
         shell: bash
         run: |
-          PROJECT_DIR="smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
-          cd "$PROJECT_DIR"
+          set -euo pipefail
+          cd "${{ steps.detect.outputs.project_dir }}"
           if [ -d out ]; then
             echo "out/ exists:"
-            ls -la out || true
+            ls -la out
           else
-            echo "No out/ directory. Showing .next:"
+            echo "No out/ - listing .next:"
             ls -la .next || true
           fi
 
-      - name: Upload artifact for Pages
+      - name: Upload Pages artifact (if exists)
         uses: actions/upload-pages-artifact@v3
         with:
-          path: smart-crop-adviser/smart-crop-adviser/smart-crop-adviser/out
+          path: ${{ steps.detect.outputs.project_dir }}/out
 
   deploy:
     runs-on: ubuntu-latest
