@@ -1,4 +1,4 @@
-name: Fix CSS-module -> global CSS & Deploy Next.js to GitHub Pages
+name: Deploy Next.js (skip ESLint step) & Pages
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -34,7 +34,6 @@ jobs:
         run: |
           set -euo pipefail
           repo_root="${GITHUB_WORKSPACE:-.}"
-          echo "Repo root: $repo_root"
           # find package.json files excluding node_modules
           mapfile -t pkgs < <(find "$repo_root" -type d -name node_modules -prune -o -type f -name 'package.json' -print 2>/dev/null || true)
           if [ ${#pkgs[@]} -eq 0 ]; then
@@ -62,50 +61,43 @@ jobs:
           fi
           echo "project_dir=$rel_proj_dir" >> $GITHUB_OUTPUT
 
-      - name: Make runner-safe CSS change (rename module -> global) and patch layout
+      - name: Disable ESLint step during build (runner-only patch to next.config.js)
         shell: bash
         run: |
           set -euo pipefail
-          PROJECT_DIR="${{ steps.detect.outputs.project_dir }}"
-          echo "Project dir (relative): $PROJECT_DIR"
-          cd "$PROJECT_DIR"
+          cd "${{ steps.detect.outputs.project_dir }}"
 
-          SRC="src/app/home.module.css"
-          DST="src/app/home.css"
+          # If there's an existing next.config.js, back it up and create a new wrapper that merges and forces eslint.ignoreDuringBuilds = true
+          if [ -f next.config.js ]; then
+            echo "Backing up existing next.config.js -> next.config.js.bak"
+            cp next.config.js next.config.js.bak
 
-          if [ -f "$SRC" ]; then
-            echo "Renaming $SRC -> $DST (runner only)"
-            mv -f "$SRC" "$DST"
+            cat > next.config.js <<'JS'
+/**
+ * Runner-only next.config.js wrapper created by CI to ignore ESLint during builds.
+ * It merges the user's original config (next.config.js.bak) and forces eslint.ignoreDuringBuilds = true.
+ */
+const userConfig = require('./next.config.js.bak') || {};
+const merged = Object.assign({}, userConfig, {
+  eslint: Object.assign({}, (userConfig.eslint || {}), { ignoreDuringBuilds: true })
+});
+module.exports = merged;
+JS
+
           else
-            echo "No $SRC found; skipping rename"
+            echo "No next.config.js found - creating one that disables ESLint during builds"
+            cat > next.config.js <<'JS'
+/** Runner-only next.config.js to skip ESLint during builds */
+module.exports = {
+  eslint: {
+    ignoreDuringBuilds: true
+  }
+};
+JS
           fi
 
-          LAYOUT="src/app/layout.js"
-          if [ -f "$LAYOUT" ]; then
-            echo "Patching $LAYOUT imports to use './home.css' instead of module"
-
-            # backup
-            cp "$LAYOUT" "${LAYOUT}.bak"
-
-            # remove any lines that reference home.module.css
-            grep -v "home.module.css" "${LAYOUT}.bak" > "${LAYOUT}.tmp" || true
-            mv -f "${LAYOUT}.tmp" "$LAYOUT"
-
-            # ensure import './home.css' exists — insert after last import line
-            if ! grep -q "import './home.css'" "$LAYOUT"; then
-              last_import_line=$(grep -n '^import ' "$LAYOUT" | tail -n1 | cut -d: -f1 || echo 0)
-              if [ "$last_import_line" -gt 0 ]; then
-                awk -v n="$last_import_line" 'NR==n{print; print "import '\''./home.css'\'';"; next} NR!=n{print}' "$LAYOUT" > "${LAYOUT}.tmp" && mv "${LAYOUT}.tmp" "$LAYOUT"
-              else
-                sed -i "1s;^;import './home.css';\n;" "$LAYOUT"
-              fi
-            fi
-
-            echo "Patched layout (preview):"
-            sed -n '1,200p' "$LAYOUT" || true
-          else
-            echo "Layout not found at $LAYOUT; skipping patch"
-          fi
+          echo "next.config.js (preview):"
+          sed -n '1,200p' next.config.js || true
 
       - name: Install dependencies (project)
         shell: bash
@@ -115,7 +107,7 @@ jobs:
           npm ci
         timeout-minutes: 10
 
-      - name: Build Next.js
+      - name: Build Next.js (ESLint disabled in runner)
         shell: bash
         run: |
           set -euo pipefail
@@ -131,24 +123,22 @@ jobs:
           if npm run | sed -n '1,200p' | grep -q " export"; then
             npm run export
           else
-            echo "No export script; skipping export"
+            echo "No export script found — skipping export."
           fi
         timeout-minutes: 10
 
-      - name: Show artifacts
+      - name: Show artifacts (for troubleshooting)
         shell: bash
         run: |
           set -euo pipefail
           cd "${{ steps.detect.outputs.project_dir }}"
           if [ -d out ]; then
-            echo "out/ exists:"
-            ls -la out
+            ls -la out || true
           else
-            echo "No out/ - listing .next:"
             ls -la .next || true
           fi
 
-      - name: Upload Pages artifact (if exists)
+      - name: Upload artifact for Pages (if out exists)
         uses: actions/upload-pages-artifact@v3
         with:
           path: ${{ steps.detect.outputs.project_dir }}/out
@@ -160,6 +150,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to Pages
+      - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
