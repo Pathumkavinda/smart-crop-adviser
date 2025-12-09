@@ -1008,9 +1008,9 @@ export default function Register() {
                     >
                       <option value="" disabled>{trans.form.userLevel.placeholder}</option>
                       <option value="farmer">{trans.form.userLevel.options.farmer}</option>
-                      <option value="agent">{trans.form.userLevel.options.agent}</option>
+                      {/* <option value="agent">{trans.form.userLevel.options.agent}</option>
                       <option value="researcher">{trans.form.userLevel.options.researcher}</option>
-                      <option value="admin">{trans.form.userLevel.options.admin}</option>
+                      <option value="admin">{trans.form.userLevel.options.admin}</option> */}
                     </select>
                   </div>
                   {validationErrors.userLevel && (
