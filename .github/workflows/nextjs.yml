@@ -1,4 +1,4 @@
-name: Fix CSS-module & Deploy Next.js to GitHub Pages
+name: Deploy Next.js site to Pages
 
 on:
   push:
@@ -15,172 +15,143 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Setup Node.js 20
+      - name: Detect Next.js project & package manager
+        id: detect
+        run: |
+          set -euo pipefail
+          repo_root="${GITHUB_WORKSPACE:-.}"
+          echo "Debug: GITHUB_WORKSPACE=$repo_root" >&2
+
+          # Find candidate package.json files (exclude node_modules)
+          mapfile -t pkg_files < <(find "$repo_root" -type d -name node_modules -prune -o -type f -name 'package.json' -print 2>/dev/null || true)
+
+          if [ ${#pkg_files[@]} -eq 0 ]; then
+            echo "No package.json found in repository (excluding node_modules)." >&2
+            exit 1
+          fi
+
+          chosen=""
+          # Prefer package.json that depends on 'next'
+          for pkg in "${pkg_files[@]}"; do
+            if grep -q '"next"' "$pkg" || grep -q '"next":' "$pkg"; then
+              chosen="$pkg"
+              break
+            fi
+          done
+
+          # fall back to the first package.json if none contained next
+          if [ -z "$chosen" ]; then
+            chosen="${pkg_files[0]}"
+            echo "No package.json with 'next' found; using first package.json: $chosen" >&2
+          else
+            echo "Selected package.json with 'next': $chosen" >&2
+          fi
+
+          project_dir=$(dirname "$chosen")
+          # detect lockfile in that project dir
+          if [ -f "$project_dir/yarn.lock" ]; then
+            manager="yarn"
+            install_cmd="yarn install --frozen-lockfile || yarn install"
+            build_cmd="yarn build"
+          elif [ -f "$project_dir/pnpm-lock.yaml" ]; then
+            manager="pnpm"
+            install_cmd="pnpm install"
+            build_cmd="pnpm exec next build"
+          elif [ -f "$project_dir/package-lock.json" ]; then
+            manager="npm"
+            install_cmd="npm ci"
+            build_cmd="npm run build"
+          else
+            # default to npm if no lockfile present
+            manager="npm"
+            install_cmd="npm install"
+            build_cmd="npm run build"
+          fi
+
+          echo "manager=$manager" >> $GITHUB_OUTPUT
+          echo "project_dir=$project_dir" >> $GITHUB_OUTPUT
+          # commands include cd into project dir for convenience
+          echo "install_cmd=cd \"$project_dir\" && $install_cmd" >> $GITHUB_OUTPUT
+          # run build, then attempt export if user has an 'export' script (don't fail on export)
+          echo "build_cmd=cd \"$project_dir\" && $build_cmd && (npm run export || yarn export || pnpm exec next export || true)" >> $GITHUB_OUTPUT
+
+      - name: Setup Node (no built-in cache)
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Prepare project (install raw-loader, add next.config, add injector, patch layout)
-        shell: bash
+      - name: Cache package manager files
+        uses: actions/cache@v4
+        with:
+          # key uses the lockfile if present under the detected project dir
+          path: |
+            ~/.npm
+            ~/.cache/yarn
+            ~/.pnpm-store
+          key: ${{ runner.os }}-pkgcache-${{ steps.detect.outputs.manager }}-${{ hashFiles(format('{0}/**/package-lock.json', steps.detect.outputs.project_dir), format('{0}/**/yarn.lock', steps.detect.outputs.project_dir), format('{0}/**/pnpm-lock.yaml', steps.detect.outputs.project_dir)) }}
+          restore-keys: |
+            ${{ runner.os }}-pkgcache-${{ steps.detect.outputs.manager }}-
+
+      - name: Cache .next
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.detect.outputs.project_dir }}/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles(format('{0}/**/package-lock.json', steps.detect.outputs.project_dir), format('{0}/**/yarn.lock', steps.detect.outputs.project_dir), format('{0}/**/pnpm-lock.yaml', steps.detect.outputs.project_dir)) }}-${{ hashFiles(format('{0}/**/*.[jt]s', steps.detect.outputs.project_dir)) }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-
+
+      - name: Show selected project
         run: |
-          set -euo pipefail
+          echo "Detected manager: ${{ steps.detect.outputs.manager }}"
+          echo "Detected project dir: ${{ steps.detect.outputs.project_dir }}"
+          echo "Project package.json:"
+          sed -n '1,200p' "${{ steps.detect.outputs.project_dir }}/package.json" || true
 
-          # Adjust this to your actual Next.js project folder if different
-          PROJECT_DIR="smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
-          echo "Project dir: $PROJECT_DIR"
-
-          if [ ! -d "$PROJECT_DIR" ]; then
-            echo "ERROR: project dir does not exist: $PROJECT_DIR"
-            echo "Repo top-level files:"
-            ls -la
-            exit 1
-          fi
-
-          cd "$PROJECT_DIR"
-
-          echo "Installing raw-loader as a dev dependency for the runner..."
-          # install dev dependency locally in the runner
-          npm install --no-audit --no-fund --save-dev raw-loader
-
-          echo "Writing next.config.js to treat home.module.css as raw text..."
-          cat > next.config.js <<'JS'
-module.exports = {
-  webpack: (config) => {
-    config.module.rules.push({
-      test: /[\\/]src[\\/]app[\\/]home\.module\.css$/,
-      use: [
-        {
-          loader: require.resolve('raw-loader'),
-        },
-      ],
-    });
-    return config;
-  },
-};
-JS
-
-          echo "Creating injector component at src/components/InjectHomeCss.jsx..."
-          mkdir -p src/components
-
-          cat > src/components/InjectHomeCss.jsx <<'JSX'
-'use client';
-
-import { useEffect } from 'react';
-import cssText from '../app/home.module.css';
-
-export default function InjectHomeCss() {
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    const ID = 'injected-home-module-css';
-    if (document.getElementById(ID)) return;
-
-    const style = document.createElement('style');
-    style.id = ID;
-    style.type = 'text/css';
-    style.appendChild(document.createTextNode(cssText));
-    document.head.appendChild(style);
-  }, []);
-
-  return null;
-}
-JSX
-
-          LAYOUT_FILE="src/app/layout.js"
-          if [ -f "$LAYOUT_FILE" ]; then
-            echo "Patching layout file: $LAYOUT_FILE"
-
-            # Remove any direct import of home.module.css
-            # and add the injector import if missing.
-            # This is conservative and will not overwrite unrelated lines.
-            cp "$LAYOUT_FILE" "${LAYOUT_FILE}.bak"
-
-            # Remove any lines importing home.module.css
-            sed -i "/home.module.css/d" "$LAYOUT_FILE" || true
-
-            # Add injector import if not present
-            if ! grep -q "InjectHomeCss" "$LAYOUT_FILE"; then
-              # find the last import line number to insert after imports
-              last_import_line=$(nl -ba "$LAYOUT_FILE" | grep -n "^ *import " | tail -n1 | awk -F: '{print $1}' || echo 0)
-              if [ "$last_import_line" -gt 0 ]; then
-                awk -v n="$last_import_line" 'NR==n{print; print "import InjectHomeCss from \'../components/InjectHomeCss\';"; next} NR!=n{print}' "$LAYOUT_FILE" > "${LAYOUT_FILE}.tmp" && mv "${LAYOUT_FILE}.tmp" "$LAYOUT_FILE"
-              else
-                # no imports found, add at top
-                sed -i "1s;^;import InjectHomeCss from '../components/InjectHomeCss';\n;" "$LAYOUT_FILE"
-              fi
-            fi
-
-            # Insert <InjectHomeCss /> immediately after opening <body ...> tag if not present
-            if ! grep -q "<InjectHomeCss" "$LAYOUT_FILE"; then
-              sed -i "s|<body\\(.*\\)>|<body\\1>\\n        <InjectHomeCss />|g" "$LAYOUT_FILE"
-            fi
-
-            echo "Patched layout (preview):"
-            sed -n '1,160p' "$LAYOUT_FILE" || true
-          else
-            echo "Warning: layout file not found at $LAYOUT_FILE; skipping patch"
-          fi
-
-      - name: Install dependencies (project)
-        shell: bash
-        run: |
-          PROJECT_DIR="smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
-          cd "$PROJECT_DIR"
-          npm ci
+      - name: Install dependencies
+        run: ${{ steps.detect.outputs.install_cmd }}
         timeout-minutes: 10
 
-      - name: Run Next.js build
-        shell: bash
+      - name: Build (and attempt export)
         run: |
-          PROJECT_DIR="smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
-          cd "$PROJECT_DIR"
-          npm run build
+          echo "Running: ${{ steps.detect.outputs.build_cmd }}"
+          set -o pipefail
+          bash -c "${{ steps.detect.outputs.build_cmd }}" | sed -u 's/^/[build] /'
         timeout-minutes: 20
 
-      - name: Run export (if present)
-        shell: bash
+      - name: Verify out/ or show .next
         run: |
-          PROJECT_DIR="smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
-          cd "$PROJECT_DIR"
-          if npm run | sed -n '1,200p' | grep -q " export"; then
-            npm run export
+          proj="${{ steps.detect.outputs.project_dir }}"
+          if [ -d "$proj/out" ]; then
+            echo "Static export produced at $proj/out"
+            ls -la "$proj/out"
           else
-            echo "No export script found — skipping export."
-          fi
-        timeout-minutes: 10
-
-      - name: Verify artifacts
-        shell: bash
-        run: |
-          PROJECT_DIR="smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
-          cd "$PROJECT_DIR"
-          if [ -d out ]; then
-            echo "out/ exists:"
-            ls -la out || true
-          else
-            echo "No out/ directory. Showing .next:"
-            ls -la .next || true
+            echo "No static ./out found. Listing $proj/.next (if present):"
+            ls -la "$proj/.next" || true
+            echo ""
+            echo "If you want GitHub Pages to serve this site, ensure you create an 'export' script or produce static files into ./out."
+            echo "Example package.json scripts for static export:"
+            echo '  \"build\": \"next build\"'
+            echo '  \"export\": \"next export\"'
           fi
 
       - name: Upload artifact for Pages
         uses: actions/upload-pages-artifact@v3
         with:
-          path: smart-crop-adviser/smart-crop-adviser/smart-crop-adviser/out
+          path: ${{ steps.detect.outputs.project_dir }}/out
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build-and-deploy
+    needs: build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to Pages
+      - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
