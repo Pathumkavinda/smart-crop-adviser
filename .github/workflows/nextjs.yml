@@ -57,7 +57,6 @@ jobs:
           proj_dir=$(dirname "$chosen")
           # make proj_dir relative to repo root
           rel_proj_dir="${proj_dir#$repo_root/}"
-          # if it's same as repo root, make it "."
           if [ -z "$rel_proj_dir" ] || [ "$rel_proj_dir" = "$repo_root" ]; then
             rel_proj_dir="."
           fi
@@ -70,9 +69,10 @@ jobs:
           PROJECT_DIR="${{ steps.detect.outputs.project_dir }}"
           echo "Project dir (relative): $PROJECT_DIR"
           cd "$PROJECT_DIR"
-          # Path to problematic file
+
           SRC="src/app/home.module.css"
           DST="src/app/home.css"
+
           if [ -f "$SRC" ]; then
             echo "Renaming $SRC -> $DST (runner only)"
             mv -f "$SRC" "$DST"
@@ -83,20 +83,26 @@ jobs:
           LAYOUT="src/app/layout.js"
           if [ -f "$LAYOUT" ]; then
             echo "Patching $LAYOUT imports to use './home.css' instead of module"
-            # Remove any import lines referencing home.module.css
-            sed -i "/home.module.css/d" "$LAYOUT" || true
-            # Ensure a global import for home.css exists
+
+            # backup
+            cp "$LAYOUT" "${LAYOUT}.bak"
+
+            # remove any lines that reference home.module.css
+            grep -v "home.module.css" "${LAYOUT}.bak" > "${LAYOUT}.tmp" || true
+            mv -f "${LAYOUT}.tmp" "$LAYOUT"
+
+            # ensure import './home.css' exists — insert after last import line
             if ! grep -q "import './home.css'" "$LAYOUT"; then
-              # insert after other imports (conservative)
-              last_import_line=$(nl -ba "$LAYOUT" | grep -n "^ *import " | tail -n1 | awk -F: '{print $1}' || echo 0)
+              last_import_line=$(grep -n '^import ' "$LAYOUT" | tail -n1 | cut -d: -f1 || echo 0)
               if [ "$last_import_line" -gt 0 ]; then
-                awk -v n="$last_import_line" 'NR==n{print; print "import \047./home.css\047;"; next} NR!=n{print}' "$LAYOUT" > "${LAYOUT}.tmp" && mv "${LAYOUT}.tmp" "$LAYOUT"
+                awk -v n="$last_import_line" 'NR==n{print; print "import '\''./home.css'\'';"; next} NR!=n{print}' "$LAYOUT" > "${LAYOUT}.tmp" && mv "${LAYOUT}.tmp" "$LAYOUT"
               else
                 sed -i "1s;^;import './home.css';\n;" "$LAYOUT"
               fi
             fi
-            echo "Preview of patched layout (first 120 lines):"
-            sed -n '1,120p' "$LAYOUT" || true
+
+            echo "Patched layout (preview):"
+            sed -n '1,200p' "$LAYOUT" || true
           else
             echo "Layout not found at $LAYOUT; skipping patch"
           fi
