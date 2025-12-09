@@ -17,7 +17,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,14 +27,19 @@ jobs:
           set -euo pipefail
           repo_root="${GITHUB_WORKSPACE:-.}"
           echo "Debug: GITHUB_WORKSPACE=$repo_root" >&2
-          echo "Debug: Top-level files:" >&2
-          ls -la "$repo_root" >&2 || true
 
-          # Find lockfiles / package.json, but IGNORE node_modules
-          found_yarn=$(find "$repo_root" -type d -name node_modules -prune -o -type f -name 'yarn.lock' -print -quit || true)
-          found_pnpm=$(find "$repo_root" -type d -name node_modules -prune -o -type f -name 'pnpm-lock.yaml' -print -quit || true)
-          found_pkglock=$(find "$repo_root" -type d -name node_modules -prune -o -type f -name 'package-lock.json' -print -quit || true)
-          found_packagejson=$(find "$repo_root" -type d -name node_modules -prune -o -type f -name 'package.json' -print -quit || true)
+          # helper: find first file, ignoring node_modules
+          find_first() {
+            local pattern="$1"
+            find "$repo_root" \
+              -path '*/node_modules/*' -prune -o \
+              -type f -name "$pattern" -print -quit
+          }
+
+          found_yarn=$(find_first 'yarn.lock' || true)
+          found_pnpm=$(find_first 'pnpm-lock.yaml' || true)
+          found_pkglock=$(find_first 'package-lock.json' || true)
+          found_packagejson=$(find_first 'package.json' || true)
 
           emit() {
             manager="$1"
@@ -43,110 +47,60 @@ jobs:
             install_cmd="$3"
             build_cmd="$4"
             echo "Debug: selected manager=$manager, project_dir=$project_dir" >&2
-            echo "manager=$manager" >> $GITHUB_OUTPUT
-            echo "project_dir=$project_dir" >> $GITHUB_OUTPUT
-            echo "install_cmd=cd \"$project_dir\" && $install_cmd" >> $GITHUB_OUTPUT
-            echo "build_cmd=cd \"$project_dir\" && $build_cmd" >> $GITHUB_OUTPUT
+            echo "manager=$manager" >> "$GITHUB_OUTPUT"
+            echo "project_dir=$project_dir" >> "$GITHUB_OUTPUT"
+            # store full shell commands (cd into project then run)
+            echo "install_cmd=cd \"$project_dir\" && $install_cmd" >> "$GITHUB_OUTPUT"
+            echo "build_cmd=cd \"$project_dir\" && $build_cmd" >> "$GITHUB_OUTPUT"
           }
 
           if [ -n "$found_yarn" ]; then
             proj_dir=$(dirname "$found_yarn")
-            emit "yarn" "$proj_dir" \
-              "yarn install --frozen-lockfile || yarn install" \
-              "yarn build && (yarn export || true)"
+            emit "yarn" "$proj_dir" "yarn install" "yarn build"
           elif [ -n "$found_pnpm" ]; then
             proj_dir=$(dirname "$found_pnpm")
-            emit "pnpm" "$proj_dir" \
-              "pnpm install" \
-              "pnpm exec next build && (pnpm exec next export || true)"
+            emit "pnpm" "$proj_dir" "pnpm install" "pnpm run build"
           elif [ -n "$found_pkglock" ]; then
             proj_dir=$(dirname "$found_pkglock")
-            emit "npm" "$proj_dir" \
-              "npm ci" \
-              "npm run build && (npm run export || true)"
+            emit "npm" "$proj_dir" "npm ci" "npm run build"
           elif [ -n "$found_packagejson" ]; then
             proj_dir=$(dirname "$found_packagejson")
-            emit "npm" "$proj_dir" \
-              "npm install" \
-              "npm run build && (npm run export || true)"
+            emit "npm" "$proj_dir" "npm install" "npm run build"
           else
             echo "Unable to determine package manager:" >&2
-            echo "  No yarn.lock, pnpm-lock.yaml, package-lock.json or package.json found (excluding node_modules)." >&2
-            echo "Repo tree (first 200 files, excluding node_modules):" >&2
-            find "$repo_root" -type d -name node_modules -prune -o -type f -print | sed -n '1,200p' >&2 || true
+            echo "  No yarn.lock, pnpm-lock.yaml, package-lock.json or package.json found (outside node_modules)." >&2
+            echo "Repo tree (first 200 files):" >&2
+            find "$repo_root" -maxdepth 4 -type f | sed -n '1,200p' >&2 || true
             exit 1
           fi
         shell: bash
 
-      - name: Setup Node (no built-in cache)
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      # Cache Yarn cache if using yarn
-      - name: Cache Yarn
-        if: ${{ steps.detect-package-manager.outputs.manager == 'yarn' }}
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/yarn
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-
-      # Cache npm cache if using npm
-      - name: Cache npm
-        if: ${{ steps.detect-package-manager.outputs.manager == 'npm' }}
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-
-      # Cache pnpm store if using pnpm
-      - name: Cache pnpm
-        if: ${{ steps.detect-package-manager.outputs.manager == 'pnpm' }}
-        uses: actions/cache@v4
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-
-      # Cache .next
-      - name: Restore .next cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.detect-package-manager.outputs.project_dir }}/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.[jt]s', '**/*.[jt]sx') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-
-
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
+          # Lets the action patch next.config.js so `next build` outputs for Pages.
           static_site_generator: next
 
       - name: Install dependencies
         run: ${{ steps.detect-package-manager.outputs.install_cmd }}
-        timeout-minutes: 10
 
-      - name: Build with Next.js (and attempt export)
-        run: |
-          echo "Running build command: ${{ steps.detect-package-manager.outputs.build_cmd }}"
-          set -o pipefail
-          bash -c "${{ steps.detect-package-manager.outputs.build_cmd }}" | sed -u 's/^/[build] /'
-        timeout-minutes: 15
+      - name: Build with Next.js
+        run: ${{ steps.detect-package-manager.outputs.build_cmd }}
 
-      - name: Verify ./out exists (or show .next)
+      - name: Show project structure
         run: |
-          proj="${{ steps.detect-package-manager.outputs.project_dir }}"
-          echo "Project dir: $proj"
-          if [ -d "$proj/out" ]; then
-            echo "Static export produced at $proj/out"
-            ls -la "$proj/out"
+          echo "Project directory: ${{ steps.detect-package-manager.outputs.project_dir }}"
+          ls -la "${{ steps.detect-package-manager.outputs.project_dir }}"
+          if [ -d "${{ steps.detect-package-manager.outputs.project_dir }}/out" ]; then
+            echo "Found ./out directory:"
+            ls -la "${{ steps.detect-package-manager.outputs.project_dir }}/out"
           else
-            echo "No ./out directory found. Showing .next contents:"
-            ls -la "$proj/.next" || true
-            echo ""
-            echo "If you want GitHub Pages to work, you must produce a static ./out folder."
-            echo "Usually by adding an 'export' script (\"export\": \"next export\")"
-            echo "and making sure your Next.js app supports static export."
+            echo "No ./out directory yet. If build succeeded, configure-pages may handle output."
           fi
 
       - name: Upload artifact
