@@ -18,30 +18,39 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up Node.js 20
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Prepare files (install raw-loader, add next.config, add injector, patch layout)
+      - name: Prepare project (install raw-loader, add next.config, add injector, patch layout)
+        shell: bash
         run: |
           set -euo pipefail
 
-          # move to the project folder (adjust if your project root is different)
-          PROJECT_DIR="./smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
+          # Adjust this to your actual Next.js project folder if different
+          PROJECT_DIR="smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
           echo "Project dir: $PROJECT_DIR"
+
+          if [ ! -d "$PROJECT_DIR" ]; then
+            echo "ERROR: project dir does not exist: $PROJECT_DIR"
+            echo "Repo top-level files:"
+            ls -la
+            exit 1
+          fi
+
           cd "$PROJECT_DIR"
 
-          echo "Installing raw-loader as dev dependency (for this runner)..."
-          # install raw-loader locally for the build (does not commit)
+          echo "Installing raw-loader as a dev dependency for the runner..."
+          # install dev dependency locally in the runner
           npm install --no-audit --no-fund --save-dev raw-loader
 
-          echo "Writing next.config.js to instruct webpack to load home.module.css as raw text..."
+          echo "Writing next.config.js to treat home.module.css as raw text..."
           cat > next.config.js <<'JS'
 module.exports = {
   webpack: (config) => {
@@ -58,8 +67,9 @@ module.exports = {
 };
 JS
 
-          echo "Creating client injector component at src/components/InjectHomeCss.jsx..."
+          echo "Creating injector component at src/components/InjectHomeCss.jsx..."
           mkdir -p src/components
+
           cat > src/components/InjectHomeCss.jsx <<'JSX'
 'use client';
 
@@ -83,81 +93,86 @@ export default function InjectHomeCss() {
 }
 JSX
 
-          # Patch layout.js: replace the CSS import with injector import, and inject component into body
-          LAYOUT="src/app/layout.js"
-          if [ -f "$LAYOUT" ]; then
-            echo "Patching $LAYOUT"
-            # Replace the import line for home.module.css with injector import.
-            # If the import exists as `import './home.module.css';` (exact), replace it.
-            # Otherwise try to remove any import that references home.module.css and add injector import.
-            if grep -q "import './home.module.css'" "$LAYOUT"; then
-              sed -i "s|import './home.module.css';|import InjectHomeCss from '../components/InjectHomeCss';|g" "$LAYOUT"
-            else
-              # remove any import lines that mention home.module.css
-              sed -i "/home.module.css/d" "$LAYOUT" || true
-              # ensure injector import exists after other imports
-              sed -i "1,/import .* from .*;/!b; /import .* from .*;/!b; a\\
-import InjectHomeCss from '../components/InjectHomeCss';
-" "$LAYOUT" || true
+          LAYOUT_FILE="src/app/layout.js"
+          if [ -f "$LAYOUT_FILE" ]; then
+            echo "Patching layout file: $LAYOUT_FILE"
+
+            # Remove any direct import of home.module.css
+            # and add the injector import if missing.
+            # This is conservative and will not overwrite unrelated lines.
+            cp "$LAYOUT_FILE" "${LAYOUT_FILE}.bak"
+
+            # Remove any lines importing home.module.css
+            sed -i "/home.module.css/d" "$LAYOUT_FILE" || true
+
+            # Add injector import if not present
+            if ! grep -q "InjectHomeCss" "$LAYOUT_FILE"; then
+              # find the last import line number to insert after imports
+              last_import_line=$(nl -ba "$LAYOUT_FILE" | grep -n "^ *import " | tail -n1 | awk -F: '{print $1}' || echo 0)
+              if [ "$last_import_line" -gt 0 ]; then
+                awk -v n="$last_import_line" 'NR==n{print; print "import InjectHomeCss from \'../components/InjectHomeCss\';"; next} NR!=n{print}' "$LAYOUT_FILE" > "${LAYOUT_FILE}.tmp" && mv "${LAYOUT_FILE}.tmp" "$LAYOUT_FILE"
+              else
+                # no imports found, add at top
+                sed -i "1s;^;import InjectHomeCss from '../components/InjectHomeCss';\n;" "$LAYOUT_FILE"
+              fi
             fi
 
-            # Insert the <InjectHomeCss /> component immediately after the opening <body ...> tag
-            # Only add if not already present.
-            if ! grep -q "InjectHomeCss" "$LAYOUT"; then
-              # Add the component line after the body opening tag
-              sed -i "s|<body\\(.*\\)>|<body\\1>\\n        <InjectHomeCss />|g" "$LAYOUT"
+            # Insert <InjectHomeCss /> immediately after opening <body ...> tag if not present
+            if ! grep -q "<InjectHomeCss" "$LAYOUT_FILE"; then
+              sed -i "s|<body\\(.*\\)>|<body\\1>\\n        <InjectHomeCss />|g" "$LAYOUT_FILE"
             fi
 
-            echo "Patched layout (first 120 lines):"
-            sed -n '1,120p' "$LAYOUT" || true
+            echo "Patched layout (preview):"
+            sed -n '1,160p' "$LAYOUT_FILE" || true
           else
-            echo "WARNING: layout file not found at $LAYOUT - skipping patch"
+            echo "Warning: layout file not found at $LAYOUT_FILE; skipping patch"
           fi
 
-      - name: Install dependencies
+      - name: Install dependencies (project)
+        shell: bash
         run: |
-          PROJECT_DIR="./smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
+          PROJECT_DIR="smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
           cd "$PROJECT_DIR"
           npm ci
         timeout-minutes: 10
 
-      - name: Build Next.js
+      - name: Run Next.js build
+        shell: bash
         run: |
-          PROJECT_DIR="./smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
+          PROJECT_DIR="smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
           cd "$PROJECT_DIR"
-          echo "Running npm run build..."
           npm run build
         timeout-minutes: 20
 
-      - name: Export (produce ./out)
+      - name: Run export (if present)
+        shell: bash
         run: |
-          PROJECT_DIR="./smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
+          PROJECT_DIR="smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
           cd "$PROJECT_DIR"
-          # attempt a static export; if export script missing, skip gracefully
           if npm run | sed -n '1,200p' | grep -q " export"; then
             npm run export
           else
-            echo "No export script found — skipping export. If your site is not exportable, GitHub Pages cannot serve it."
+            echo "No export script found — skipping export."
           fi
         timeout-minutes: 10
 
-      - name: Verify out path and show listing
+      - name: Verify artifacts
+        shell: bash
         run: |
-          PROJECT_DIR="./smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
+          PROJECT_DIR="smart-crop-adviser/smart-crop-adviser/smart-crop-adviser"
           cd "$PROJECT_DIR"
           if [ -d out ]; then
-            echo "Found out/ directory:"
+            echo "out/ exists:"
             ls -la out || true
           else
-            echo "No out/ directory found. Showing .next (if any):"
+            echo "No out/ directory. Showing .next:"
             ls -la .next || true
-            echo "If no out/ produced, GitHub Pages will not be able to serve this app (requires static export)."
           fi
 
-      - name: Upload artifact (Pages)
+      - name: Upload artifact for Pages
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./smart-crop-adviser/smart-crop-adviser/smart-crop-adviser/out
+          path: smart-crop-adviser/smart-crop-adviser/smart-crop-adviser/out
 
   deploy:
     runs-on: ubuntu-latest
@@ -166,6 +181,6 @@ import InjectHomeCss from '../components/InjectHomeCss';
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy to Pages
         id: deployment
         uses: actions/deploy-pages@v4
