@@ -2,8 +2,7 @@ name: Build & Deploy Next.js to GitHub Pages
 
 on:
   push:
-    branches:
-      - main
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
@@ -13,56 +12,59 @@ permissions:
 
 concurrency:
   group: "pages"
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Setup Node.js 20
+      - name: Detect Next.js project directory
+        id: detect
+        run: |
+          echo "Searching for package.json..."
+          FILE=$(find . -maxdepth 4 -type f -name package.json | head -n 1)
+          if [ -z "$FILE" ]; then
+            echo "No package.json found!"
+            exit 1
+          fi
+          DIR=$(dirname "$FILE")
+          echo "Project found in: $DIR"
+          echo "project_dir=$DIR" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: 20
           cache: "npm"
 
       - name: Install dependencies
+        working-directory: ${{ steps.detect.outputs.project_dir }}
         run: npm ci
 
       - name: Build Next.js
+        working-directory: ${{ steps.detect.outputs.project_dir }}
         run: npm run build
-        env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
 
-      - name: Export static site to out/
-        run: |
-          # Use either the package.json script if present, otherwise run npx next export
-          if npm run | grep -q "export"; then
-            npm run export
-          else
-            npx next export
-          fi
+      - name: Export static site
+        working-directory: ${{ steps.detect.outputs.project_dir }}
+        run: npx next export
 
-      - name: Verify out/ exists
-        run: |
-          echo "Listing out/ directory (should contain index.html etc):"
-          ls -la out || (echo "No out/ directory found — next export probably failed" && exit 1)
-
-      - name: Upload Pages artifact
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out
+          path: ${{ steps.detect.outputs.project_dir }}/out
 
   deploy:
-    needs: build-and-deploy
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
