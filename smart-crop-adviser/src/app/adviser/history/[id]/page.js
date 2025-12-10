@@ -658,6 +658,7 @@
 // }
 
 // app/adviser/history/[id]/page.jsx
+// app/adviser/history/[id]/page.jsx
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -685,8 +686,6 @@ import {
 } from 'lucide-react';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
-
-// NOTE: generateStaticParams() removed because this file is a client component.
 
 // Backend base URL (no trailing slash)
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace(/\/+$/, '');
@@ -1316,4 +1315,3 @@ function ParamRow({ label, value }) {
     </div>
   );
 }
-
