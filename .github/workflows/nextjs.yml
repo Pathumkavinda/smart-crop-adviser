@@ -107,35 +107,6 @@ jobs:
             echo "Layout not found at $LAYOUT; skipping patch"
           fi
 
-      - name: Fix dynamic route for static export
-        shell: bash
-        run: |
-          set -euo pipefail
-          PROJECT_DIR="${{ steps.detect.outputs.project_dir }}"
-          cd "$PROJECT_DIR"
-          
-          DYNAMIC_DIR="src/app/adviser/history/[id]"
-          
-          if [ -d "$DYNAMIC_DIR" ]; then
-            echo "Found dynamic route: $DYNAMIC_DIR"
-            echo "Creating layout.js with generateStaticParams..."
-            
-            cat > "$DYNAMIC_DIR/layout.js" << 'ENDOFFILE'
-export async function generateStaticParams() {
-  return [];
-}
-
-export default function Layout({ children }) {
-  return children;
-}
-ENDOFFILE
-            
-            echo "Created layout.js in $DYNAMIC_DIR"
-            cat "$DYNAMIC_DIR/layout.js"
-          else
-            echo "Dynamic route not found at $DYNAMIC_DIR"
-          fi
-
       - name: Install dependencies (project)
         shell: bash
         run: |
