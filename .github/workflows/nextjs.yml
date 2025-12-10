@@ -131,33 +131,27 @@ jobs:
               
               if [ -f "$NEXT_CONFIG" ]; then
                 echo "Updating next.config.js to handle dynamic routes"
-                
-                # Backup
                 cp "$NEXT_CONFIG" "${NEXT_CONFIG}.bak"
-                
-                # Check if config already has trailingSlash
                 if ! grep -q "trailingSlash" "$NEXT_CONFIG"; then
-                  # Add trailingSlash and modify output config
-                  cat > "${NEXT_CONFIG}.tmp" << 'EOF'
+                  cat > "${NEXT_CONFIG}.tmp" << 'EOFCONFIG'
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
   trailingSlash: true,
   skipTrailingSlashRedirect: true,
-  // This will generate a catch-all 404 page that can handle dynamic routes
   generateBuildId: async () => {
     return 'build-' + Date.now()
   }
 }
 
 module.exports = nextConfig
-EOF
+EOFCONFIG
                   mv "${NEXT_CONFIG}.tmp" "$NEXT_CONFIG"
                   echo "Updated next.config.js"
                 fi
               else
                 echo "Creating next.config.js"
-                cat > "$NEXT_CONFIG" << 'EOF'
+                cat > "$NEXT_CONFIG" << 'EOFCONFIG'
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
@@ -166,7 +160,7 @@ const nextConfig = {
 }
 
 module.exports = nextConfig
-EOF
+EOFCONFIG
               fi
               
               echo "Note: Dynamic routes with client components require manual handling."
