@@ -31,5 +31,13 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.5",
     "tailwindcss": "^4"
-  }
+  },
+  "scripts": {
+  "dev": "next dev --turbopack",
+  "build": "next build",
+  "export": "next export",
+  "start": "next start",
+  "lint": "next lint"
+}
+
 }
