@@ -1,79 +1,141 @@
-name: Debug Next.js build - find package.json and list npm scripts
+name: Detect project, build Next.js, export & deploy (robust)
 
 on:
-  workflow_dispatch:
   push:
     branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
-  debug-build:
+  detect-build-export:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository (full)
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Show repo root and list top-level files
+      - name: Find package.json with a build script (and prefer Next.js)
+        id: detect
+        shell: bash
         run: |
-          echo "Runner pwd: $(pwd)"
-          echo "Listing root files:"
-          ls -la
+          set -euo pipefail
 
-      - name: Find package.json (debug)
-        id: findpkg
-        run: |
-          echo "Searching for package.json (maxdepth 6)..."
-          FILE=$(find . -maxdepth 6 -type f -name package.json | sed -n '1p' || true)
-          if [ -z "$FILE" ]; then
-            echo "::error::No package.json found in repository (search depth 6)."
+          echo "Searching for package.json files (depth 6)..."
+          mapfile -t files < <(find . -maxdepth 6 -type f -name package.json || true)
+
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "::error::No package.json found in repo (search depth 6)."
             exit 1
           fi
-          echo "Found package.json at: $FILE"
-          echo "path=$FILE" >> $GITHUB_OUTPUT
 
-      - name: Show the found package.json path and directory
-        run: |
-          echo "package.json path: ${{ steps.findpkg.outputs.path }}"
-          DIR=$(dirname "${{ steps.findpkg.outputs.path }}")
-          echo "package.json dir: $DIR"
-          echo "Listing files in that directory:"
-          ls -la "$DIR"
+          chosen=""
+          # First prefer package.json that contains 'next' in dependencies/devDependencies
+          for f in "${files[@]}"; do
+            # use node to safely inspect package.json
+            has_next=$(node -e "try{const p=require('$f'); console.log(Boolean((p.dependencies && p.dependencies.next) || (p.devDependencies && p.devDependencies.next)));}catch(e){console.log(false)}")
+            has_build=$(node -e "try{const p=require('$f'); console.log(Boolean(p.scripts && p.scripts.build));}catch(e){console.log(false)}")
+            if [ "$has_next" = "true" ] && [ "$has_build" = "true" ]; then
+              chosen="$f"
+              echo "Preferred package.json (next + build) at: $chosen"
+              break
+            fi
+          done
 
-      - name: Print package.json contents (for debug)
-        run: |
-          echo "---- package.json contents start ----"
-          cat "${{ steps.findpkg.outputs.path }}" || true
-          echo "---- package.json contents end ----"
+          # If no next + build found, pick any package.json that has build script
+          if [ -z "$chosen" ]; then
+            for f in "${files[@]}"; do
+              has_build=$(node -e "try{const p=require('$f'); console.log(Boolean(p.scripts && p.scripts.build));}catch(e){console.log(false)}")
+              if [ "$has_build" = "true" ]; then
+                chosen="$f"
+                echo "Found package.json with build script at: $chosen"
+                break
+              fi
+            done
+          fi
 
-      - name: Show npm available scripts (in package dir)
-        run: |
-          DIR=$(dirname "${{ steps.findpkg.outputs.path }}")
-          echo "Running 'npm --version' and 'node --version'"
-          npm --version
-          node --version
-          echo "Listing npm scripts (npm run) in $DIR"
-          (cd "$DIR" && npm run) || true
+          if [ -z "$chosen" ]; then
+            echo "::error::No package.json with a 'build' script found. Searched these files:"
+            for f in "${files[@]}"; do echo "  - $f"; done
+            exit 1
+          fi
 
-      - name: Install dependencies (in package dir)
-        if: ${{ always() }}
-        run: |
-          DIR=$(dirname "${{ steps.findpkg.outputs.path }}")
-          echo "Installing dependencies in $DIR"
-          cd "$DIR"
-          npm ci
-        working-directory: ${{ github.workspace }}
+          proj_dir="$(dirname "$chosen")"
+          echo "project_dir=$proj_dir" >> $GITHUB_OUTPUT
+          echo "package_json=$chosen" >> $GITHUB_OUTPUT
 
-      - name: Attempt build (only if build script exists)
+      - name: Print project dir and package.json (sanity)
         run: |
-          DIR=$(dirname "${{ steps.findpkg.outputs.path }}")
-          echo "Checking for build script in package.json..."
-          if (cd "$DIR" && node -e "const p=require('./package.json'); console.log(Boolean(p.scripts && p.scripts.build));"); then
-            echo "build script present — running npm run build"
-            cd "$DIR"
+          echo "Detected project_dir: ${{ steps.detect.outputs.project_dir }}"
+          echo "Detected package.json: ${{ steps.detect.outputs.package_json }}"
+          echo "Contents of detected package.json:"
+          cat "${{ steps.detect.outputs.package_json }}"
+
+      - name: Setup Node.js 20 (with npm cache)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies (project dir)
+        working-directory: ${{ steps.detect.outputs.project_dir }}
+        run: npm ci
+
+      - name: List npm scripts (project dir)
+        working-directory: ${{ steps.detect.outputs.project_dir }}
+        run: npm run
+
+      - name: Run build (only if build script exists)
+        working-directory: ${{ steps.detect.outputs.project_dir }}
+        run: |
+          set -euo pipefail
+          if node -e "const p=require('./package.json'); process.exit(Boolean(p.scripts && p.scripts.build) ? 0 : 2)"; then
+            echo "Build script present — running npm run build"
             npm run build
           else
-            echo "::error::No build script present in $DIR/package.json — aborting build step."
+            echo "::error::No build script found in $PWD/package.json; aborting build."
             exit 1
           fi
-        working-directory: ${{ github.workspace }}
+
+      - name: Export static site to out/
+        working-directory: ${{ steps.detect.outputs.project_dir }}
+        run: |
+          # prefer npm run export if present, otherwise run npx next export
+          if node -e "const p=require('./package.json'); process.exit(Boolean(p.scripts && p.scripts.export) ? 0 : 1)"; then
+            echo "Using npm run export"
+            npm run export
+          else
+            echo "Running npx next export"
+            npx next export
+          fi
+
+      - name: Verify out/ exists and list
+        working-directory: ${{ steps.detect.outputs.project_dir }}
+        run: |
+          if [ -d out ]; then
+            echo "out/ exists — listing:"
+            ls -la out
+          else
+            echo "::error::out/ not found after export. next export likely failed or the project is not exportable."
+            exit 1
+          fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ steps.detect.outputs.project_dir }}/out
+
+  deploy:
+    needs: detect-build-export
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
