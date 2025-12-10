@@ -78,6 +78,26 @@ jobs:
         working-directory: ${{ steps.detect.outputs.project_dir }}
         run: npm ci
         
+      - name: Fix corrupted CSS module file
+        working-directory: ${{ steps.detect.outputs.project_dir }}
+        shell: bash
+        run: |
+          CSS_FILE="src/app/home.module.css"
+          if [ -f "$CSS_FILE" ]; then
+            echo "Checking $CSS_FILE for corruption..."
+            if grep -q '^export default' "$CSS_FILE"; then
+              echo "CSS file is corrupted with JavaScript export. Fixing..."
+              # Remove the export default wrapper and unescape the content
+              sed -i '1s/^export default "//; $s/"$//' "$CSS_FILE"
+              sed -i 's/\\n/\n/g' "$CSS_FILE"
+              echo "Fixed $CSS_FILE"
+            else
+              echo "$CSS_FILE looks normal"
+            fi
+          else
+            echo "$CSS_FILE not found, skipping"
+          fi
+        
       - name: Build with Next.js
         working-directory: ${{ steps.detect.outputs.project_dir }}
         run: npx next build
