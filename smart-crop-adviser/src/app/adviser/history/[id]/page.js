@@ -686,14 +686,7 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-// Required exports for static export with dynamic routes
-export const dynamic = 'error';
-export const dynamicParams = false;
-
-export async function generateStaticParams() {
-  // Return empty array - pages will be generated on client-side navigation
-  return [];
-}
+// NOTE: generateStaticParams() removed because this file is a client component.
 
 // Backend base URL (no trailing slash)
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace(/\/+$/, '');
