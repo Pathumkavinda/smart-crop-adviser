@@ -107,6 +107,50 @@ jobs:
             echo "Layout not found at $LAYOUT; skipping patch"
           fi
 
+      - name: Fix dynamic routes for static export
+        shell: bash
+        run: |
+          set -euo pipefail
+          PROJECT_DIR="${{ steps.detect.outputs.project_dir }}"
+          cd "$PROJECT_DIR"
+
+          # Find and fix the dynamic route page
+          DYNAMIC_PAGE="src/app/adviser/history/[id]/page.js"
+          
+          if [ -f "$DYNAMIC_PAGE" ]; then
+            echo "Found dynamic route at $DYNAMIC_PAGE"
+            
+            # Check if generateStaticParams already exists
+            if ! grep -q "generateStaticParams" "$DYNAMIC_PAGE"; then
+              echo "Adding generateStaticParams function"
+              
+              # Backup original
+              cp "$DYNAMIC_PAGE" "${DYNAMIC_PAGE}.bak"
+              
+              # Add generateStaticParams at the beginning of the file (after imports)
+              cat > "${DYNAMIC_PAGE}.tmp" << 'EOF'
+// Generate static params for all possible IDs
+export async function generateStaticParams() {
+  // Return empty array to generate no static pages at build time
+  // This allows the route to work with dynamic rendering
+  // If you have specific IDs, return them like: return [{ id: '1' }, { id: '2' }]
+  return [];
+}
+
+EOF
+              cat "$DYNAMIC_PAGE" >> "${DYNAMIC_PAGE}.tmp"
+              mv "${DYNAMIC_PAGE}.tmp" "$DYNAMIC_PAGE"
+              
+              echo "Added generateStaticParams to $DYNAMIC_PAGE"
+            else
+              echo "generateStaticParams already exists in $DYNAMIC_PAGE"
+            fi
+          else
+            echo "Dynamic route not found at expected path: $DYNAMIC_PAGE"
+            echo "Searching for dynamic routes..."
+            find src/app -type f -name "page.js" -path "*/\[*\]/*" || true
+          fi
+
       - name: Install dependencies (project)
         shell: bash
         run: |
