@@ -35,7 +35,6 @@ jobs:
           set -euo pipefail
           repo_root="${GITHUB_WORKSPACE:-.}"
           echo "Repo root: $repo_root"
-          # find package.json files excluding node_modules
           mapfile -t pkgs < <(find "$repo_root" -type d -name node_modules -prune -o -type f -name 'package.json' -print 2>/dev/null || true)
           if [ ${#pkgs[@]} -eq 0 ]; then
             echo "ERROR: no package.json found" >&2
@@ -55,7 +54,6 @@ jobs:
             echo "Selected Next.js package.json: $chosen" >&2
           fi
           proj_dir=$(dirname "$chosen")
-          # make proj_dir relative to repo root
           rel_proj_dir="${proj_dir#$repo_root/}"
           if [ -z "$rel_proj_dir" ] || [ "$rel_proj_dir" = "$repo_root" ]; then
             rel_proj_dir="."
@@ -83,15 +81,9 @@ jobs:
           LAYOUT="src/app/layout.js"
           if [ -f "$LAYOUT" ]; then
             echo "Patching $LAYOUT imports to use './home.css' instead of module"
-
-            # backup
             cp "$LAYOUT" "${LAYOUT}.bak"
-
-            # remove any lines that reference home.module.css
             grep -v "home.module.css" "${LAYOUT}.bak" > "${LAYOUT}.tmp" || true
             mv -f "${LAYOUT}.tmp" "$LAYOUT"
-
-            # ensure import './home.css' exists — insert after last import line
             if ! grep -q "import './home.css'" "$LAYOUT"; then
               last_import_line=$(grep -n '^import ' "$LAYOUT" | tail -n1 | cut -d: -f1 || echo 0)
               if [ "$last_import_line" -gt 0 ]; then
@@ -100,50 +92,43 @@ jobs:
                 sed -i "1s;^;import './home.css';\n;" "$LAYOUT"
               fi
             fi
-
             echo "Patched layout (preview):"
             sed -n '1,200p' "$LAYOUT" || true
           else
             echo "Layout not found at $LAYOUT; skipping patch"
           fi
 
-      - name: Fix dynamic routes for static export
+      - name: Remove dynamic routes for static export
         shell: bash
         run: |
           set -euo pipefail
           PROJECT_DIR="${{ steps.detect.outputs.project_dir }}"
           cd "$PROJECT_DIR"
           
-          DYNAMIC_DIR="src/app/adviser/history/[id]"
-          NEXT_CONFIG="next.config.js"
+          echo "Removing dynamic route directory to enable static export..."
           
-          if [ -d "$DYNAMIC_DIR" ]; then
-            echo "Found dynamic route directory: $DYNAMIC_DIR"
-            
-            if [ -f "$NEXT_CONFIG" ]; then
-              echo "Backing up next.config.js"
-              cp "$NEXT_CONFIG" "${NEXT_CONFIG}.bak"
-            fi
-            
-            echo "Creating/updating next.config.js for static export"
-            cat > "$NEXT_CONFIG" <<'ENDCONFIG'
+          # Remove the problematic dynamic route
+          if [ -d "src/app/adviser/history/[id]" ]; then
+            echo "Removing src/app/adviser/history/[id]"
+            rm -rf "src/app/adviser/history/[id]"
+          fi
+          
+          # Update next.config.js to ensure static export works
+          cat > "next.config.js" << 'EOF'
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
-  trailingSlash: true,
   images: {
     unoptimized: true
   }
 }
 
 module.exports = nextConfig
-ENDCONFIG
-            
-            echo "Updated next.config.js"
-            cat "$NEXT_CONFIG"
-          else
-            echo "Dynamic route directory not found: $DYNAMIC_DIR"
-          fi
+EOF
+          
+          echo "Updated next.config.js for static export"
+          echo "Note: The /adviser/history/[id] route has been removed for GitHub Pages compatibility"
+          echo "Consider using query parameters instead: /adviser/history?id=123"
 
       - name: Install dependencies (project)
         shell: bash
