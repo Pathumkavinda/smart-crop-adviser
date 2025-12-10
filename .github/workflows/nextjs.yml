@@ -1,4 +1,4 @@
-name: Deploy Next.js site to Pages
+name: Fix CSS-module -> global CSS & Deploy Next.js to GitHub Pages
 
 on:
   push:
@@ -15,149 +15,151 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
-        
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: Detect Next.js project directory
         id: detect
         shell: bash
         run: |
           set -euo pipefail
-          
-          # Find package.json files excluding node_modules
-          mapfile -t pkgs < <(find . -type d -name node_modules -prune -o -type f -name 'package.json' -print 2>/dev/null || true)
-          
+          repo_root="${GITHUB_WORKSPACE:-.}"
+          echo "Repo root: $repo_root"
+          # find package.json files excluding node_modules
+          mapfile -t pkgs < <(find "$repo_root" -type d -name node_modules -prune -o -type f -name 'package.json' -print 2>/dev/null || true)
           if [ ${#pkgs[@]} -eq 0 ]; then
-            echo "ERROR: no package.json found"
+            echo "ERROR: no package.json found" >&2
             exit 1
           fi
-          
-          # Find package.json with Next.js dependency
           chosen=""
           for p in "${pkgs[@]}"; do
-            if grep -q '"next"' "$p"; then
+            if grep -q '"next"' "$p" || grep -q '"next":' "$p"; then
               chosen="$p"
-              echo "Found Next.js package.json: $chosen"
               break
             fi
           done
-          
           if [ -z "$chosen" ]; then
             chosen="${pkgs[0]}"
-            echo "No Next.js package.json found, using first: $chosen"
-          fi
-          
-          proj_dir=$(dirname "$chosen")
-          
-          # Make path relative
-          if [ "$proj_dir" = "." ]; then
-            rel_proj_dir="."
+            echo "No package.json with 'next' found; using first: $chosen" >&2
           else
-            rel_proj_dir="${proj_dir#./}"
+            echo "Selected Next.js package.json: $chosen" >&2
           fi
-          
+          proj_dir=$(dirname "$chosen")
+          # make proj_dir relative to repo root
+          rel_proj_dir="${proj_dir#$repo_root/}"
+          if [ -z "$rel_proj_dir" ] || [ "$rel_proj_dir" = "$repo_root" ]; then
+            rel_proj_dir="."
+          fi
           echo "project_dir=$rel_proj_dir" >> $GITHUB_OUTPUT
-          echo "Project directory: $rel_proj_dir"
-          
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: 'npm'
-          cache-dependency-path: ${{ steps.detect.outputs.project_dir }}/package-lock.json
-          
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-        with:
-          static_site_generator: next
-          
-      - name: Install dependencies
-        working-directory: ${{ steps.detect.outputs.project_dir }}
-        run: npm ci
-        
-      - name: Fix corrupted CSS module file
-        working-directory: ${{ steps.detect.outputs.project_dir }}
+
+      - name: Make runner-safe CSS change (rename module -> global) and patch layout
         shell: bash
         run: |
-          CSS_FILE="src/app/home.module.css"
-          if [ -f "$CSS_FILE" ]; then
-            echo "Checking $CSS_FILE for corruption..."
-            if grep -q '^export default' "$CSS_FILE"; then
-              echo "CSS file is corrupted. Extracting and fixing content..."
-              
-              # Create a Python script to properly unescape the CSS
-              cat > fix_css.py << 'PYEOF'
-import re
-import sys
+          set -euo pipefail
+          PROJECT_DIR="${{ steps.detect.outputs.project_dir }}"
+          echo "Project dir (relative): $PROJECT_DIR"
+          cd "$PROJECT_DIR"
 
-with open(sys.argv[1], 'r') as f:
-    content = f.read()
+          SRC="src/app/home.module.css"
+          DST="src/app/home.css"
 
-# Remove export default wrapper
-content = re.sub(r'^export default\s*"', '', content)
-content = re.sub(r'";\s*
-        
-      - name: Build with Next.js
-        working-directory: ${{ steps.detect.outputs.project_dir }}
-        run: npx next build
-        
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ${{ steps.detect.outputs.project_dir }}/out
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4, '', content)
-content = content.rstrip('"')
-
-# Unescape newlines and other escaped characters
-content = content.replace('\\n', '\n')
-content = content.replace('\\"', '"')
-content = content.replace('\\\\', '\\')
-
-with open(sys.argv[1], 'w') as f:
-    f.write(content)
-
-print("CSS file fixed successfully")
-PYEOF
-              
-              python3 fix_css.py "$CSS_FILE"
-              echo "First 50 lines of fixed CSS:"
-              head -n 50 "$CSS_FILE"
-            else
-              echo "$CSS_FILE looks normal"
-            fi
+          if [ -f "$SRC" ]; then
+            echo "Renaming $SRC -> $DST (runner only)"
+            mv -f "$SRC" "$DST"
           else
-            echo "$CSS_FILE not found, skipping"
+            echo "No $SRC found; skipping rename"
           fi
-        
-      - name: Build with Next.js
-        working-directory: ${{ steps.detect.outputs.project_dir }}
-        run: npx next build
-        
-      - name: Upload artifact
+
+          LAYOUT="src/app/layout.js"
+          if [ -f "$LAYOUT" ]; then
+            echo "Patching $LAYOUT imports to use './home.css' instead of module"
+
+            # backup
+            cp "$LAYOUT" "${LAYOUT}.bak"
+
+            # remove any lines that reference home.module.css
+            grep -v "home.module.css" "${LAYOUT}.bak" > "${LAYOUT}.tmp" || true
+            mv -f "${LAYOUT}.tmp" "$LAYOUT"
+
+            # ensure import './home.css' exists — insert after last import line
+            if ! grep -q "import './home.css'" "$LAYOUT"; then
+              last_import_line=$(grep -n '^import ' "$LAYOUT" | tail -n1 | cut -d: -f1 || echo 0)
+              if [ "$last_import_line" -gt 0 ]; then
+                awk -v n="$last_import_line" 'NR==n{print; print "import '\''./home.css'\'';"; next} NR!=n{print}' "$LAYOUT" > "${LAYOUT}.tmp" && mv "${LAYOUT}.tmp" "$LAYOUT"
+              else
+                sed -i "1s;^;import './home.css';\n;" "$LAYOUT"
+              fi
+            fi
+
+            echo "Patched layout (preview):"
+            sed -n '1,200p' "$LAYOUT" || true
+          else
+            echo "Layout not found at $LAYOUT; skipping patch"
+          fi
+
+      - name: Install dependencies (project)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "${{ steps.detect.outputs.project_dir }}"
+          npm ci
+        timeout-minutes: 10
+
+      - name: Build Next.js
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "${{ steps.detect.outputs.project_dir }}"
+          npm run build
+        timeout-minutes: 20
+
+      - name: Export static site if available
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "${{ steps.detect.outputs.project_dir }}"
+          if npm run | sed -n '1,200p' | grep -q " export"; then
+            npm run export
+          else
+            echo "No export script; skipping export"
+          fi
+        timeout-minutes: 10
+
+      - name: Show artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "${{ steps.detect.outputs.project_dir }}"
+          if [ -d out ]; then
+            echo "out/ exists:"
+            ls -la out
+          else
+            echo "No out/ - listing .next:"
+            ls -la .next || true
+          fi
+
+      - name: Upload Pages artifact (if exists)
         uses: actions/upload-pages-artifact@v3
         with:
           path: ${{ steps.detect.outputs.project_dir }}/out
 
   deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy to Pages
         id: deployment
         uses: actions/deploy-pages@v4
