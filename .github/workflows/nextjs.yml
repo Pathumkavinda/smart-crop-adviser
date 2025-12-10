@@ -86,11 +86,55 @@ jobs:
           if [ -f "$CSS_FILE" ]; then
             echo "Checking $CSS_FILE for corruption..."
             if grep -q '^export default' "$CSS_FILE"; then
-              echo "CSS file is corrupted with JavaScript export. Fixing..."
-              # Remove the export default wrapper and unescape the content
-              sed -i '1s/^export default "//; $s/"$//' "$CSS_FILE"
-              sed -i 's/\\n/\n/g' "$CSS_FILE"
-              echo "Fixed $CSS_FILE"
+              echo "CSS file is corrupted. Extracting and fixing content..."
+              
+              # Create a Python script to properly unescape the CSS
+              cat > fix_css.py << 'PYEOF'
+import re
+import sys
+
+with open(sys.argv[1], 'r') as f:
+    content = f.read()
+
+# Remove export default wrapper
+content = re.sub(r'^export default\s*"', '', content)
+content = re.sub(r'";\s*
+        
+      - name: Build with Next.js
+        working-directory: ${{ steps.detect.outputs.project_dir }}
+        run: npx next build
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ steps.detect.outputs.project_dir }}/out
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4, '', content)
+content = content.rstrip('"')
+
+# Unescape newlines and other escaped characters
+content = content.replace('\\n', '\n')
+content = content.replace('\\"', '"')
+content = content.replace('\\\\', '\\')
+
+with open(sys.argv[1], 'w') as f:
+    f.write(content)
+
+print("CSS file fixed successfully")
+PYEOF
+              
+              python3 fix_css.py "$CSS_FILE"
+              echo "First 50 lines of fixed CSS:"
+              head -n 50 "$CSS_FILE"
             else
               echo "$CSS_FILE looks normal"
             fi
