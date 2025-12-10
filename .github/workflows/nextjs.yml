@@ -113,65 +113,36 @@ jobs:
           set -euo pipefail
           PROJECT_DIR="${{ steps.detect.outputs.project_dir }}"
           cd "$PROJECT_DIR"
-
-          # Find the dynamic route directory
+          
           DYNAMIC_DIR="src/app/adviser/history/[id]"
-          DYNAMIC_PAGE="$DYNAMIC_DIR/page.jsx"
+          NEXT_CONFIG="next.config.js"
           
           if [ -d "$DYNAMIC_DIR" ]; then
             echo "Found dynamic route directory: $DYNAMIC_DIR"
             
-            # Check if page file exists (could be .js, .jsx, .ts, or .tsx)
-            if [ -f "$DYNAMIC_PAGE" ] || [ -f "$DYNAMIC_DIR/page.js" ] || [ -f "$DYNAMIC_DIR/page.tsx" ] || [ -f "$DYNAMIC_DIR/page.ts" ]; then
-              echo "Page file found in $DYNAMIC_DIR"
-              
-              # Since the page is a client component, we need to modify next.config.js
-              # to handle dynamic routes properly for static export
-              NEXT_CONFIG="next.config.js"
-              
-              if [ -f "$NEXT_CONFIG" ]; then
-                echo "Updating next.config.js to handle dynamic routes"
-                cp "$NEXT_CONFIG" "${NEXT_CONFIG}.bak"
-                if ! grep -q "trailingSlash" "$NEXT_CONFIG"; then
-                  cat > "${NEXT_CONFIG}.tmp" << 'EOFCONFIG'
+            if [ -f "$NEXT_CONFIG" ]; then
+              echo "Backing up next.config.js"
+              cp "$NEXT_CONFIG" "${NEXT_CONFIG}.bak"
+            fi
+            
+            echo "Creating/updating next.config.js for static export"
+            cat > "$NEXT_CONFIG" <<'ENDCONFIG'
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
   trailingSlash: true,
-  skipTrailingSlashRedirect: true,
-  generateBuildId: async () => {
-    return 'build-' + Date.now()
+  images: {
+    unoptimized: true
   }
 }
 
 module.exports = nextConfig
-EOFCONFIG
-                  mv "${NEXT_CONFIG}.tmp" "$NEXT_CONFIG"
-                  echo "Updated next.config.js"
-                fi
-              else
-                echo "Creating next.config.js"
-                cat > "$NEXT_CONFIG" << 'EOFCONFIG'
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  output: 'export',
-  trailingSlash: true,
-  skipTrailingSlashRedirect: true
-}
-
-module.exports = nextConfig
-EOFCONFIG
-              fi
-              
-              echo "Note: Dynamic routes with client components require manual handling."
-              echo "Consider converting to a catch-all route or pre-generating pages."
-            else
-              echo "Page file not found in $DYNAMIC_DIR"
-            fi
+ENDCONFIG
+            
+            echo "Updated next.config.js"
+            cat "$NEXT_CONFIG"
           else
             echo "Dynamic route directory not found: $DYNAMIC_DIR"
-            echo "Searching for dynamic routes..."
-            find src/app -type d -name "\[*\]" 2>/dev/null || true
           fi
 
       - name: Install dependencies (project)
